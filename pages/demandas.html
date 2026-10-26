@@ -1,0 +1,291 @@
+<!-- =====================================================
+     PÁGINA DE DEMANDAS
+===================================================== -->
+
+<section class="page demandas-page">
+
+
+    <!-- =================================================
+         ENCABEZADO
+    ================================================== -->
+
+    <div class="demandas-header">
+
+
+        <div class="demandas-header-info">
+
+            <span class="eyebrow">
+                Registro jurídico
+            </span>
+
+            <h1>
+                Demandas
+            </h1>
+
+            <p>
+                Consulta, registra y administra las demandas recibidas.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-btn demandas-new-button"
+            data-action="new-demanda"
+        >
+
+            <i class="fa-solid fa-plus"></i>
+
+            Nueva demanda
+
+        </button>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         RESUMEN
+    ================================================== -->
+
+    <div class="demandas-summary">
+
+
+        <!-- TOTAL -->
+
+        <article class="demandas-summary-card">
+
+            <div class="demandas-summary-icon">
+
+                <i class="fa-solid fa-file-signature"></i>
+
+            </div>
+
+
+            <div class="demandas-summary-info">
+
+                <span>
+                    Total de demandas
+                </span>
+
+                <strong id="demandasTotal">
+                    0
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- HOY -->
+
+        <article class="demandas-summary-card">
+
+            <div class="demandas-summary-icon">
+
+                <i class="fa-solid fa-calendar-check"></i>
+
+            </div>
+
+
+            <div class="demandas-summary-info">
+
+                <span>
+                    Registradas hoy
+                </span>
+
+                <strong id="demandasHoy">
+                    0
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- ÚLTIMA CAPTURA -->
+
+        <article class="demandas-summary-card">
+
+            <div class="demandas-summary-icon">
+
+                <i class="fa-regular fa-clock"></i>
+
+            </div>
+
+
+            <div class="demandas-summary-info">
+
+                <span>
+                    Última captura
+                </span>
+
+                <strong
+                    id="demandasUltima"
+                    class="demandas-last-capture"
+                >
+                    —
+                </strong>
+
+            </div>
+
+        </article>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         CONTENEDOR DE REGISTROS
+    ================================================== -->
+
+    <section class="demandas-content-card">
+
+
+        <!-- =============================================
+             TOOLBAR
+        ============================================== -->
+
+        <div class="demandas-toolbar">
+
+
+            <div class="demandas-toolbar-title">
+
+                <h2>
+                    Demandas registradas
+                </h2>
+
+                <p>
+                    Consulta los movimientos capturados en el sistema.
+                </p>
+
+            </div>
+
+
+
+            <div class="demandas-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="search"
+                    id="demandasSearch"
+                    placeholder="Buscar expediente, demandante o demandado..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =============================================
+             TABLA
+        ============================================== -->
+
+        <div class="demandas-table-container">
+
+
+            <table class="demandas-table">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Expediente
+                        </th>
+
+                        <th>
+                            Fecha de llegada
+                        </th>
+
+                        <th>
+                            Demandante
+                        </th>
+
+                        <th>
+                            Demandado
+                        </th>
+
+                        <th>
+                            Actos de la demanda
+                        </th>
+
+                        <th>
+                            Acción
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="demandasTable">
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+
+        <!-- =============================================
+             SIN REGISTROS
+        ============================================== -->
+
+        <div
+            id="demandasEmpty"
+            class="demandas-empty"
+            hidden
+        >
+
+
+            <div class="demandas-empty-icon">
+
+                <i class="fa-solid fa-file-circle-plus"></i>
+
+            </div>
+
+
+            <h3>
+                No hay demandas registradas
+            </h3>
+
+
+            <p>
+                Cuando registres una demanda aparecerá aquí.
+            </p>
+
+
+            <button
+                type="button"
+                class="secondary-btn"
+                data-action="new-demanda"
+            >
+
+                <i class="fa-solid fa-plus"></i>
+
+                Registrar primera demanda
+
+            </button>
+
+
+        </div>
+
+
+    </section>
+
+
+</section>

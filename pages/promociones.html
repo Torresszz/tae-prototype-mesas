@@ -1,0 +1,50 @@
+<div class="page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow"> Oficios y promociones </span>
+
+      <h1>Promociones</h1>
+
+      <p>
+        Consulta y registra las promociones relacionadas con los expedientes.
+      </p>
+    </div>
+
+    <button class="primary-btn" data-action="new-promocion">
+      + Nueva promoción
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+
+      <input
+        type="search"
+        id="promocionesSearch"
+        placeholder="Buscar promoción o expediente..."
+        autocomplete="off"
+      />
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Expediente</th>
+
+          <th>Fecha</th>
+
+          <th>Tipo</th>
+
+          <th>Descripción</th>
+
+          <th>Acción</th>
+        </tr>
+      </thead>
+
+      <tbody id="promocionesTable"></tbody>
+    </table>
+  </div>
+</div>

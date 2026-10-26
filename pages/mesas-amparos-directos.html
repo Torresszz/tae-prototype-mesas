@@ -1,0 +1,102 @@
+<!-- =========================================================
+     MESA DE AMPAROS (DIRECTOS E INDIRECTOS)
+========================================================= -->
+<section class="page mesas-page" id="mampPage" data-tipo="directo">
+
+    <header class="mesas-page-header">
+        <div>
+            <span class="eyebrow">Mesas y Secretaría de Acuerdos</span>
+            <h1>Amparos Directos</h1>
+            <p>Amparos directos: quejoso y terceros interesados, Informe Justificado, suspensión y cuadernillo.</p>
+        </div>
+    </header>
+
+    <div class="mesas-secretaria-layout">
+
+        <main class="mesas-secretaria-main">
+
+            <!-- ESTADO -->
+            <div class="mesas-status-tabs" id="mampTabs">
+                <button type="button" class="mesas-status-tab active" data-estado="todos">
+                    <span>Todos</span>
+                    <strong id="mampCountTodos">0</strong>
+                </button>
+                <button type="button" class="mesas-status-tab" data-estado="activos">
+                    <span>En trámite</span>
+                    <strong id="mampCountActivos">0</strong>
+                </button>
+                <button type="button" class="mesas-status-tab" data-estado="concluidos">
+                    <span>Concluidos</span>
+                    <strong id="mampCountConcluidos">0</strong>
+                </button>
+            </div>
+
+            <!-- BUSCADOR Y FILTRO -->
+            <div class="mesas-secretaria-toolbar">
+                <div class="mesas-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        id="mampSearch"
+                        type="search"
+                        placeholder="Buscar amparo, expediente o promovente..."
+                        autocomplete="off"
+                    >
+                </div>
+                <select id="mampEtapaFilter">
+                    <option value="">Todas las etapas</option>
+                </select>
+            </div>
+
+            <!-- TABLA -->
+            <section class="mesas-secretaria-table-card">
+                <div class="mesas-table-wrapper">
+                    <table class="mesas-secretaria-table mamp-table">
+                        <thead>
+                            <tr>
+                                <th>Amparo</th>
+                                <th>Expediente</th>
+                                <th>Promovente</th>
+                                <th>Etapa / en poder de</th>
+                                <th>Plazo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mampTable"></tbody>
+                    </table>
+                </div>
+
+                <div class="mesas-empty-state" id="mampEmpty" hidden>
+                    <div class="mesas-empty-icon">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <strong>No hay amparos en esta vista</strong>
+                    <span>Registra amparos en Oficialía o carga datos de demostración (se crean directos e indirectos).</span>
+                    <button type="button" class="mesas-primary-btn" id="mampLoadDemoBtn">
+                        <i class="fa-solid fa-flask"></i>
+                        Cargar datos de demostración
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- ALERTAS -->
+        <aside class="mesas-secretaria-sidebar">
+            <section class="mesas-alert-card">
+                <div class="mesas-alert-card-header">
+                    <div>
+                        <span class="mesas-mini-eyebrow">Plazos</span>
+                        <h2>Alertas</h2>
+                    </div>
+                    <span class="mesas-alert-counter" id="mampAlertCount">0</span>
+                </div>
+                <div class="mesas-alert-list" id="mampAlerts">
+                    <div class="mesas-no-alerts">
+                        <i class="fa-regular fa-bell"></i>
+                        <span>Sin alertas pendientes.</span>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+    </div>
+</section>

@@ -1,0 +1,201 @@
+<!-- =====================================================
+     PÁGINA AMPAROS
+===================================================== -->
+
+<section class="page amparos-page">
+
+
+    <!-- =================================================
+         ENCABEZADO
+    ================================================== -->
+
+    <div class="amparos-page-header">
+
+
+        <div>
+
+            <span class="eyebrow">
+                Registro jurídico
+            </span>
+
+            <h1>
+                Amparos
+            </h1>
+
+            <p>
+                Consulta y administra los amparos relacionados con los expedientes.
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-btn amparos-new-button"
+            data-action="new-amparo"
+        >
+
+            <i class="fa-solid fa-plus"></i>
+
+            <span>
+                Nuevo amparo
+            </span>
+
+        </button>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         CONTENEDOR PRINCIPAL
+    ================================================== -->
+
+    <section class="amparos-records-card">
+
+
+        <!-- =============================================
+             TOOLBAR
+        ============================================== -->
+
+        <div class="amparos-toolbar">
+
+
+            <div>
+
+                <h2>
+                    Amparos registrados
+                </h2>
+
+                <p>
+                    Consulta los amparos capturados en el sistema.
+                </p>
+
+            </div>
+
+
+            <div class="amparos-search">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    id="amparosSearch"
+                    type="search"
+                    placeholder="Buscar expediente, promovente o juzgado..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =============================================
+             TABLA
+        ============================================== -->
+
+        <div class="amparos-table-container">
+
+
+            <table class="amparos-table">
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Recepción
+                        </th>
+
+                        <th>
+                            Expediente
+                        </th>
+
+                        <th>
+                            Promovente
+                        </th>
+
+                        <th>
+                            No. juzgado
+                        </th>
+
+                        <th>
+                            Acto reclamado
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                        <th>
+                            Acción
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="amparosTable">
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+
+        <!-- =============================================
+             ESTADO VACÍO
+        ============================================== -->
+
+        <div
+            id="amparosEmpty"
+            class="amparos-empty"
+            hidden
+        >
+
+            <div class="amparos-empty-icon">
+
+                <i class="fa-solid fa-shield-halved"></i>
+
+            </div>
+
+
+            <h3>
+                No hay amparos registrados
+            </h3>
+
+
+            <p>
+                Los amparos que registres aparecerán en esta sección.
+            </p>
+
+
+            <button
+                type="button"
+                class="secondary-btn"
+                data-action="new-amparo"
+            >
+
+                <i class="fa-solid fa-plus"></i>
+
+                Registrar primer amparo
+
+            </button>
+
+
+        </div>
+
+
+    </section>
+
+
+</section>

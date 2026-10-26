@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Acceso | Tribunal
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="./assets/css/login.css"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <main class="login-page">
+
+
+        <section class="login-card">
+
+
+            <!-- =============================================
+                 LOGO
+            ============================================== -->
+
+            <div class="login-brand">
+
+                <div class="login-logo">
+
+                    <i class="fa-solid fa-scale-balanced"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h1>
+                        Tribunal
+                    </h1>
+
+                    <span>
+                        Gestión jurídica
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================
+                 HEADER
+            ============================================== -->
+
+            <div class="login-header">
+
+                <span class="login-eyebrow">
+                    Acceso al sistema
+                </span>
+
+                <h2>
+                    Iniciar sesión
+                </h2>
+
+                <p>
+                    Ingresa tus credenciales para acceder
+                    al área asignada.
+                </p>
+
+            </div>
+
+
+            <!-- =============================================
+                 FORMULARIO
+            ============================================== -->
+
+            <form id="loginForm">
+
+
+                <div class="login-field">
+
+                    <label for="loginEmail">
+                        Usuario
+                    </label>
+
+
+                    <div class="login-input">
+
+                        <i class="fa-regular fa-user"></i>
+
+                        <input
+                            id="loginEmail"
+                            type="text"
+                            placeholder="usuario@example"
+                            autocomplete="username"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="login-field">
+
+                    <label for="loginPassword">
+                        Contraseña
+                    </label>
+
+
+                    <div class="login-input">
+
+                        <i class="fa-solid fa-lock"></i>
+
+                        <input
+                            id="loginPassword"
+                            type="password"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="loginError"
+                    class="login-error"
+                    hidden
+                >
+
+                    Usuario o contraseña incorrectos.
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+
+                    Iniciar sesión
+
+                    <i class="fa-solid fa-arrow-right"></i>
+
+                </button>
+
+
+            </form>
+
+
+            <div class="login-footer">
+
+                Tribunal de Arbitraje y Escalafón
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+    <script
+        type="module"
+        src="./assets/js/login.js"
+    ></script>
+
+
+</body>
+
+</html>

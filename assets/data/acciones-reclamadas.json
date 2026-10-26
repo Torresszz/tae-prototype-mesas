@@ -1,0 +1,20 @@
+{
+  "version": "2026",
+  "descripcion": "Catálogo de actos demandados (acciones reclamadas).",
+  "acciones": [
+    { "id": "base", "nombre": "Base", "activo": true },
+    { "id": "corrimiento-escalafonario", "nombre": "Corrimiento escalafonario", "activo": true },
+    { "id": "declaratoria-beneficiarios", "nombre": "Declaratoria de beneficiarios", "activo": true },
+    { "id": "incremento-salarial", "nombre": "Incremento Salarial", "activo": true },
+    { "id": "indemnizacion", "nombre": "Indemnización", "activo": true },
+    { "id": "nombramiento", "nombre": "Nombramiento", "activo": true },
+    { "id": "nulidad-acta-administrativa", "nombre": "Nulidad de acta administrativa", "activo": true },
+    { "id": "nulidad-nombramiento", "nombre": "Nulidad de nombramiento", "activo": true },
+    { "id": "reinstalacion", "nombre": "Reinstalación", "activo": true },
+    { "id": "rescision", "nombre": "Rescisión", "activo": true },
+    { "id": "pago-prestacion", "nombre": "Pago de prestación", "activo": true },
+    { "id": "pago-salarios", "nombre": "Pago de salarios", "activo": true },
+    { "id": "cuotas-imss", "nombre": "Cuotas IMSS", "activo": true },
+    { "id": "otros", "nombre": "Otros", "activo": true }
+  ]
+}

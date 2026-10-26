@@ -1,0 +1,166 @@
+<section class="page historico-page">
+  <!-- HEADER -->
+
+  <div class="historico-header">
+    <span class="eyebrow"> Reportes </span>
+
+    <h1>Resumen histórico</h1>
+
+    <p>Consulta los movimientos registrados en el sistema.</p>
+  </div>
+
+  <!-- =========================================
+         RESUMEN GENERAL
+    ========================================== -->
+
+  <section class="historico-summary-card">
+    <div class="historico-summary-header">
+      <div>
+        <span class="historico-summary-eyebrow"> Resumen de capturas </span>
+
+        <h2>Total de movimientos</h2>
+
+        <p>Concentrado de los registros mostrados en el historial.</p>
+      </div>
+
+      <div class="historico-total-box">
+        <span> Total </span>
+
+        <strong id="historicoTotal"> 0 </strong>
+      </div>
+    </div>
+
+    <div class="historico-summary-grid">
+      <div class="historico-stat">
+        <div class="historico-stat-icon">
+          <i class="fa-solid fa-file-signature"></i>
+        </div>
+
+        <div>
+          <span>Demandas</span>
+          <strong id="historicoDemandas">0</strong>
+        </div>
+      </div>
+
+      <div class="historico-stat">
+        <div class="historico-stat-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+
+        <div>
+          <span>Amparos</span>
+          <strong id="historicoAmparos">0</strong>
+        </div>
+      </div>
+
+      <div class="historico-stat">
+        <div class="historico-stat-icon">
+          <i class="fa-solid fa-arrow-right-arrow-left"></i>
+        </div>
+
+        <div>
+          <span>Exhortos</span>
+          <strong id="historicoExhortos">0</strong>
+        </div>
+      </div>
+
+      <div class="historico-stat">
+        <div class="historico-stat-icon">
+          <i class="fa-solid fa-file-lines"></i>
+        </div>
+
+        <div>
+          <span>Promociones</span>
+          <strong id="historicoPromociones">0</strong>
+        </div>
+      </div>
+
+      <div class="historico-stat">
+        <div class="historico-stat-icon">
+          <i class="fa-solid fa-envelope-open-text"></i>
+        </div>
+
+        <div>
+          <span>Oficios</span>
+          <strong id="historicoOficios">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCIÓN -->
+
+    <div class="historico-send-area">
+      <div>
+        <strong> Envío a mesas </strong>
+
+        <p>Envía el concentrado actual para continuar con su distribución.</p>
+      </div>
+
+      <div class="historico-send-buttons">
+        <button
+          type="button"
+          id="sendAmparosToMesasBtn"
+          class="historico-send-btn secondary"
+        >
+          <i class="fa-solid fa-shield-halved"></i>
+          Mandar solo amparos
+        </button>
+
+        <button type="button" id="sendToMesasBtn" class="historico-send-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+
+          Mandar a mesas
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================
+         ÚLTIMO ENVÍO
+    ========================================== -->
+
+  <section id="ultimoEnvioMesas" class="historico-last-send" hidden></section>
+
+  <!-- BUSCADOR -->
+
+  <div class="historico-search" style="margin-top: 1rem">
+    <i class="fa-solid fa-magnifying-glass"></i>
+
+    <input
+      id="historicoSearch"
+      type="search"
+      placeholder="Buscar en el historial..."
+      autocomplete="off"
+    />
+  </div>
+
+  <!-- TABLA -->
+
+  <section class="historico-card">
+    <div class="historico-table-container">
+      <table class="historico-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+
+            <th>Tipo</th>
+
+            <th>Referencia</th>
+
+            <th>Movimiento</th>
+          </tr>
+        </thead>
+
+        <tbody id="historicoTable"></tbody>
+      </table>
+    </div>
+
+    <div id="historicoEmpty" class="historico-empty" hidden>
+      <i class="fa-regular fa-folder-open"></i>
+
+      <strong> No hay movimientos registrados </strong>
+
+      <span> Los registros aparecerán aquí conforme se capturen. </span>
+    </div>
+  </section>
+</section>

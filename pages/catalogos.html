@@ -1,0 +1,64 @@
+<div class="page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow">
+        Configuración del sistema
+      </span>
+      <h1>
+        Gestión de Catálogos
+      </h1>
+      <p>
+        Administra los catálogos del sistema del Tribunal de Arbitraje y Escalafón.
+      </p>
+    </div>
+  </div>
+
+  <div class="catalogos-tabs">
+    <button class="tab-btn active" onclick="switchCatalogTab('entes')">Entes Públicos</button>
+  </div>
+
+  <div class="catalog-card">
+    <div class="catalog-card-header">
+      <div>
+        <h3>Catálogo de Entes</h3>
+        <p class="section-subtitle">Listado de entes públicos registrados en el sistema</p>
+      </div>
+      <button class="primary-btn" onclick="openEnteForm()">
+        + Agregar Ente
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre del Ente</th>
+            <th>Grupo / Clasificación</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="entesTable">
+          <!-- Se puebla dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="catalog-card" style="margin-top: 24px;">
+    <div class="catalog-card-header">
+      <div>
+        <h3>Catálogo de Actos Demandados</h3>
+        <p class="section-subtitle">Opciones disponibles en el registro de Demandas. Agrega aquí únicamente los valores oficiales definidos por el Tribunal.</p>
+      </div>
+      <button class="primary-btn" onclick="openActoDemandadoForm()">+ Agregar Acto</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead><tr><th>ID</th><th>Acto demandado</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody id="actosDemandadosTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>

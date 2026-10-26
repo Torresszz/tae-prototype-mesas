@@ -1,0 +1,619 @@
+/* ============================================================
+   FORMULARIOS ESTÁNDAR
+   ------------------------------------------------------------
+   Mismo formato que los formularios de Demandas y Amparos
+   (encabezado, secciones numeradas, pie fijo con botones).
+
+   Lo usan: Expedientes, Exhortos, Promociones y Oficios.
+   El marcado se genera con assets/js/forms/formKit.js
+   ============================================================ */
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+#modal.show:has(.tf-shell) {
+    display: flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    box-sizing: border-box !important;
+
+    padding: 18px !important;
+
+    zoom: 1.08 !important;
+}
+
+
+#modal.show:has(.tf-shell) .modal-card {
+    width: 720px !important;
+    max-width: calc(100vw - 50px) !important;
+
+    height: auto !important;
+    max-height: 86vh !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    overflow: hidden !important;
+
+    border-radius: 12px !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 18px 45px
+        rgba(15, 35, 55, 0.16) !important;
+}
+
+
+#modal.show:has(.tf-shell) #modalContent {
+    width: 100% !important;
+
+    padding: 0 !important;
+
+    overflow: visible !important;
+}
+
+
+#modal.show:has(.tf-shell) .modal-close {
+    top: 12px !important;
+    right: 13px !important;
+
+    z-index: 50 !important;
+
+    width: 32px !important;
+    height: 32px !important;
+
+    border-radius: 7px !important;
+}
+
+
+/* ============================================================
+   CONTENEDOR
+   ============================================================ */
+
+.tf-shell {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    max-height: 86vh;
+
+    box-sizing: border-box;
+
+    background: #f5f7fa;
+
+    color: #102b45;
+}
+
+
+/* ============================================================
+   ENCABEZADO
+   ============================================================ */
+
+.tf-header {
+    flex: 0 0 auto;
+
+    /* deja libre el botón de cerrar */
+    padding: 17px 60px 14px 22px;
+
+    border-bottom: 1px solid #dce4ec;
+
+    background: #ffffff;
+}
+
+
+.tf-eyebrow {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #2672d4;
+
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+
+.tf-header h2 {
+    margin: 0 0 5px;
+
+    color: #102b45;
+
+    font-size: 23px;
+    line-height: 28px;
+    font-weight: 700;
+
+    overflow-wrap: anywhere;
+}
+
+
+.tf-header p {
+    margin: 0;
+
+    color: #71859a;
+
+    font-size: 11px;
+    line-height: 16px;
+}
+
+
+/* ============================================================
+   FORM / CONTENIDO CON SCROLL
+   ============================================================ */
+
+.tf-form {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1 1 auto;
+
+    width: 100%;
+    min-height: 0;
+
+    overflow: hidden;
+}
+
+
+.tf-content {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1 1 auto;
+
+    gap: 10px;
+
+    width: 100%;
+    min-height: 0;
+
+    padding: 13px 13px 18px;
+
+    box-sizing: border-box;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    background: #f5f7fa;
+}
+
+
+.tf-content::-webkit-scrollbar {
+    width: 7px;
+}
+
+.tf-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tf-content::-webkit-scrollbar-thumb {
+    border-radius: 20px;
+
+    background: #cad5df;
+}
+
+
+/* ============================================================
+   SECCIONES
+   ============================================================ */
+
+.tf-section {
+    /* evita que el scroll comprima las secciones */
+    flex: 0 0 auto;
+
+    width: 100%;
+
+    margin: 0;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d7e0e9;
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+
+.tf-section-header {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    width: 100%;
+    min-height: 47px;
+
+    padding: 8px 12px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #dfe6ed;
+    border-radius: 9px 9px 0 0;
+
+    background: #f8fafc;
+}
+
+
+.tf-section-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 26px;
+
+    width: 26px;
+    height: 26px;
+
+    border-radius: 7px;
+
+    background: #e8f1ff;
+
+    color: #2470d4;
+
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+
+.tf-section-header h3 {
+    margin: 0 0 2px;
+
+    color: #19364f;
+
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 700;
+}
+
+
+.tf-section-header p {
+    margin: 0;
+
+    color: #7d8fa0;
+
+    font-size: 10px;
+    line-height: 13px;
+}
+
+
+/* ============================================================
+   GRIDS
+   ============================================================ */
+
+.tf-grid {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 12px 14px;
+
+    width: 100%;
+
+    padding: 13px;
+
+    box-sizing: border-box;
+}
+
+
+.tf-grid-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+
+.tf-full {
+    grid-column: 1 / -1;
+}
+
+
+/* ============================================================
+   CAMPOS
+   ============================================================ */
+
+.tf-field {
+    min-width: 0;
+}
+
+
+.tf-field label {
+    display: block;
+
+    margin: 0 0 6px;
+
+    color: #18344e;
+
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+}
+
+
+.tf-field label span {
+    color: #dc4c56;
+}
+
+
+.tf-field input,
+.tf-field select,
+.tf-field textarea {
+    display: block;
+
+    width: 100%;
+
+    margin: 0;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d3dde7;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #203950;
+
+    font-family: inherit;
+    font-size: 12px;
+
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease;
+}
+
+
+.tf-field input,
+.tf-field select {
+    height: 39px;
+
+    padding: 0 11px;
+}
+
+
+.tf-field textarea {
+    min-height: 66px;
+
+    padding: 9px 11px;
+
+    resize: vertical;
+}
+
+
+.tf-field input::placeholder,
+.tf-field textarea::placeholder {
+    color: #8b9bab;
+}
+
+
+.tf-field input:focus,
+.tf-field select:focus,
+.tf-field textarea:focus {
+    border-color: #82aee5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, .08);
+}
+
+
+/* ============================================================
+   OPCIÓN (checkbox)
+   Igual que las opciones de "Acción reclamada" en Demandas
+   ============================================================ */
+
+.tf-option {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 42px;
+
+    padding: 9px 12px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d9e2eb;
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #334e68;
+
+    font-size: 11px;
+    line-height: 14px;
+
+    cursor: pointer;
+}
+
+
+.tf-option:hover {
+    border-color: #adc6e5;
+
+    background: #fafcff;
+}
+
+
+.tf-option input {
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+
+.tf-check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 18px;
+
+    width: 18px;
+    height: 18px;
+
+    border: 1px solid #bdcad7;
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    color: transparent;
+
+    font-size: 8px;
+}
+
+
+.tf-option input:checked + .tf-check {
+    border-color: #2b72d6;
+
+    background: #2b72d6;
+
+    color: #ffffff;
+}
+
+
+.tf-option input:focus-visible + .tf-check {
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, .18);
+}
+
+
+/* ============================================================
+   PIE CON BOTONES
+   ============================================================ */
+
+.tf-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 9px;
+
+    width: 100%;
+    min-height: 58px;
+
+    padding: 9px 13px;
+
+    box-sizing: border-box;
+
+    border-top: 1px solid #dce4ec;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   BOTONES
+   El texto NUNCA se sale del botón: si no cabe, baja de línea
+   y el botón crece en alto (min-height en lugar de height).
+   ============================================================ */
+
+.tf-btn-secondary,
+.tf-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    min-width: 105px;
+    min-height: 38px;
+
+    padding: 8px 15px;
+
+    box-sizing: border-box;
+
+    border-radius: 7px;
+
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.25;
+    font-weight: 600;
+    text-align: center;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+
+    cursor: pointer;
+}
+
+
+.tf-btn-secondary {
+    border: 1px solid #b9cde3;
+
+    background: #ffffff;
+
+    color: #1768cf;
+}
+
+
+.tf-btn-secondary:hover {
+    background: #f5f8fc;
+}
+
+
+.tf-btn-primary {
+    min-width: 145px;
+
+    border: 1px solid #2b72d6;
+
+    background: #2b72d6;
+
+    color: #ffffff;
+}
+
+
+.tf-btn-primary:hover {
+    background: #2464c2;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    #modal.show:has(.tf-shell) .modal-card {
+        width: calc(100vw - 22px) !important;
+
+        max-height: 93vh !important;
+    }
+
+    .tf-shell {
+        max-height: 93vh;
+    }
+
+    .tf-grid,
+    .tf-grid-three {
+        grid-template-columns: 1fr;
+    }
+
+    .tf-full {
+        grid-column: auto;
+    }
+
+    .tf-footer {
+        justify-content: stretch;
+    }
+
+    .tf-btn-secondary,
+    .tf-btn-primary {
+        flex: 1 1 140px;
+    }
+}

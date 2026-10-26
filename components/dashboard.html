@@ -1,0 +1,795 @@
+<!-- =====================================================
+     DASHBOARD / INICIO
+===================================================== -->
+
+<section class="page active" id="dashboard">
+
+
+     <!-- =================================================
+         ENCABEZADO
+    ================================================== -->
+
+     <div class="page-heading">
+
+          <span class="eyebrow">
+               Gestión jurídica
+          </span>
+
+
+          <h1>
+               ¿Qué expediente necesitas?
+          </h1>
+
+
+          <p>
+               Busca un expediente existente o registra uno nuevo para comenzar.
+          </p>
+
+     </div>
+
+
+
+     <!-- =================================================
+         LAYOUT PRINCIPAL
+    ================================================== -->
+
+     <div class="home-layout">
+
+
+
+          <!-- =============================================
+             COLUMNA PRINCIPAL
+        ============================================== -->
+
+          <div class="home-primary">
+
+
+
+               <!-- =========================================
+                 BUSCADOR DE EXPEDIENTE
+            ========================================== -->
+
+               <div class="search-card">
+
+
+                    <label for="expedienteSearch">
+
+                         Número de expediente
+
+                    </label>
+
+
+
+                    <div class="main-search">
+
+
+                         <i class="fa-solid fa-folder"></i>
+
+
+
+                         <input id="expedienteSearch" type="text" placeholder="Ej. 124/2026" autocomplete="off">
+
+
+
+                         <button id="searchExpedienteBtn" class="primary-btn" type="button">
+
+                              Buscar expediente
+
+                         </button>
+
+
+                    </div>
+
+
+
+                    <div id="searchResult"></div>
+
+
+               </div>
+
+
+
+               <!-- =========================================
+                 CREAR EXPEDIENTE
+            ========================================== -->
+
+               <div class="new-record">
+
+
+                    <div>
+
+
+                         <h3>
+
+                              Los expedientes se generan desde Demandas
+
+                         </h3>
+
+
+                         <p>
+
+                              Registra una demanda para generar automáticamente su expediente y consultar después todo su historial.
+
+                         </p>
+
+
+                    </div>
+
+
+               </div>
+
+
+
+               <!-- =========================================
+                 ACCIONES RÁPIDAS
+            ========================================== -->
+
+               <div class="section-title">
+
+
+                    <div>
+
+
+                         <h2>
+
+                              Acciones rápidas
+
+                         </h2>
+
+
+                         <p>
+
+                              Registra un nuevo movimiento.
+
+                         </p>
+
+
+                    </div>
+
+
+               </div>
+
+
+
+               <div class="quick-grid">
+
+
+
+                    <!-- =====================================
+                     DEMANDA
+                ====================================== -->
+
+                    <button type="button" class="quick-card" data-action="new-demanda">
+
+
+                         <div class="quick-icon">
+
+                              <i class="fa-solid fa-file-signature"></i>
+
+                         </div>
+
+
+
+                         <div class="quick-content">
+
+                              <strong>
+
+                                   Demanda
+
+                              </strong>
+
+
+                              <span>
+
+                                   Registrar nueva demanda
+
+                              </span>
+
+                         </div>
+
+
+                    </button>
+
+
+
+                    <!-- =====================================
+                     AMPARO
+                ====================================== -->
+
+                    <button type="button" class="quick-card" data-action="new-amparo">
+
+
+                         <div class="quick-icon">
+
+                              <i class="fa-solid fa-shield-halved"></i>
+
+                         </div>
+
+
+
+                         <div class="quick-content">
+
+                              <strong>
+
+                                   Amparo
+
+                              </strong>
+
+
+                              <span>
+
+                                   Registrar nuevo amparo
+
+                              </span>
+
+                         </div>
+
+
+                    </button>
+
+
+
+                    <!-- =====================================
+                     EXHORTO
+                ====================================== -->
+
+                    <button type="button" class="quick-card" data-action="new-exhorto">
+
+
+                         <div class="quick-icon">
+
+                              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                         </div>
+
+
+
+                         <div class="quick-content">
+
+                              <strong>
+
+                                   Exhorto
+
+                              </strong>
+
+
+                              <span>
+
+                                   Registrar nuevo exhorto
+
+                              </span>
+
+                         </div>
+
+
+                    </button>
+
+
+
+                    <!-- =====================================
+                     PROMOCIÓN
+                ====================================== -->
+
+                    <button type="button" class="quick-card" data-action="new-promocion">
+
+
+                         <div class="quick-icon">
+
+                              <i class="fa-solid fa-file-lines"></i>
+
+                         </div>
+
+
+
+                         <div class="quick-content">
+
+                              <strong>
+
+                                   Promoción
+
+                              </strong>
+
+
+                              <span>
+
+                                   Registrar nueva promoción
+
+                              </span>
+
+                         </div>
+
+
+                    </button>
+
+
+
+                    <!-- =====================================
+                     OFICIO
+                ====================================== -->
+
+                    <button type="button" class="quick-card" data-action="new-oficio">
+
+
+                         <div class="quick-icon">
+
+                              <i class="fa-solid fa-envelope-open-text"></i>
+
+                         </div>
+
+
+
+                         <div class="quick-content">
+
+                              <strong>
+
+                                   Oficio
+
+                              </strong>
+
+
+                              <span>
+
+                                   Registrar nuevo oficio
+
+                              </span>
+
+                         </div>
+
+
+                    </button>
+
+
+               </div>
+
+
+
+               <!-- =========================================
+                 EXPEDIENTES RECIENTES
+            ========================================== -->
+
+               <div class="section-title recent-title">
+
+
+                    <div>
+
+
+                         <h2>
+
+                              Expedientes recientes
+
+                         </h2>
+
+
+                         <p>
+
+                              Últimos expedientes registrados.
+
+                         </p>
+
+
+                    </div>
+
+
+               </div>
+
+
+
+               <div class="table-container">
+
+
+                    <table>
+
+
+                         <thead>
+
+
+                              <tr>
+
+
+                                   <th>
+                                        Expediente
+                                   </th>
+
+
+                                   <th>
+                                        Actor
+                                   </th>
+
+
+                                   <th>
+                                        Demandado
+                                   </th>
+
+
+                                   <th>
+                                        Estado
+                                   </th>
+
+
+                                   <th>
+                                        Ubicación
+                                   </th>
+
+
+                                   <th>
+                                   </th>
+
+
+                              </tr>
+
+
+                         </thead>
+
+
+
+                         <tbody id="recentTable">
+
+                         </tbody>
+
+
+                    </table>
+
+
+               </div>
+
+
+          </div>
+
+
+
+          <!-- =============================================
+             PANEL DERECHO
+        ============================================== -->
+
+          <aside class="daily-panel">
+
+
+
+               <!-- =========================================
+                 RESUMEN DIARIO
+            ========================================== -->
+
+               <section class="daily-summary-card">
+
+
+
+                    <div class="daily-card-header">
+
+
+                         <div>
+
+
+                              <span class="daily-eyebrow">
+
+                                   Actividad de hoy
+
+                              </span>
+
+
+                              <h2>
+
+                                   Resumen diario
+
+                              </h2>
+
+
+                         </div>
+
+
+
+                         <div class="daily-date">
+
+
+                              <i class="fa-regular fa-calendar"></i>
+
+
+                              <span id="dailyDate">
+
+                                   —
+
+                              </span>
+
+
+                         </div>
+
+
+                    </div>
+
+
+
+                    <!-- =====================================
+                     TOTAL CAPTURAS
+                ====================================== -->
+
+                    <div class="daily-total">
+
+
+                         <div>
+
+
+                              <span>
+
+                                   Total de capturas
+
+                              </span>
+
+
+                              <strong id="dailyTotal">
+
+                                   0
+
+                              </strong>
+
+
+                         </div>
+
+
+
+                         <div class="daily-total-icon">
+
+                              <i class="fa-solid fa-file-circle-check"></i>
+
+                         </div>
+
+
+                    </div>
+
+
+
+                    <!-- =====================================
+                     CONTADORES
+                ====================================== -->
+
+                    <div class="daily-stats">
+
+
+
+                         <!-- DEMANDAS -->
+
+                         <div class="daily-stat">
+
+
+                              <div class="daily-stat-icon">
+
+                                   <i class="fa-solid fa-file-signature"></i>
+
+                              </div>
+
+
+
+                              <div class="daily-stat-info">
+
+
+                                   <span>
+
+                                        Demandas
+
+                                   </span>
+
+
+                                   <strong id="dailyDemandas">
+
+                                        0
+
+                                   </strong>
+
+
+                              </div>
+
+
+                         </div>
+
+
+
+                         <!-- AMPAROS -->
+
+                         <div class="daily-stat">
+
+
+                              <div class="daily-stat-icon">
+
+                                   <i class="fa-solid fa-shield-halved"></i>
+
+                              </div>
+
+
+
+                              <div class="daily-stat-info">
+
+
+                                   <span>
+
+                                        Amparos
+
+                                   </span>
+
+
+                                   <strong id="dailyAmparos">
+
+                                        0
+
+                                   </strong>
+
+
+                              </div>
+
+
+                         </div>
+
+
+
+                         <!-- EXHORTOS -->
+
+                         <div class="daily-stat">
+
+
+                              <div class="daily-stat-icon">
+
+                                   <i class="fa-solid fa-arrow-right-arrow-left"></i>
+
+                              </div>
+
+
+
+                              <div class="daily-stat-info">
+
+
+                                   <span>
+
+                                        Exhortos
+
+                                   </span>
+
+
+                                   <strong id="dailyExhortos">
+
+                                        0
+
+                                   </strong>
+
+
+                              </div>
+
+
+                         </div>
+
+
+
+                         <!-- PROMOCIONES -->
+
+                         <div class="daily-stat">
+
+
+                              <div class="daily-stat-icon">
+
+                                   <i class="fa-solid fa-file-lines"></i>
+
+                              </div>
+
+
+
+                              <div class="daily-stat-info">
+
+
+                                   <span>
+
+                                        Promociones
+
+                                   </span>
+
+
+                                   <strong id="dailyPromociones">
+
+                                        0
+
+                                   </strong>
+
+
+                              </div>
+
+
+                         </div>
+
+
+
+                         <!-- OFICIOS -->
+
+                         <div class="daily-stat">
+
+
+                              <div class="daily-stat-icon">
+
+                                   <i class="fa-solid fa-envelope-open-text"></i>
+
+                              </div>
+
+
+
+                              <div class="daily-stat-info">
+
+
+                                   <span>
+
+                                        Oficios
+
+                                   </span>
+
+
+                                   <strong id="dailyOficios">
+
+                                        0
+
+                                   </strong>
+
+
+                              </div>
+
+
+                         </div>
+
+
+                    </div>
+
+
+               </section>
+
+
+
+               <!-- =========================================
+                 ÚLTIMAS CAPTURAS
+            ========================================== -->
+
+               <section class="recent-captures-card">
+
+
+
+                    <div class="recent-captures-header">
+
+
+                         <div>
+
+
+                              <span class="daily-eyebrow">
+
+                                   Actividad
+
+                              </span>
+
+
+                              <h3>
+
+                                   Últimas capturas
+
+                              </h3>
+
+
+                         </div>
+
+
+
+                         <span>
+
+                              Hoy
+
+                         </span>
+
+
+                    </div>
+
+
+
+                    <div id="dailyRecentCaptures" class="daily-recent-list">
+
+                    </div>
+
+
+               </section>
+
+
+          </aside>
+
+
+     </div>
+
+
+</section>

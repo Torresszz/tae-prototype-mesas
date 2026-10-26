@@ -1,0 +1,114 @@
+{
+  "version": "2026",
+  "descripcion": "Catálogo parcial de entes públicos para pruebas del sistema del Tribunal de Arbitraje y Escalafón del Estado de Colima",
+  "entes": [
+    {
+      "id": "oficina-gubernatura",
+      "nombre": "Oficina de la Gubernatura",
+      "grupo": "Poder Ejecutivo",
+      "activo": true
+    },
+    {
+      "id": "secretaria-general-gobierno",
+      "nombre": "Secretaría General de Gobierno",
+      "grupo": "Poder Ejecutivo",
+      "activo": true
+    },
+    {
+      "id": "c5i",
+      "nombre": "Centro de Coordinación, Control, Comando, Comunicación, Cómputo e Inteligencia del Estado (C5i)",
+      "grupo": "Poder Ejecutivo",
+      "activo": true
+    },
+    {
+      "id": "secretaria-planeacion-finanzas",
+      "nombre": "Secretaría de Planeación, Finanzas y Administración",
+      "grupo": "Poder Ejecutivo",
+      "activo": true
+    },
+    {
+      "id": "dif-estatal",
+      "nombre": "Sistema para el Desarrollo Integral de la Familia del Estado de Colima (DIF Estatal)",
+      "grupo": "Organismos Públicos Descentralizados",
+      "activo": true
+    },
+    {
+      "id": "ciapacov",
+      "nombre": "Comisión Intermunicipal de Agua Potable y Alcantarillado de Colima y Villa de Álvarez (CIAPACOV)",
+      "grupo": "Organismos Públicos Descentralizados",
+      "activo": true
+    },
+    {
+      "id": "secretaria-educacion-cultura",
+      "nombre": "Secretaría de Educación y Cultura",
+      "grupo": "Poder Ejecutivo",
+      "activo": true
+    },
+    {
+      "id": "servicios-salud-colima",
+      "nombre": "Servicios de Salud del Estado de Colima",
+      "grupo": "Organismos Públicos Descentralizados",
+      "activo": true
+    },
+    {
+      "id": "congreso-colima",
+      "nombre": "H. Congreso del Estado de Colima",
+      "grupo": "Poder Legislativo",
+      "activo": true
+    },
+    {
+      "id": "tribunal-superior-justicia",
+      "nombre": "Tribunal Superior de Justicia del Estado de Colima",
+      "grupo": "Poder Judicial",
+      "activo": true
+    },
+    {
+      "id": "cdhec",
+      "nombre": "Comisión de Derechos Humanos del Estado de Colima (CDHEC)",
+      "grupo": "Organismos Autónomos",
+      "activo": true
+    },
+    {
+      "id": "fiscalia-general-colima",
+      "nombre": "Fiscalía General del Estado de Colima",
+      "grupo": "Organismos Autónomos",
+      "activo": true
+    },
+    {
+      "id": "tae",
+      "nombre": "Tribunal de Arbitraje y Escalafón (TAE)",
+      "grupo": "Organismos Autónomos",
+      "activo": true
+    },
+    {
+      "id": "ayuntamiento-colima",
+      "nombre": "H. Ayuntamiento de Colima",
+      "grupo": "Ayuntamientos",
+      "activo": true
+    },
+    {
+      "id": "ayuntamiento-coquimatlan",
+      "nombre": "H. Ayuntamiento de Coquimatlán",
+      "grupo": "Ayuntamientos",
+      "activo": true
+    },
+    {
+      "id": "ayuntamiento-manzanillo",
+      "nombre": "H. Ayuntamiento de Manzanillo",
+      "grupo": "Ayuntamientos",
+      "activo": true
+    },
+    {
+      "id": "sindicato-gobierno-estado",
+      "nombre": "Sindicato de Trabajadores al Servicio del Gobierno del Estado de Colima (S.T.S.G.E.)",
+      "grupo": "Sindicatos",
+      "activo": true
+    },
+    {
+      "id": "sindicato-ayuntamiento-colima",
+      "nombre": "Sindicato de Trabajadores al Servicio del H. Ayuntamiento de Colima (S.T.S.H.A.C.)",
+      "grupo": "Sindicatos",
+      "activo": true
+    }
+  ]
+}

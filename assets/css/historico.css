@@ -1,0 +1,708 @@
+/* ============================================================
+   RESUMEN HISTÓRICO
+   ============================================================ */
+
+.historico-page {
+    width: 100%;
+
+    padding: 38px 35px 45px;
+
+    box-sizing: border-box;
+}
+
+
+/* HEADER */
+
+.historico-header {
+    margin-bottom: 26px;
+}
+
+.historico-header .eyebrow {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #2672d4;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: .08em;
+
+    text-transform: uppercase;
+}
+
+.historico-header h1 {
+    margin: 0 0 7px;
+
+    color: #102b45;
+
+    font-size: 29px;
+    line-height: 35px;
+
+    font-weight: 700;
+}
+
+.historico-header p {
+    margin: 0;
+
+    color: #647d94;
+
+    font-size: 11px;
+}
+
+
+/* ============================================================
+   BUSCADOR
+   ============================================================ */
+
+.historico-search {
+    position: relative;
+
+    width: 340px;
+    max-width: 100%;
+
+    margin-bottom: 14px;
+}
+
+.historico-search i {
+    position: absolute;
+
+    top: 50%;
+    left: 13px;
+
+    transform: translateY(-50%);
+
+    color: #8496a7;
+
+    font-size: 11px;
+}
+
+.historico-search input {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 13px 0 35px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d7e0e9;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #203950;
+
+    font-family: inherit;
+    font-size: 11px;
+}
+
+.historico-search input:focus {
+    border-color: #8db4e4;
+
+    box-shadow:
+        0 0 0 3px rgba(43, 114, 214, .08);
+}
+
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+.historico-card {
+    overflow: hidden;
+
+    border: 1px solid #dce3ea;
+    border-radius: 10px;
+
+    background: #ffffff;
+}
+
+.historico-table-container {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.historico-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+}
+
+.historico-table thead {
+    background: #f7f9fb;
+}
+
+.historico-table th {
+    height: 42px;
+
+    padding: 0 17px;
+
+    border-bottom: 1px solid #dce3ea;
+
+    color: #61758a;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    text-align: left;
+
+    text-transform: uppercase;
+}
+
+.historico-table td {
+    padding: 14px 17px;
+
+    border-bottom: 1px solid #e7edf2;
+
+    color: #405c75;
+
+    font-size: 9px;
+    line-height: 14px;
+
+    vertical-align: middle;
+}
+
+.historico-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.historico-table td:first-child {
+    color: #18344e;
+
+    font-weight: 600;
+}
+
+.historico-table th:nth-child(1) {
+    width: 28%;
+}
+
+.historico-table th:nth-child(2) {
+    width: 18%;
+}
+
+.historico-table th:nth-child(3) {
+    width: 22%;
+}
+
+.historico-table th:nth-child(4) {
+    width: 32%;
+}
+
+
+/* EMPTY */
+
+.historico-empty {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 40px;
+
+    color: #7c8fa2;
+
+    text-align: center;
+}
+
+.historico-empty[hidden] {
+    display: none !important;
+}
+
+.historico-empty i {
+    margin-bottom: 5px;
+
+    color: #2b72d6;
+
+    font-size: 24px;
+}
+
+.historico-empty strong {
+    color: #203950;
+
+    font-size: 12px;
+}
+
+.historico-empty span {
+    font-size: 9px;
+}
+
+
+/* ============================================================
+   RESUMEN
+   ============================================================ */
+
+.historico-summary-card {
+    margin-top: 17px;
+
+    overflow: hidden;
+
+    border: 1px solid #dce3ea;
+    border-radius: 10px;
+
+    background: #ffffff;
+}
+
+.historico-summary-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 17px 19px;
+
+    border-bottom: 1px solid #e2e8ee;
+}
+
+.historico-summary-eyebrow {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #2672d4;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    letter-spacing: .08em;
+
+    text-transform: uppercase;
+}
+
+.historico-summary-header h2 {
+    margin: 0 0 3px;
+
+    color: #17344e;
+
+    font-size: 15px;
+}
+
+.historico-summary-header p {
+    margin: 0;
+
+    color: #778b9e;
+
+    font-size: 9px;
+}
+
+.historico-total-box {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 8px 13px;
+
+    border-radius: 8px;
+
+    background: #edf4ff;
+}
+
+.historico-total-box span {
+    color: #647d94;
+
+    font-size: 9px;
+}
+
+.historico-total-box strong {
+    color: #1768cf;
+
+    font-size: 19px;
+}
+
+
+/* CONTADORES */
+
+.historico-summary-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 10px;
+
+    padding: 15px 18px;
+}
+
+.historico-stat {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+
+    padding: 11px;
+
+    border: 1px solid #e0e7ee;
+    border-radius: 8px;
+
+    background: #fbfcfe;
+}
+
+.historico-stat-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 33px;
+    height: 33px;
+
+    min-width: 33px;
+
+    border-radius: 7px;
+
+    background: #e8f1ff;
+
+    color: #2672d4;
+
+    font-size: 11px;
+}
+
+.historico-stat span {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #72879a;
+
+    font-size: 8px;
+}
+
+.historico-stat strong {
+    color: #17344e;
+
+    font-size: 15px;
+}
+
+
+/* ============================================================
+   MANDAR A MESAS
+   ============================================================ */
+
+.historico-send-area {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 14px 18px;
+
+    border-top: 1px solid #e2e8ee;
+
+    background: #fafbfd;
+}
+
+.historico-send-area strong {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #17344e;
+
+    font-size: 11px;
+}
+
+.historico-send-area p {
+    margin: 0;
+
+    color: #788c9e;
+
+    font-size: 9px;
+}
+
+.historico-send-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-width: 135px;
+    min-height: 39px;
+
+    padding: 8px 15px;
+
+    border: 1px solid #2b72d6;
+    border-radius: 7px;
+
+    background: #2b72d6;
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+
+    cursor: pointer;
+}
+
+.historico-send-btn:hover {
+    background: #2465c2;
+}
+
+
+/* ============================================================
+   ÚLTIMO ENVÍO
+   ============================================================ */
+
+.historico-last-send {
+    margin-top: 14px;
+
+    padding: 14px 17px;
+
+    border: 1px solid #cfe1d5;
+    border-radius: 9px;
+
+    background: #f5fbf7;
+}
+
+.historico-last-send[hidden] {
+    display: none !important;
+}
+
+.last-send-header {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+.last-send-header strong {
+    color: #245339;
+
+    font-size: 11px;
+}
+
+.last-send-header span {
+    color: #6d8778;
+
+    font-size: 8px;
+}
+
+.last-send-items {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+.last-send-item {
+    padding: 5px 8px;
+
+    border-radius: 999px;
+
+    background: #ffffff;
+
+    color: #436653;
+
+    font-size: 8px;
+}
+
+
+/* ============================================================
+   MODAL MESAS
+   ============================================================ */
+
+.mesas-confirm {
+    padding: 23px;
+}
+
+.mesas-confirm-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 46px;
+    height: 46px;
+
+    margin-bottom: 14px;
+
+    border-radius: 10px;
+
+    background: #e8f1ff;
+
+    color: #2672d4;
+
+    font-size: 17px;
+}
+
+.mesas-confirm.success .mesas-confirm-icon {
+    background: #e8f7ed;
+
+    color: #27834b;
+}
+
+.mesas-confirm h2 {
+    margin: 0 0 7px;
+
+    color: #17344e;
+
+    font-size: 18px;
+}
+
+.mesas-confirm > p {
+    margin: 0 0 16px;
+
+    color: #71869a;
+
+    font-size: 10px;
+    line-height: 15px;
+}
+
+.mesas-confirm-summary {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+
+    margin-bottom: 18px;
+}
+
+.mesas-confirm-row {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 9px 11px;
+
+    border: 1px solid #e0e7ee;
+    border-radius: 7px;
+
+    background: #fafbfd;
+}
+
+.mesas-confirm-row span {
+    color: #60778c;
+
+    font-size: 9px;
+}
+
+.mesas-confirm-row strong {
+    color: #18344e;
+
+    font-size: 11px;
+}
+
+.mesas-confirm-total {
+    grid-column: 1 / -1;
+
+    background: #edf4ff;
+}
+
+.mesas-confirm-actions {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    justify-content: flex-end;
+
+    gap: 9px;
+}
+
+.mesas-modal-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 100px;
+    min-height: 38px;
+
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    font-family: inherit;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+
+    cursor: pointer;
+}
+
+.mesas-modal-btn.secondary {
+    border: 1px solid #b8cce3;
+
+    background: #ffffff;
+
+    color: #1768cf;
+}
+
+.mesas-modal-btn.primary {
+    border: 1px solid #2b72d6;
+
+    background: #2b72d6;
+
+    color: #ffffff;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+    .historico-summary-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .historico-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .historico-send-area {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .historico-send-btn {
+        width: 100%;
+    }
+
+}
+.historico-send-buttons{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.historico-send-btn.secondary{background:#fff;color:#1768cf;border:1px solid #b9cde3}

@@ -1,0 +1,129 @@
+/* ============================================================
+   MESA DE AMPAROS
+   assets/css/mesasAmparos.css
+   Reutiliza las clases base de mesas.css; aquí solo lo propio (mamp-*)
+   ============================================================ */
+
+.mesas-stage-badge.mamp-directo { background: #e8f1ff; color: #1768cf; }
+.mesas-stage-badge.mamp-indirecto { background: #f1eaff; color: #7045bd; }
+.mesas-stage-badge.mamp-ok { background: #e4f6e8; color: #14833b; }
+.mesas-stage-badge.mamp-warn { background: #fff4e0; color: #8a4b08; }
+.mesas-stage-badge.mamp-danger { background: #fdecea; color: #b42318; }
+
+/* Línea de etapas dentro del modal */
+.mamp-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+}
+
+.mamp-steps li {
+    padding: 4px 9px;
+    border: 1px solid #dce3ea;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #7b8fa2;
+    font-size: 8.5px;
+    font-weight: 600;
+}
+
+.mamp-steps li.done { background: #e4f6e8; border-color: #bfe5c8; color: #14833b; }
+.mamp-steps li.current { background: #2b72d6; border-color: #2b72d6; color: #ffffff; }
+
+/* Formularios del modal */
+.mamp-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 11px; }
+.mamp-field label { color: #5d7186; font-size: 9px; font-weight: 600; }
+
+.mamp-field input[type="text"],
+.mamp-field input[type="number"],
+.mamp-field select,
+.mamp-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    border: 1px solid #dce3ea;
+    border-radius: 7px;
+    color: #102b45;
+    font: inherit;
+    font-size: 10px;
+}
+
+.mamp-field textarea { min-height: 80px; resize: vertical; }
+
+.mamp-options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 11px; }
+
+.mamp-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 11px;
+    border: 1px solid #dce3ea;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #29445c;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.mamp-option:hover { border-color: #b9cde3; background: #f7faff; }
+
+.mamp-note {
+    margin: 0 0 12px;
+    padding: 9px 11px;
+    border-radius: 7px;
+    background: #e8f1ff;
+    color: #1768cf;
+    font-size: 9.5px;
+    line-height: 14px;
+}
+
+.mamp-note.warn { background: #fff4e0; color: #8a4b08; }
+
+.mamp-req-list { margin: 0 0 11px; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.mamp-req-list li { padding: 7px 10px; border-left: 3px solid #b9cde3; background: #f5f7fa; font-size: 9.5px; color: #29445c; }
+.mamp-req-list li strong { display: block; color: #5d7186; font-size: 8.5px; }
+
+.mamp-inline-link {
+    border: 0;
+    background: none;
+    color: #1768cf;
+    font-size: 9px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
+/* Tabla (6 columnas; mesas.css fija anchos para 9) */
+.mesas-secretaria-table.mamp-table th:nth-child(1) { width: 16%; }
+.mesas-secretaria-table.mamp-table th:nth-child(2) { width: 14%; }
+.mesas-secretaria-table.mamp-table th:nth-child(3) { width: 20%; }
+.mesas-secretaria-table.mamp-table th:nth-child(4) { width: 20%; }
+.mesas-secretaria-table.mamp-table th:nth-child(5) { width: 12%; }
+.mesas-secretaria-table.mamp-table th:nth-child(6) { width: 18%; }
+
+.mamp-dep { display: block; margin-top: 4px; color: #7b8fa2; font-size: 8.5px; }
+
+.mamp-tipo { display: flex; width: fit-content; margin-top: 5px; }
+
+#mampEtapaFilter {
+    width: 100%;
+    height: 40px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+    outline: none;
+    background: #ffffff;
+    color: #29445c;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+#mampEtapaFilter:focus {
+    border-color: #8eb4e5;
+    box-shadow: 0 0 0 3px rgba(43, 114, 214, 0.08);
+}

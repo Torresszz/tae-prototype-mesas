@@ -1,0 +1,130 @@
+{
+  "movimientos": [
+    {
+      "id": "HIST-001",
+      "fecha": "2026-09-27T08:15:00",
+      "tipo": "Amparo",
+      "referencia": "124/2026",
+      "movimiento": "Registro de amparo"
+    },
+    {
+      "id": "HIST-002",
+      "fecha": "2026-09-27T08:40:00",
+      "tipo": "Demanda",
+      "referencia": "131/2026",
+      "movimiento": "Registro de demanda"
+    },
+    {
+      "id": "HIST-003",
+      "fecha": "2026-09-27T09:10:00",
+      "tipo": "Oficio",
+      "referencia": "TAE-0241/2026",
+      "movimiento": "Registro de oficio"
+    },
+    {
+      "id": "HIST-004",
+      "fecha": "2026-09-27T09:30:00",
+      "tipo": "Amparo",
+      "referencia": "125/2026",
+      "movimiento": "Registro de amparo"
+    },
+    {
+      "id": "HIST-005",
+      "fecha": "2026-09-27T10:00:00",
+      "tipo": "Promoción",
+      "referencia": "132/2026",
+      "movimiento": "Registro de promoción"
+    },
+    {
+      "id": "HIST-006",
+      "fecha": "2026-09-27T10:25:00",
+      "tipo": "Exhorto",
+      "referencia": "EXH-038/2026",
+      "movimiento": "Registro de exhorto"
+    },
+    {
+      "id": "HIST-007",
+      "fecha": "2026-09-27T11:15:00",
+      "tipo": "Demanda",
+      "referencia": "133/2026",
+      "movimiento": "Registro de demanda"
+    },
+    {
+      "id": "HIST-008",
+      "fecha": "2026-09-27T12:05:00",
+      "tipo": "Oficio",
+      "referencia": "TAE-0242/2026",
+      "movimiento": "Oficio anexado a expediente"
+    },
+    {
+      "id": "HIST-009",
+      "fecha": "2026-09-27T12:40:00",
+      "tipo": "Amparo",
+      "referencia": "126/2026",
+      "movimiento": "Registro de amparo"
+    },
+    {
+      "id": "HIST-010",
+      "fecha": "2026-09-27T13:10:00",
+      "tipo": "Promoción",
+      "referencia": "124/2026",
+      "movimiento": "Promoción recibida"
+    },
+    {
+      "id": "HIST-011",
+      "fecha": "2026-09-27T13:45:00",
+      "tipo": "Exhorto",
+      "referencia": "EXH-039/2026",
+      "movimiento": "Registro de exhorto"
+    },
+    {
+      "id": "HIST-012",
+      "fecha": "2026-09-27T14:20:00",
+      "tipo": "Demanda",
+      "referencia": "134/2026",
+      "movimiento": "Registro de demanda"
+    },
+    {
+      "id": "HIST-013",
+      "fecha": "2026-09-27T15:00:00",
+      "tipo": "Oficio",
+      "referencia": "TAE-0243/2026",
+      "movimiento": "Registro de oficio"
+    },
+    {
+      "id": "HIST-014",
+      "fecha": "2026-09-27T15:35:00",
+      "tipo": "Amparo",
+      "referencia": "127/2026",
+      "movimiento": "Registro de amparo"
+    },
+    {
+      "id": "HIST-015",
+      "fecha": "2026-09-27T16:05:00",
+      "tipo": "Promoción",
+      "referencia": "135/2026",
+      "movimiento": "Registro de promoción"
+    },
+    {
+      "id": "HIST-016",
+      "fecha": "2026-09-26T09:15:00",
+      "tipo": "Demanda",
+      "referencia": "128/2026",
+      "movimiento": "Registro de demanda"
+    },
+    {
+      "id": "HIST-017",
+      "fecha": "2026-09-26T11:30:00",
+      "tipo": "Oficio",
+      "referencia": "TAE-0238/2026",
+      "movimiento": "Registro de oficio"
+    },
+    {
+      "id": "HIST-018",
+      "fecha": "2026-09-26T13:10:00",
+      "tipo": "Amparo",
+      "referencia": "123/2026",
+      "movimiento": "Registro de amparo"
+    }
+  ]
+}

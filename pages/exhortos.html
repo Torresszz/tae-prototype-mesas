@@ -1,0 +1,56 @@
+<div class="page">
+  <div class="page-heading">
+    <div>
+      <span class="eyebrow"> Registro jurídico </span>
+
+      <h1>Exhortos</h1>
+
+      <p>Consulta y registra los exhortos recibidos.</p>
+    </div>
+
+    <button class="primary-btn" data-action="new-exhorto">
+      + Nuevo exhorto
+    </button>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+
+      <input
+        type="search"
+        id="exhortosSearch"
+        placeholder="Buscar exhorto, actor o autoridad..."
+        autocomplete="off"
+      />
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>No. exhorto</th>
+
+          <th>Fecha llegada</th>
+
+          <th>No. origen</th>
+
+          <th>Actor</th>
+
+          <th>Demandado</th>
+
+          <th>Autoridad exhortante</th>
+
+          <th>Promoción</th>
+
+          <th>Estado</th>
+
+          <th>Ubicación</th>
+        </tr>
+      </thead>
+
+      <tbody id="exhortosTable"></tbody>
+    </table>
+  </div>
+</div>
