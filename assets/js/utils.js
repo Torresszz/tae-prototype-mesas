@@ -95,3 +95,51 @@ export function truncate(text, length = 60) {
 
   return text.substring(0, length) + "...";
 }
+
+// =====================================================
+// AMPAROS: TIPO Y JUZGADOS (compartido por Oficialía y Mesas)
+// =====================================================
+
+export const JUZGADOS_DISTRITO = [
+  "Juzgado Primero de Distrito del Estado",
+  "Juzgado Segundo de Distrito del Estado",
+  "Juzgado Tercero de Distrito del Estado",
+];
+
+export const AUTORIDAD_DIRECTO = "Tribunal Colegiado de Circuito (TCC)";
+
+// Devuelve "directo" o "indirecto". Los amparos nuevos traen
+// `tipoAmparo`; para registros viejos se deduce por texto.
+export function getTipoAmparo(amparo = {}) {
+  if (amparo.tipoAmparo === "directo" || amparo.tipoAmparo === "indirecto") {
+    return amparo.tipoAmparo;
+  }
+
+  const texto = [
+    amparo.juzgado,
+    amparo.oficio,
+    amparo.observaciones,
+    amparo.actoReclamado,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  if (/indirecto/i.test(texto)) {
+    return "indirecto";
+  }
+
+  return /colegiado|directo|TCC/i.test(texto) ? "directo" : "indirecto";
+}
+
+// Texto del destino de un oficio: Administrativo / Presidencia / Otro: xxx
+export function destinoOficioTexto(oficio = {}) {
+  if (!oficio.destino) {
+    return "";
+  }
+
+  if (oficio.destino === "Otro") {
+    return oficio.destinoOtro ? `Otro: ${oficio.destinoOtro}` : "Otro";
+  }
+
+  return oficio.destino;
+}

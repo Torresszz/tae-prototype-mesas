@@ -12,7 +12,9 @@
       "acciones": "Remitir informe y documentación correspondiente.",
       "observaciones": "Pendiente de seguimiento.",
       "estado": "En trámite",
-      "creadoEn": "2026-09-27T08:15:00"
+      "creadoEn": "2026-09-27T08:15:00",
+      "tipoAmparo": "directo",
+      "juzgadoOrigen": "Tribunal Colegiado de Circuito (TCC)"
     },
     {
       "id": "AMP-002",
@@ -26,7 +28,9 @@
       "acciones": "Preparar informe solicitado por el juzgado.",
       "observaciones": "",
       "estado": "Recibido",
-      "creadoEn": "2026-09-27T09:30:00"
+      "creadoEn": "2026-09-27T09:30:00",
+      "tipoAmparo": "indirecto",
+      "juzgadoOrigen": "Juzgado Primero de Distrito del Estado"
     },
     {
       "id": "AMP-003",
@@ -40,7 +44,9 @@
       "acciones": "Revisar antecedentes del expediente.",
       "observaciones": "Sin oficio relacionado hasta el momento.",
       "estado": "Pendiente",
-      "creadoEn": "2026-09-26T13:10:00"
+      "creadoEn": "2026-09-26T13:10:00",
+      "tipoAmparo": "indirecto",
+      "juzgadoOrigen": "Juzgado Segundo de Distrito del Estado"
     }
   ]
 }

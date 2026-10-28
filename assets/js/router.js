@@ -19,6 +19,8 @@ import { renderPromociones } from "./modules/promociones.js";
 
 import { renderOficios } from "./modules/oficios.js";
 
+import { renderRegistral } from "./modules/registral.js";
+
 // import { renderHistorico } from "./dashboard/historico.js";
 import { initHistorico } from "./modules/historico.js";
 
@@ -43,6 +45,8 @@ const routes = {
   exhortos: "pages/exhortos.html",
 
   promociones: "pages/promociones.html",
+
+  registral: "pages/registral.html",
 
   oficios: "pages/oficios.html",
 
@@ -207,6 +211,15 @@ function initializePage(page) {
 
     case "promociones":
       renderPromociones();
+
+      break;
+
+    // =============================================
+    // REGISTRAL
+    // =============================================
+
+    case "registral":
+      renderRegistral();
 
       break;
 

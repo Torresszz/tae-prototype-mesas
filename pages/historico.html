@@ -77,6 +77,17 @@
 
       <div class="historico-stat">
         <div class="historico-stat-icon">
+          <i class="fa-solid fa-people-group"></i>
+        </div>
+
+        <div>
+          <span>Registrales</span>
+          <strong id="historicoRegistrales">0</strong>
+        </div>
+      </div>
+
+      <div class="historico-stat">
+        <div class="historico-stat-icon">
           <i class="fa-solid fa-envelope-open-text"></i>
         </div>
 
@@ -91,25 +102,47 @@
 
     <div class="historico-send-area">
       <div>
-        <strong> Envío a mesas </strong>
+        <strong> Envío de documentos </strong>
 
-        <p>Envía el concentrado actual para continuar con su distribución.</p>
+        <p>
+          Cada documento se envía a su módulo según su tipo: demandas,
+          exhortos y promociones a Mesas; amparos a su Mesa de Amparo
+          (directo o indirecto); registrales a Presidencia; y los oficios
+          al destino que se indicó al capturarlos.
+        </p>
       </div>
 
       <div class="historico-send-buttons">
+        <button type="button" id="sendAllBtn" class="historico-send-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+          Enviar todo
+        </button>
+
         <button
           type="button"
-          id="sendAmparosToMesasBtn"
+          id="sendAmparosBtn"
           class="historico-send-btn secondary"
         >
           <i class="fa-solid fa-shield-halved"></i>
-          Mandar solo amparos
+          Enviar amparos
         </button>
 
-        <button type="button" id="sendToMesasBtn" class="historico-send-btn">
-          <i class="fa-solid fa-paper-plane"></i>
+        <button
+          type="button"
+          id="sendMesasBtn"
+          class="historico-send-btn secondary"
+        >
+          <i class="fa-solid fa-table-columns"></i>
+          Enviar a mesas
+        </button>
 
-          Mandar a mesas
+        <button
+          type="button"
+          id="sendPresidenciaBtn"
+          class="historico-send-btn secondary"
+        >
+          <i class="fa-solid fa-landmark"></i>
+          Enviar a presidencia
         </button>
       </div>
     </div>
@@ -147,7 +180,7 @@
 
             <th>Referencia</th>
 
-            <th>Movimiento</th>
+            <th>Estado</th>
           </tr>
         </thead>
 

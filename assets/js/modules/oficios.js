@@ -1,5 +1,11 @@
 import { getData, saveData } from "../storage.js";
-import { escapeHTML, escapeJS, formatDate, createId } from "../utils.js";
+import {
+  escapeHTML,
+  escapeJS,
+  formatDate,
+  createId,
+  destinoOficioTexto,
+} from "../utils.js";
 
 let oficios = [];
 
@@ -30,7 +36,7 @@ export function renderOficios() {
   if (oficios.length === 0) {
     table.innerHTML = `
             <tr>
-                <td colspan="8">No existen oficios registrados.</td>
+                <td colspan="9">No existen oficios registrados.</td>
             </tr>
         `;
     return;
@@ -43,10 +49,14 @@ export function renderOficios() {
       return `
             <tr>
                 <td>${escapeHTML(item.numeroOficio || item.numero || "-")}</td>
-                <td>${escapeHTML(item.expediente || "-")}</td>
+                <td>
+                    ${escapeHTML(item.expediente || "-")}
+                    ${item.expedienteAmparo ? `<br><small style="color:#788c9e;">Amparo ${escapeHTML(item.expedienteAmparo)}</small>` : ""}
+                </td>
                 <td>${formatDate(item.fecha)}</td>
                 <td>${escapeHTML(item.procedencia || item.remitente || "-")}</td>
                 <td>${escapeHTML(item.asunto || "-")}</td>
+                <td>${escapeHTML(destinoOficioTexto(item) || "Sin destino")}</td>
                 <td>
                     <!-- Badge estático (no editable desde la tabla) -->
                     <span class="status-badge ${esRecibido ? "status-recibido" : "status-pendiente"}">

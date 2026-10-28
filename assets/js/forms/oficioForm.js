@@ -46,6 +46,28 @@ function setupProcedenciaListener() {
   });
 }
 
+// Muestra el input manual solo cuando el destino es "Otro"
+function setupDestinoListener() {
+  const select = document.getElementById("destinoOficio");
+  const wrapper = document.getElementById("destinoOtroWrapper");
+  const otroInput = document.getElementById("destinoOtroOficio");
+
+  if (!select || !wrapper || !otroInput) return;
+
+  select.addEventListener("change", () => {
+    const esOtro = select.value === "Otro";
+
+    wrapper.hidden = !esOtro;
+    otroInput.required = esOtro;
+
+    if (esOtro) {
+      otroInput.focus();
+    } else {
+      otroInput.value = "";
+    }
+  });
+}
+
 export function openOficioForm(context = null) {
   oficioContext = context && context.amparoId ? context : null;
 
@@ -116,6 +138,20 @@ export function openOficioForm(context = null) {
             label: "Estado",
             options: ["Pendiente", "Recibido", "En revisión", "Atendido"],
           }),
+
+          selectField({
+            id: "destinoOficio",
+            label: "Destino del oficio",
+            options: ["Administrativo", "Presidencia", "Otro"],
+          }),
+
+          `<div id="destinoOtroWrapper" class="tf-full" hidden>
+            ${inputField({
+              id: "destinoOtroOficio",
+              label: "Especifica el destino",
+              placeholder: "Escribe el destino",
+            })}
+          </div>`,
         ],
       }),
 
@@ -138,6 +174,7 @@ export function openOficioForm(context = null) {
   applyOficioContext();
   setupEstadoListener();
   setupProcedenciaListener();
+  setupDestinoListener();
 }
 
 // Escucha el cambio de selección del estado e inyecta la leyenda tenue
@@ -237,6 +274,11 @@ function saveOficio(event) {
     procedenciaSel === "Otro"
       ? document.getElementById("procedenciaOtroOficio")?.value.trim() || "Otro"
       : procedenciaSel;
+  const destinoSel = document.getElementById("destinoOficio")?.value || "Administrativo";
+  const destinoOtro =
+    destinoSel === "Otro"
+      ? document.getElementById("destinoOtroOficio")?.value.trim() || ""
+      : "";
   const oficios = getData("oficios", []);
   const estadoVal =
     document.getElementById("estadoOficio")?.value || "Pendiente";
@@ -264,6 +306,11 @@ function saveOficio(event) {
 
     estado: estadoVal,
 
+    // A dónde se envía el oficio desde el Resumen histórico
+    destino: destinoSel,
+
+    destinoOtro,
+
     recibidoPor: esRecibido ? recibidoPor : "",
 
     fechaRecepcion: esRecibido ? new Date().toISOString() : null,
@@ -276,6 +323,8 @@ function saveOficio(event) {
     nuevoOficio.origen = "amparo";
 
     nuevoOficio.amparoId = oficioContext.amparoId;
+
+    nuevoOficio.expedienteAmparo = oficioContext.expedienteAmparo || "";
   }
 
   oficios.unshift(nuevoOficio);

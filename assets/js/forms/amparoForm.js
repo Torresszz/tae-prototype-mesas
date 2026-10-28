@@ -4,7 +4,15 @@
 
 import { showModal, closeForm } from "./formHelper.js";
 
-import { createId, escapeHTML } from "../utils.js";
+import {
+  createId,
+  escapeHTML,
+  formatDate,
+  getTipoAmparo,
+  destinoOficioTexto,
+  JUZGADOS_DISTRITO,
+  AUTORIDAD_DIRECTO,
+} from "../utils.js";
 
 import { getData, saveData } from "../storage.js";
 
@@ -13,6 +21,14 @@ import { getData, saveData } from "../storage.js";
 // ============================================================
 
 let expedientesReferencia = [];
+
+// Oficios capturados en la pestaña "Oficios" que aún no se guardan.
+let oficiosPendientes = [];
+
+// Oficios ya guardados y vinculados al amparo que se está editando.
+let oficiosGuardados = [];
+
+const DESTINOS_OFICIO = ["Administrativo", "Presidencia", "Otro"];
 
 // ============================================================
 // INIT
@@ -60,6 +76,25 @@ export async function openAmparoForm(amparoId = null) {
     ? amparosActuales.find((item) => String(item.id) === String(amparoId))
     : null;
 
+  const tipoInicial = amparoEdicion
+    ? getTipoAmparo(amparoEdicion)
+    : window.getAmparoTipoActivo?.() || "directo";
+
+  // El tipo solo se puede cambiar mientras la Mesa de Amparos
+  // no haya empezado a darle seguimiento.
+  const tipoBloqueado = Boolean(
+    amparoEdicion &&
+      getData("mesasAmparosSeguimiento", {})[String(amparoEdicion.id)],
+  );
+
+  oficiosPendientes = [];
+
+  oficiosGuardados = amparoEdicion
+    ? getData("oficios", []).filter(
+        (item) => String(item.amparoId || "") === String(amparoEdicion.id),
+      )
+    : [];
+
   showModal(`
 
         <div class="amparo-form-shell">
@@ -91,7 +126,27 @@ export async function openAmparoForm(amparoId = null) {
             <form id="amparoFormElement">
 
 
+                <!-- PESTAÑAS DEL MODAL -->
+
+                <div class="amparo-form-tabs" role="tablist">
+
+                    <button type="button" class="amparo-form-tab active" role="tab" data-amparo-form-tab="datos">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        Datos del amparo
+                    </button>
+
+                    <button type="button" class="amparo-form-tab" role="tab" data-amparo-form-tab="oficios">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        Oficios
+                        <span class="amparo-form-tab-count" id="ampTabOficiosCount">0</span>
+                    </button>
+
+                </div>
+
+
                 <div class="amparo-form-content">
+
+                    <div class="amparo-tab-pane" id="ampPaneDatos">
 
 
                     <!-- =====================================
@@ -160,7 +215,7 @@ export async function openAmparoForm(amparoId = null) {
                             <div class="amparo-field">
 
                                 <label for="ampExp">
-                                    Número de expediente
+                                    Expediente laboral
                                     <span>*</span>
                                 </label>
 
@@ -244,14 +299,66 @@ export async function openAmparoForm(amparoId = null) {
 
                             <div class="amparo-field">
 
-                                <label for="ampJuzgado">
-                                    Número asignado por juzgado
+                                <label for="ampTipo">
+                                    Tipo de amparo
+                                    <span>*</span>
+                                </label>
+
+                                <select id="ampTipo" ${tipoBloqueado ? "disabled" : ""}>
+
+                                    <option value="directo" ${tipoInicial === "directo" ? "selected" : ""}>
+                                        Directo
+                                    </option>
+
+                                    <option value="indirecto" ${tipoInicial === "indirecto" ? "selected" : ""}>
+                                        Indirecto
+                                    </option>
+
+                                </select>
+
+                                ${
+                                  tipoBloqueado
+                                    ? '<small class="amparo-field-hint">La Mesa de Amparos ya le dio seguimiento; el tipo solo se reclasifica desde allá.</small>'
+                                    : ""
+                                }
+
+                            </div>
+
+
+                            <div class="amparo-field" id="ampJuzgadoWrapper">
+
+                                <label for="ampJuzgadoOrigen">
+                                    Juzgado de Distrito
+                                    <span>*</span>
+                                </label>
+
+                                <select id="ampJuzgadoOrigen">
+
+                                    <option value="">
+                                        Selecciona un juzgado
+                                    </option>
+
+                                    ${JUZGADOS_DISTRITO.map(
+                                      (juzgado) =>
+                                        `<option value="${escapeHTML(juzgado)}">${escapeHTML(juzgado)}</option>`,
+                                    ).join("")}
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="amparo-field" id="ampAutoridadWrapper">
+
+                                <label for="ampAutoridadDirecto">
+                                    Autoridad de origen
                                 </label>
 
                                 <input
-                                    id="ampJuzgado"
+                                    id="ampAutoridadDirecto"
                                     type="text"
-                                    placeholder="Ej. 843/2026"
+                                    value="${escapeHTML(AUTORIDAD_DIRECTO)}"
+                                    readonly
                                 >
 
                             </div>
@@ -259,14 +366,14 @@ export async function openAmparoForm(amparoId = null) {
 
                             <div class="amparo-field">
 
-                                <label for="ampOficio">
-                                    Número de oficio registrado
+                                <label for="ampJuzgado">
+                                    Expediente de amparo
                                 </label>
 
                                 <input
-                                    id="ampOficio"
+                                    id="ampJuzgado"
                                     type="text"
-                                    placeholder="Ej. TAE-SA-0142/2026"
+                                    placeholder="Ej. 843/2026"
                                 >
 
                             </div>
@@ -470,6 +577,151 @@ export async function openAmparoForm(amparoId = null) {
                     </section>
 
 
+                    </div>
+                    <!-- /ampPaneDatos -->
+
+
+                    <!-- =====================================
+                         PESTAÑA OFICIOS
+                    ====================================== -->
+
+                    <div class="amparo-tab-pane" id="ampPaneOficios" hidden>
+
+                        <section class="amparo-section">
+
+                            <div class="amparo-section-header">
+
+                                <span class="amparo-section-number">
+                                    <i class="fa-solid fa-link"></i>
+                                </span>
+
+                                <div>
+
+                                    <h3>
+                                        Oficios del amparo
+                                    </h3>
+
+                                    <p>
+                                        Los oficios quedan relacionados con el expediente
+                                        laboral y con el expediente de amparo.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="amparo-oficio-rel">
+
+                                <div>
+                                    <span>Expediente laboral</span>
+                                    <strong id="ampRelLaboral">—</strong>
+                                </div>
+
+                                <div>
+                                    <span>Expediente de amparo</span>
+                                    <strong id="ampRelAmparo">—</strong>
+                                </div>
+
+                            </div>
+
+
+                            <div class="amparo-grid">
+
+                                <div class="amparo-field">
+
+                                    <label for="ampOfNumero">
+                                        Número de oficio
+                                    </label>
+
+                                    <input
+                                        id="ampOfNumero"
+                                        type="text"
+                                        placeholder="Ej. TAE-SA-0142/2026"
+                                        autocomplete="off"
+                                    >
+
+                                </div>
+
+
+                                <div class="amparo-field">
+
+                                    <label for="ampOfFecha">
+                                        Fecha del oficio
+                                    </label>
+
+                                    <input
+                                        id="ampOfFecha"
+                                        type="date"
+                                    >
+
+                                </div>
+
+
+                                <div class="amparo-field">
+
+                                    <label for="ampOfDestino">
+                                        Destino del oficio
+                                    </label>
+
+                                    <select id="ampOfDestino">
+                                        ${DESTINOS_OFICIO.map((d) => `<option>${d}</option>`).join("")}
+                                    </select>
+
+                                </div>
+
+
+                                <div class="amparo-field" id="ampOfDestinoOtroWrapper" hidden>
+
+                                    <label for="ampOfDestinoOtro">
+                                        Especifica el destino
+                                    </label>
+
+                                    <input
+                                        id="ampOfDestinoOtro"
+                                        type="text"
+                                        placeholder="Escribe el destino"
+                                        autocomplete="off"
+                                    >
+
+                                </div>
+
+
+                                <div class="amparo-field full">
+
+                                    <label for="ampOfAsunto">
+                                        Asunto
+                                    </label>
+
+                                    <input
+                                        id="ampOfAsunto"
+                                        type="text"
+                                        placeholder="Descripción breve del oficio"
+                                        autocomplete="off"
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="amparo-oficio-add">
+
+                                <button type="button" class="amparo-btn-secondary" id="ampOfAddBtn">
+                                    <i class="fa-solid fa-plus"></i>
+                                    Agregar oficio
+                                </button>
+
+                            </div>
+
+
+                            <div id="ampOficiosLista" class="amparo-oficios-lista"></div>
+
+                        </section>
+
+                    </div>
+
+
                 </div>
 
 
@@ -519,8 +771,235 @@ export async function openAmparoForm(amparoId = null) {
   }
 
   setupExpedienteLookup();
+  setupTipoToggle();
+  setupFormTabs();
+  setupOficiosTab();
   setupCancel();
   setupSubmit(amparoEdicion);
+}
+
+// ============================================================
+// TIPO DE AMPARO (directo / indirecto)
+// ============================================================
+
+function setupTipoToggle() {
+  const select = document.getElementById("ampTipo");
+
+  if (!select) {
+    return;
+  }
+
+  select.addEventListener("change", applyTipo);
+
+  applyTipo();
+}
+
+function applyTipo() {
+  const esIndirecto = document.getElementById("ampTipo")?.value === "indirecto";
+
+  const juzgadoWrapper = document.getElementById("ampJuzgadoWrapper");
+  const juzgadoSelect = document.getElementById("ampJuzgadoOrigen");
+  const autoridadWrapper = document.getElementById("ampAutoridadWrapper");
+
+  // Indirecto: selector de juzgado. Directo: solo se reciben del TCC.
+  if (juzgadoWrapper) juzgadoWrapper.hidden = !esIndirecto;
+  if (autoridadWrapper) autoridadWrapper.hidden = esIndirecto;
+
+  if (juzgadoSelect) {
+    juzgadoSelect.required = esIndirecto;
+
+    if (!esIndirecto) {
+      juzgadoSelect.value = "";
+    }
+  }
+}
+
+// ============================================================
+// PESTAÑAS DEL MODAL
+// ============================================================
+
+function setupFormTabs() {
+  document.querySelectorAll("[data-amparo-form-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => activarTab(tab.dataset.amparoFormTab));
+  });
+
+  // Si falta un campo obligatorio estando en "Oficios", volvemos
+  // a "Datos" para que el navegador pueda mostrar el error.
+  document
+    .getElementById("amparoFormElement")
+    ?.addEventListener("invalid", () => activarTab("datos"), true);
+}
+
+function activarTab(nombre) {
+  document.querySelectorAll("[data-amparo-form-tab]").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.amparoFormTab === nombre);
+  });
+
+  const datos = document.getElementById("ampPaneDatos");
+  const oficios = document.getElementById("ampPaneOficios");
+
+  if (datos) datos.hidden = nombre !== "datos";
+  if (oficios) oficios.hidden = nombre !== "oficios";
+
+  if (nombre === "oficios") {
+    actualizarRelacion();
+  }
+}
+
+// ============================================================
+// PESTAÑA OFICIOS
+// ============================================================
+
+function setupOficiosTab() {
+  const destino = document.getElementById("ampOfDestino");
+
+  destino?.addEventListener("change", () => {
+    const esOtro = destino.value === "Otro";
+    const wrapper = document.getElementById("ampOfDestinoOtroWrapper");
+    const input = document.getElementById("ampOfDestinoOtro");
+
+    if (wrapper) wrapper.hidden = !esOtro;
+
+    if (input) {
+      if (esOtro) input.focus();
+      else input.value = "";
+    }
+  });
+
+  document
+    .getElementById("ampOfAddBtn")
+    ?.addEventListener("click", () => agregarOficioPendiente());
+
+  // Enter dentro de la pestaña agrega el oficio en lugar de guardar el amparo.
+  document
+    .getElementById("ampPaneOficios")
+    ?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && event.target.tagName === "INPUT") {
+        event.preventDefault();
+        agregarOficioPendiente();
+      }
+    });
+
+  document
+    .getElementById("ampOficiosLista")
+    ?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-of-remove]");
+
+      if (!button) {
+        return;
+      }
+
+      oficiosPendientes.splice(Number(button.dataset.ofRemove), 1);
+
+      renderOficiosLista();
+    });
+
+  renderOficiosLista();
+}
+
+function actualizarRelacion() {
+  const laboral = document.getElementById("ampExp")?.value.trim();
+  const amparo = document.getElementById("ampJuzgado")?.value.trim();
+
+  const setText = (id, value) => {
+    const element = document.getElementById(id);
+
+    if (element) element.textContent = value || "Sin capturar";
+  };
+
+  setText("ampRelLaboral", laboral);
+  setText("ampRelAmparo", amparo);
+}
+
+// Agrega a la lista el oficio capturado. Devuelve true si se agregó.
+function agregarOficioPendiente() {
+  const numero = document.getElementById("ampOfNumero");
+  const fecha = document.getElementById("ampOfFecha");
+  const destino = document.getElementById("ampOfDestino");
+  const destinoOtro = document.getElementById("ampOfDestinoOtro");
+  const asunto = document.getElementById("ampOfAsunto");
+
+  if (!numero?.value.trim()) {
+    numero?.focus();
+    return false;
+  }
+
+  if (!fecha?.value) {
+    fecha?.focus();
+    return false;
+  }
+
+  if (destino.value === "Otro" && !destinoOtro.value.trim()) {
+    destinoOtro.focus();
+    return false;
+  }
+
+  oficiosPendientes.push({
+    numero: numero.value.trim(),
+    fecha: fecha.value,
+    destino: destino.value,
+    destinoOtro: destino.value === "Otro" ? destinoOtro.value.trim() : "",
+    asunto: asunto.value.trim(),
+  });
+
+  numero.value = "";
+  fecha.value = "";
+  asunto.value = "";
+  destinoOtro.value = "";
+  destino.value = DESTINOS_OFICIO[0];
+  destino.dispatchEvent(new Event("change"));
+
+  renderOficiosLista();
+
+  numero.focus();
+
+  return true;
+}
+
+function renderOficiosLista() {
+  const lista = document.getElementById("ampOficiosLista");
+  const contador = document.getElementById("ampTabOficiosCount");
+
+  const total = oficiosGuardados.length + oficiosPendientes.length;
+
+  if (contador) {
+    contador.textContent = total;
+  }
+
+  if (!lista) {
+    return;
+  }
+
+  if (total === 0) {
+    lista.innerHTML =
+      '<p class="amparo-oficios-empty">Aún no hay oficios relacionados con este amparo.</p>';
+    return;
+  }
+
+  const fila = (oficio, etiqueta, botonQuitar = "") => `
+    <div class="amparo-oficio-item">
+      <div>
+        <strong>${escapeHTML(oficio.numero || "Sin número")}</strong>
+        <span>${escapeHTML(formatDate(oficio.fecha))} · Destino: ${escapeHTML(destinoOficioTexto(oficio) || "Sin destino")}</span>
+        ${oficio.asunto ? `<p>${escapeHTML(oficio.asunto)}</p>` : ""}
+      </div>
+      <div class="amparo-oficio-item-side">
+        <em>${etiqueta}</em>
+        ${botonQuitar}
+      </div>
+    </div>`;
+
+  lista.innerHTML =
+    oficiosGuardados.map((oficio) => fila(oficio, "Registrado")).join("") +
+    oficiosPendientes
+      .map((oficio, index) =>
+        fila(
+          oficio,
+          "Se guardará con el amparo",
+          `<button type="button" class="amparo-oficio-remove" data-of-remove="${index}" title="Quitar" aria-label="Quitar"><i class="fa-solid fa-xmark"></i></button>`,
+        ),
+      )
+      .join("");
 }
 
 // ============================================================
@@ -533,7 +1012,8 @@ function fillAmparoForm(amparo) {
     ampExp: amparo.expediente || "",
     ampPromueve: amparo.promovente || "",
     ampJuzgado: amparo.juzgado || "",
-    ampOficio: amparo.oficio || "",
+    ampTipo: getTipoAmparo(amparo),
+    ampJuzgadoOrigen: amparo.juzgadoOrigen || "",
     ampEstado: amparo.estado || "Recibido",
     ampActoReclamado: amparo.actoReclamado || "",
     ampAcciones: amparo.acciones || "",
@@ -621,14 +1101,8 @@ function buscarExpediente() {
 function completarDatosExpediente(expediente) {
   const promovente = document.getElementById("ampPromueve");
 
-  const oficio = document.getElementById("ampOficio");
-
   if (promovente && !promovente.value.trim()) {
     promovente.value = expediente.promoventeSugerido || "";
-  }
-
-  if (oficio && !oficio.value.trim()) {
-    oficio.value = expediente.ultimoOficio || "";
   }
 
   const container = document.getElementById("ampExpedienteInfo");
@@ -771,22 +1245,50 @@ function setupSubmit(amparoEdicion = null) {
 function saveAmparo(event, amparoEdicion = null) {
   event.preventDefault();
 
+  // Si dejaron un oficio capturado sin pulsar "Agregar", se agrega ahora.
+  if (document.getElementById("ampOfNumero")?.value.trim()) {
+    if (!agregarOficioPendiente()) {
+      activarTab("oficios");
+      return;
+    }
+  }
+
   const amparos = getData("amparos", []);
+
+  const tipoAmparo = document.getElementById("ampTipo").value;
+
+  const juzgadoOrigen =
+    tipoAmparo === "indirecto"
+      ? document.getElementById("ampJuzgadoOrigen").value
+      : AUTORIDAD_DIRECTO;
+
+  const expedienteLaboral = document.getElementById("ampExp").value.trim();
+
+  const expedienteAmparo = document.getElementById("ampJuzgado").value.trim();
+
+  const ahora = new Date().toISOString();
 
   const nuevoAmparo = {
     id: amparoEdicion?.id || createId(),
+
+    tipoAmparo,
 
     dia: document.getElementById("ampDia").value,
 
     hora: document.getElementById("ampHora").value,
 
-    expediente: document.getElementById("ampExp").value.trim(),
+    expediente: expedienteLaboral,
 
     promovente: document.getElementById("ampPromueve").value.trim(),
 
-    juzgado: document.getElementById("ampJuzgado").value.trim(),
+    // Número de expediente de amparo (asignado por el juzgado o el TCC)
+    juzgado: expedienteAmparo,
 
-    oficio: document.getElementById("ampOficio").value.trim(),
+    // Juzgado de Distrito (indirectos) o TCC (directos)
+    juzgadoOrigen,
+
+    // Se conserva el último número de oficio ligado al amparo.
+    oficio: amparoEdicion?.oficio || oficiosPendientes[0]?.numero || "",
 
     actoReclamado: document.getElementById("ampActoReclamado").value.trim(),
 
@@ -796,10 +1298,46 @@ function saveAmparo(event, amparoEdicion = null) {
 
     estado: document.getElementById("ampEstado").value,
 
-    creadoEn: amparoEdicion?.creadoEn || new Date().toISOString(),
+    creadoEn: amparoEdicion?.creadoEn || ahora,
 
-    actualizadoEn: amparoEdicion ? new Date().toISOString() : undefined,
+    actualizadoEn: amparoEdicion ? ahora : undefined,
   };
+
+  // ==========================================================
+  // OFICIOS: se relacionan con el expediente laboral y el de amparo
+  // ==========================================================
+
+  const oficios = getData("oficios", []);
+
+  // Si cambió alguno de los dos números, los oficios ya ligados lo reflejan.
+  oficios.forEach((oficio) => {
+    if (String(oficio.amparoId || "") === String(nuevoAmparo.id)) {
+      oficio.expediente = expedienteLaboral;
+      oficio.expedienteAmparo = expedienteAmparo;
+    }
+  });
+
+  const nuevosOficios = oficiosPendientes.map((oficio) => ({
+    id: createId(),
+    numero: oficio.numero,
+    expediente: expedienteLaboral,
+    expedienteAmparo,
+    fecha: oficio.fecha,
+    procedencia: juzgadoOrigen,
+    asunto: oficio.asunto,
+    estado: "Pendiente",
+    recibidoPor: "",
+    fechaRecepcion: null,
+    destino: oficio.destino,
+    destinoOtro: oficio.destinoOtro,
+    origen: "amparo",
+    amparoId: nuevoAmparo.id,
+    creadoEn: ahora,
+  }));
+
+  if (nuevosOficios.length || oficios.length) {
+    saveData("oficios", [...nuevosOficios, ...oficios]);
+  }
 
   if (amparoEdicion) {
     const index = amparos.findIndex(
@@ -809,21 +1347,32 @@ function saveAmparo(event, amparoEdicion = null) {
       const campos = [
         ["Fecha", "dia"],
         ["Hora", "hora"],
-        ["Expediente", "expediente"],
+        ["Tipo de amparo", "tipoAmparo"],
+        ["Expediente laboral", "expediente"],
         ["Promovente", "promovente"],
-        ["No. juzgado", "juzgado"],
-        ["No. oficio", "oficio"],
+        ["Expediente de amparo", "juzgado"],
+        ["Juzgado", "juzgadoOrigen"],
         ["Acto reclamado", "actoReclamado"],
         ["Acciones", "acciones"],
         ["Observaciones", "observaciones"],
         ["Estado", "estado"],
       ];
+
+      // Para amparos viejos sin tipo guardado, comparamos contra el deducido.
+      const anterior = {
+        ...amparoEdicion,
+        tipoAmparo: getTipoAmparo(amparoEdicion),
+      };
+
       const cambios = campos
         .filter(
-          ([, key]) =>
-            String(amparoEdicion[key] || "") !== String(nuevoAmparo[key] || ""),
+          ([, key]) => String(anterior[key] || "") !== String(nuevoAmparo[key] || ""),
         )
         .map(([label]) => label);
+
+      if (nuevosOficios.length) {
+        cambios.push(`Oficios agregados (${nuevosOficios.length})`);
+      }
 
       if (cambios.length) {
         const historial = getData("amparoHistorial", []);
@@ -848,6 +1397,10 @@ function saveAmparo(event, amparoEdicion = null) {
 
   if (window.renderAmparos) {
     window.renderAmparos();
+  }
+
+  if (window.renderOficios) {
+    window.renderOficios();
   }
 
   if (window.initDashboardPage) {

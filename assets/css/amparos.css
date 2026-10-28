@@ -1069,37 +1069,42 @@
 
 .amparos-table th:nth-child(1),
 .amparos-table td:nth-child(1) {
-  width: 11%;
+  width: 9%;
 }
 
 .amparos-table th:nth-child(2),
 .amparos-table td:nth-child(2) {
-  width: 11%;
+  width: 10%;
 }
 
 .amparos-table th:nth-child(3),
 .amparos-table td:nth-child(3) {
-  width: 16%;
+  width: 13%;
 }
 
 .amparos-table th:nth-child(4),
 .amparos-table td:nth-child(4) {
-  width: 12%;
+  width: 10%;
 }
 
 .amparos-table th:nth-child(5),
 .amparos-table td:nth-child(5) {
-  width: 25%;
+  width: 17%;
 }
 
 .amparos-table th:nth-child(6),
 .amparos-table td:nth-child(6) {
-  width: 10%;
+  width: 16%;
 }
 
 .amparos-table th:nth-child(7),
 .amparos-table td:nth-child(7) {
-  width: 15%;
+  width: 9%;
+}
+
+.amparos-table th:nth-child(8),
+.amparos-table td:nth-child(8) {
+  width: 16%;
 }
 
 /* ============================================================
@@ -1571,4 +1576,220 @@
 /* Las secciones no deben encogerse: si no caben, el contenedor hace scroll */
 .amparo-detail-content > .amparo-detail-section {
   flex: 0 0 auto;
+}
+
+/* ============================================================
+   AMPAROS: PESTAÑAS DIRECTOS / INDIRECTOS (PÁGINA)
+   ============================================================ */
+
+.amparos-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 19px 0;
+  border-bottom: 1px solid #dce3ea;
+  background: #ffffff;
+}
+
+.amparos-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: #5b7189;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.amparos-tab:hover {
+  background: #f2f6fb;
+}
+
+.amparos-tab.active {
+  position: relative;
+  top: 1px;
+  border-color: #dce3ea;
+  background: #ffffff;
+  color: #1768cf;
+}
+
+.amparos-tab-count {
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: #1768cf;
+  font-size: 10px;
+  text-align: center;
+}
+
+/* ============================================================
+   AMPAROS: PESTAÑAS DENTRO DEL MODAL
+   ============================================================ */
+
+.amparo-form-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 13px 0;
+  border-bottom: 1px solid #dce3ea;
+  background: #ffffff;
+}
+
+.amparo-form-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #5b7189;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.amparo-form-tab.active {
+  border-bottom-color: #2b72d6;
+  color: #1768cf;
+}
+
+.amparo-form-tab-count {
+  min-width: 18px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: #1768cf;
+  font-size: 10px;
+  text-align: center;
+}
+
+.amparo-tab-pane {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.amparo-tab-pane[hidden],
+.amparo-field[hidden] {
+  display: none !important;
+}
+
+.amparo-field-hint {
+  margin-top: 4px;
+  color: #788c9e;
+  font-size: 10px;
+}
+
+/* ============================================================
+   AMPAROS: PESTAÑA OFICIOS
+   ============================================================ */
+
+.amparo-oficio-rel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 13px 13px 0;
+  padding: 10px 12px;
+  border: 1px solid #cfe0f5;
+  border-radius: 8px;
+  background: #eaf2ff;
+}
+
+.amparo-oficio-rel span {
+  display: block;
+  color: #5b7189;
+  font-size: 10px;
+}
+
+.amparo-oficio-rel strong {
+  color: #102b45;
+  font-size: 13px;
+}
+
+.amparo-oficio-add {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 13px;
+}
+
+.amparo-oficios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 13px 13px;
+}
+
+.amparo-oficios-empty {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed #c9d6e3;
+  border-radius: 8px;
+  color: #788c9e;
+  font-size: 12px;
+  text-align: center;
+}
+
+.amparo-oficio-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.amparo-oficio-item strong {
+  display: block;
+  color: #102b45;
+  font-size: 12px;
+}
+
+.amparo-oficio-item span {
+  color: #5b7189;
+  font-size: 11px;
+}
+
+.amparo-oficio-item p {
+  margin: 4px 0 0;
+  color: #35526e;
+  font-size: 11px;
+}
+
+.amparo-oficio-item-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.amparo-oficio-item-side em {
+  color: #788c9e;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.amparo-oficio-remove {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #e3c9c9;
+  border-radius: 6px;
+  background: #fff;
+  color: #b03a3a;
+  cursor: pointer;
+}
+
+@media (max-width: 750px) {
+  .amparo-oficio-rel {
+    grid-template-columns: 1fr;
+  }
 }

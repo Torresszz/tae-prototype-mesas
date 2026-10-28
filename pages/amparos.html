@@ -55,6 +55,27 @@
     <section class="amparos-records-card">
 
 
+
+        <!-- =============================================
+             PESTAÑAS: DIRECTOS / INDIRECTOS
+        ============================================== -->
+
+        <div class="amparos-tabs" role="tablist">
+
+            <button type="button" class="amparos-tab active" role="tab" data-amparo-tab="directo">
+                <i class="fa-solid fa-scale-balanced"></i>
+                Amparos directos
+                <span class="amparos-tab-count" id="amparosCountDirectos">0</span>
+            </button>
+
+            <button type="button" class="amparos-tab" role="tab" data-amparo-tab="indirecto">
+                <i class="fa-solid fa-scale-unbalanced"></i>
+                Amparos indirectos
+                <span class="amparos-tab-count" id="amparosCountIndirectos">0</span>
+            </button>
+
+        </div>
+
         <!-- =============================================
              TOOLBAR
         ============================================== -->
@@ -64,8 +85,8 @@
 
             <div>
 
-                <h2>
-                    Amparos registrados
+                <h2 id="amparosListTitle">
+                    Amparos directos registrados
                 </h2>
 
                 <p>
@@ -82,7 +103,7 @@
                 <input
                     id="amparosSearch"
                     type="search"
-                    placeholder="Buscar expediente, promovente o juzgado..."
+                    placeholder="Buscar expediente, promovente, juzgado u oficio..."
                     autocomplete="off"
                 >
 
@@ -120,7 +141,11 @@
                         </th>
 
                         <th>
-                            No. juzgado
+                            No. de amparo
+                        </th>
+
+                        <th id="amparosAutoridadHeader">
+                            Autoridad
                         </th>
 
                         <th>
@@ -169,7 +194,7 @@
             </div>
 
 
-            <h3>
+            <h3 id="amparosEmptyTitle">
                 No hay amparos registrados
             </h3>
 

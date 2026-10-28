@@ -14,7 +14,7 @@
 
 import { getData, saveData } from "../storage.js";
 
-import { escapeHTML } from "../utils.js";
+import { escapeHTML, getTipoAmparo, JUZGADOS_DISTRITO } from "../utils.js";
 
 import { showModal, closeForm } from "../forms/formHelper.js";
 
@@ -55,7 +55,7 @@ const FLUJOS = {
 
 const ETAPA_FINAL = { directo: "archivo", indirecto: "concluido" };
 
-const JUZGADOS = ["Juzgado Primero", "Juzgado Segundo", "Juzgado Tercero"];
+const JUZGADOS = JUZGADOS_DISTRITO;
 
 const MOTIVOS = [
   "Omisión de radicar la demanda",
@@ -167,7 +167,7 @@ function crearEstado(amparo, tipo) {
     suspension: null,
     cumplimiento: { laudoNuevo: false, reenviado: false, cumplido: false },
     cuad: {},
-    juzgado: "",
+    juzgado: JUZGADOS.includes(amparo.juzgadoOrigen) ? amparo.juzgadoOrigen : "",
     motivo: "",
     firmaRecibido: false,
     actoCierto: null,
@@ -184,20 +184,7 @@ function crearEstado(amparo, tipo) {
 
 // "indirecto" contiene "directo": se revisa primero.
 function detectarTipo(amparo) {
-  const texto = [
-    amparo.juzgado,
-    amparo.oficio,
-    amparo.observaciones,
-    amparo.actoReclamado,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  if (/indirecto/i.test(texto)) {
-    return "indirecto";
-  }
-
-  return /colegiado|directo|TCC/i.test(texto) ? "directo" : "indirecto";
+  return getTipoAmparo(amparo);
 }
 
 function getRegistros() {

@@ -329,7 +329,7 @@
     display: grid;
 
     grid-template-columns:
-        repeat(5, minmax(0, 1fr));
+        repeat(6, minmax(0, 1fr));
 
     gap: 10px;
 
@@ -706,3 +706,99 @@
 
 }
 .historico-send-buttons{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.historico-send-btn.secondary{background:#fff;color:#1768cf;border:1px solid #b9cde3}
+
+/* ============================================================
+   ENVÍOS: BOTONES Y ESTADO DE DOCUMENTOS
+   ============================================================ */
+
+.historico-send-area {
+  flex-wrap: wrap;
+}
+
+.historico-send-buttons {
+  flex: 1 1 360px;
+  justify-content: flex-end;
+}
+
+.historico-send-btn.secondary:hover {
+  background: #eaf2ff;
+}
+
+.historico-estado {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.historico-estado.pendiente {
+  background: #fff4dc;
+  color: #94600a;
+}
+
+.historico-estado.enviado {
+  background: #e3f6ea;
+  color: #1c7a43;
+}
+
+.historico-estado.sin-destino {
+  background: #fde8e8;
+  color: #b03a3a;
+}
+
+.historico-estado-detalle {
+  display: block;
+  margin-top: 3px;
+  color: #788c9e;
+  font-size: 10px;
+}
+
+.historico-confirm-destinos {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  background: #f7f9fc;
+  text-align: left;
+}
+
+.historico-confirm-destinos > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #788c9e;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.historico-confirm-destino {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  color: #102b45;
+  font-size: 12px;
+}
+
+.historico-confirm-destino i {
+  color: #2b72d6;
+  font-size: 10px;
+}
+
+.historico-confirm-destino strong {
+  margin-left: auto;
+}
+
+.historico-confirm-note {
+  margin: 10px 0 0;
+  color: #94600a;
+  font-size: 11px;
+}
+
+.historico-confirm-destinos ~ .mesas-confirm-actions,
+.historico-confirm-note ~ .mesas-confirm-actions {
+  margin-top: 18px;
+}

@@ -85,6 +85,11 @@ import {
 
 
 import {
+  initRegistral
+} from "./modules/registral.js";
+
+
+import {
   initMesas
 } from "./modules/mesas.js";
 
@@ -120,6 +125,11 @@ import {
 import {
   initOficioForm
 } from "./forms/oficioForm.js";
+
+
+import {
+  initRegistralForm
+} from "./forms/registralForm.js";
 
 
 // =====================================================
@@ -666,6 +676,8 @@ function initModules() {
 
   initOficios();
 
+  initRegistral();
+
 
   // ==================================================
   // FORMULARIOS
@@ -680,6 +692,8 @@ function initModules() {
   initPromocionForm();
 
   initOficioForm();
+
+  initRegistralForm();
 
 }
 
@@ -776,6 +790,19 @@ function setupEvents() {
 
           window
             .openPromocionForm
+            ?.();
+
+          break;
+
+
+        // =============================================
+        // NUEVO REGISTRAL
+        // =============================================
+
+        case "new-registral":
+
+          window
+            .openRegistralForm
             ?.();
 
           break;

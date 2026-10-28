@@ -4,7 +4,12 @@
 
 import { getData, saveData } from "../storage.js";
 
-import { escapeHTML } from "../utils.js";
+import {
+  escapeHTML,
+  getTipoAmparo,
+  AUTORIDAD_DIRECTO,
+  destinoOficioTexto,
+} from "../utils.js";
 import { showModal } from "../forms/formHelper.js";
 
 // ============================================================
@@ -12,6 +17,12 @@ import { showModal } from "../forms/formHelper.js";
 // ============================================================
 
 let currentFilter = "";
+
+// Pestaña activa: "directo" | "indirecto"
+let currentTipo = "directo";
+
+// El formulario de alta lee esta función para preseleccionar el tipo.
+window.getAmparoTipoActivo = () => currentTipo;
 
 // ============================================================
 // INICIALIZAR
@@ -23,6 +34,8 @@ export async function initAmparos() {
   window.renderAmparos = renderAmparos;
 
   currentFilter = "";
+
+  currentTipo = "directo";
 
   await seedAmparosEjemplo();
 
@@ -86,6 +99,14 @@ function bindAmparosEvents() {
     };
   }
 
+  document.querySelectorAll("[data-amparo-tab]").forEach((tab) => {
+    tab.onclick = () => {
+      currentTipo = tab.dataset.amparoTab;
+
+      renderAmparos();
+    };
+  });
+
   document.querySelectorAll('[data-action="new-amparo"]').forEach((button) => {
     button.onclick = () => {
       if (typeof window.openAmparoForm === "function") {
@@ -111,7 +132,40 @@ export function renderAmparos() {
   // SIEMPRE leemos la versión más reciente.
   const amparos = getData("amparos", []);
 
-  const filtered = amparos.filter((amparo) => {
+  // Contadores y pestaña activa
+  const totalDirectos = amparos.filter(
+    (a) => getTipoAmparo(a) === "directo",
+  ).length;
+
+  setTextById("amparosCountDirectos", totalDirectos);
+  setTextById("amparosCountIndirectos", amparos.length - totalDirectos);
+
+  document.querySelectorAll("[data-amparo-tab]").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.amparoTab === currentTipo);
+  });
+
+  const esDirecto = currentTipo === "directo";
+
+  setTextById(
+    "amparosListTitle",
+    esDirecto ? "Amparos directos registrados" : "Amparos indirectos registrados",
+  );
+
+  setTextById(
+    "amparosAutoridadHeader",
+    esDirecto ? "Autoridad" : "Juzgado de Distrito",
+  );
+
+  setTextById(
+    "amparosEmptyTitle",
+    esDirecto
+      ? "No hay amparos directos registrados"
+      : "No hay amparos indirectos registrados",
+  );
+
+  const filtered = amparos
+    .filter((amparo) => getTipoAmparo(amparo) === currentTipo)
+    .filter((amparo) => {
     if (!currentFilter) {
       return true;
     }
@@ -121,6 +175,7 @@ export function renderAmparos() {
                     ${amparo.expediente || ""}
                     ${amparo.promovente || ""}
                     ${amparo.juzgado || ""}
+                    ${amparo.juzgadoOrigen || ""}
                     ${amparo.oficio || ""}
                     ${amparo.actoReclamado || ""}
                     ${amparo.estado || ""}
@@ -215,11 +270,21 @@ function createAmparoRow(amparo) {
 
 
 
-            <!-- JUZGADO -->
+            <!-- NO. DE AMPARO -->
 
             <td>
 
                 ${escapeHTML(amparo.juzgado || "—")}
+
+            </td>
+
+
+
+            <!-- AUTORIDAD / JUZGADO -->
+
+            <td>
+
+                ${escapeHTML(getAutoridad(amparo))}
 
             </td>
 
@@ -370,8 +435,11 @@ function verDetalleAmparo(amparoId) {
       fecha: oficio.creadoEn || oficio.fechaRecepcion || oficio.fecha || "",
       titulo: `Oficio ${oficio.numero || "sin número"}`,
       detalle:
-        oficio.asunto ||
-        `Oficio vinculado al amparo · ${oficio.estado || "Registrado"}`,
+        (oficio.asunto ||
+          `Oficio vinculado al amparo · ${oficio.estado || "Registrado"}`) +
+        (destinoOficioTexto(oficio)
+          ? ` · Destino: ${destinoOficioTexto(oficio)}`
+          : ""),
       icono: "fa-file-lines",
     })),
   ].sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
@@ -416,7 +484,9 @@ function verDetalleAmparo(amparoId) {
             ${detailField("Expediente", amparo.expediente)}
             ${detailField("Recepción", `${formatDate(amparo.dia)} ${amparo.hora || ""}`.trim())}
             ${detailField("Promovente", amparo.promovente)}
-            ${detailField("No. juzgado", amparo.juzgado)}
+            ${detailField("Tipo de amparo", getTipoAmparo(amparo) === "directo" ? "Directo" : "Indirecto")}
+            ${detailField("Autoridad / juzgado", getAutoridad(amparo))}
+            ${detailField("No. de amparo", amparo.juzgado)}
             ${detailField("No. oficio", amparo.oficio)}
             ${detailField("Acto reclamado", amparo.actoReclamado, true)}
             ${detailField("Acciones a realizar", amparo.acciones, true)}
@@ -491,9 +561,11 @@ function anexarOficio(amparoId) {
 
     expediente: amparo.expediente,
 
+    expedienteAmparo: amparo.juzgado,
+
     promovente: amparo.promovente,
 
-    juzgado: amparo.juzgado,
+    juzgado: getAutoridad(amparo),
 
     actoReclamado: amparo.actoReclamado,
   };
@@ -545,4 +617,24 @@ function formatDate(value) {
   }
 
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function getAutoridad(amparo) {
+  if (getTipoAmparo(amparo) === "directo") {
+    return AUTORIDAD_DIRECTO;
+  }
+
+  return amparo.juzgadoOrigen || "Sin juzgado asignado";
+}
+
+function setTextById(id, value) {
+  const element = document.getElementById(id);
+
+  if (element) {
+    element.textContent = value;
+  }
 }

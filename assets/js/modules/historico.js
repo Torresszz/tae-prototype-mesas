@@ -1,12 +1,84 @@
 // ============================================================
 // RESUMEN HISTÓRICO
 // ============================================================
+//
+// Muestra todos los documentos capturados en Oficialía y permite
+// enviarlos a su módulo de destino. A dónde va cada uno depende
+// del tipo de documento:
+//
+//   Demandas, Exhortos y Promociones ......... Mesas
+//   Amparos directos ......................... Mesa de Amparo Directo
+//   Amparos indirectos ....................... Mesa de Amparo Indirecto
+//   Registrales .............................. Presidencia
+//   Oficios .................................. el destino que se eligió
+//                                              al capturarlos
+//                                              (Administrativo, Presidencia u Otro)
+//
+// Los envíos se guardan en la clave "enviosMesas" de localStorage.
+// ============================================================
 
 import { getData, saveData } from "../storage.js";
 
-import { createId, escapeHTML } from "../utils.js";
+import {
+  createId,
+  escapeHTML,
+  getTipoAmparo,
+} from "../utils.js";
 
 import { showModal, closeForm } from "../forms/formHelper.js";
+
+// ============================================================
+// CONFIGURACIÓN DE ENVÍOS
+// ============================================================
+
+// grupo del destino -> qué botones lo incluyen
+const MODOS = {
+  todo: {
+    titulo: "Enviar todo",
+    descripcion:
+      "Se enviarán todos los documentos pendientes, cada uno a su módulo de destino.",
+    vacio: "No hay documentos pendientes de enviar.",
+    icono: "fa-paper-plane",
+    incluye: () => true,
+  },
+
+  amparos: {
+    titulo: "Enviar amparos",
+    descripcion:
+      "Se enviarán los amparos pendientes: los directos a la Mesa de Amparo Directo y los indirectos a la Mesa de Amparo Indirecto.",
+    vacio: "No hay amparos pendientes de enviar.",
+    icono: "fa-shield-halved",
+    incluye: (destino) => destino.grupo === "amparos",
+  },
+
+  mesas: {
+    titulo: "Enviar a mesas",
+    descripcion:
+      "Se enviarán a Mesas las demandas, exhortos y promociones pendientes.",
+    vacio: "No hay demandas, exhortos ni promociones pendientes de enviar.",
+    icono: "fa-table-columns",
+    incluye: (destino) => destino.grupo === "mesas",
+  },
+
+  presidencia: {
+    titulo: "Enviar a presidencia",
+    descripcion:
+      "Se enviarán a Presidencia los registrales y los oficios cuyo destino sea Presidencia.",
+    vacio: "No hay documentos pendientes de enviar a Presidencia.",
+    icono: "fa-landmark",
+    incluye: (destino) => destino.grupo === "presidencia",
+  },
+};
+
+const ETIQUETA_ENVIO = {
+  todo: "Todo",
+  amparos: "Amparos",
+  mesas: "Mesas",
+  presidencia: "Presidencia",
+  // Valores de versiones anteriores
+  general: "Todo",
+  "solo-amparos": "Amparos",
+};
 
 // ============================================================
 // ESTADO
@@ -16,8 +88,6 @@ let currentFilter = "";
 
 let movimientosEjemplo = [];
 
-let movimientosActuales = [];
-
 // ============================================================
 // INICIALIZAR
 // ============================================================
@@ -25,15 +95,14 @@ let movimientosActuales = [];
 export async function initHistorico() {
   window.renderHistorico = renderHistorico;
 
-  // Dejamos también disponible la acción del botón.
-  window.openMesasConfirmation = openMesasConfirmation;
+  // Compatibilidad con el nombre anterior.
+  window.openMesasConfirmation = () => openEnvioConfirmation("mesas");
 
   currentFilter = "";
 
   setupHistoricoSearch();
 
-  setupMesasButton();
-  setupAmparosMesasButton();
+  setupSendButtons();
 
   await loadHistoricoEjemplo();
 
@@ -78,108 +147,62 @@ async function loadHistoricoEjemplo() {
 // ============================================================
 
 function getMovimientosLocales() {
-  const demandas = getData("demandas", []);
-
-  const amparos = getData("amparos", []);
-
-  const exhortos = getData("exhortos", []);
-
-  const promociones = getData("promociones", []);
-
-  const oficios = getData("oficios", []);
-
   const movimientos = [];
 
-  // ========================================================
-  // DEMANDAS
-  // ========================================================
-
-  demandas.forEach((item) => {
+  getData("demandas", []).forEach((item) => {
     movimientos.push({
       id: item.id,
-
       fecha: item.creadoEn || item.fecha,
-
       tipo: "Demanda",
-
       referencia: item.expediente || "Sin expediente",
-
-      movimiento: "Registro de demanda",
     });
   });
 
-  // ========================================================
-  // AMPAROS
-  // ========================================================
-
-  amparos.forEach((item) => {
+  getData("amparos", []).forEach((item) => {
     movimientos.push({
       id: item.id,
-
       fecha: item.creadoEn || buildDateTime(item.dia, item.hora),
-
       tipo: "Amparo",
-
+      subtipo: getTipoAmparo(item),
       referencia: item.expediente || "Sin expediente",
-
-      movimiento: "Registro de amparo",
     });
   });
 
-  // ========================================================
-  // EXHORTOS
-  // ========================================================
-
-  exhortos.forEach((item) => {
+  getData("exhortos", []).forEach((item) => {
     movimientos.push({
       id: item.id,
-
       fecha: item.creadoEn || item.fecha,
-
       tipo: "Exhorto",
-
       referencia: item.numero || item.expediente || "Sin referencia",
-
-      movimiento: "Registro de exhorto",
     });
   });
 
-  // ========================================================
-  // PROMOCIONES
-  // ========================================================
-
-  promociones.forEach((item) => {
+  getData("promociones", []).forEach((item) => {
     movimientos.push({
       id: item.id,
-
       fecha: item.creadoEn || item.fecha,
-
       tipo: "Promoción",
-
       referencia: item.expediente || item.numero || "Sin referencia",
-
-      movimiento: "Registro de promoción",
     });
   });
 
-  // ========================================================
-  // OFICIOS
-  // ========================================================
-
-  oficios.forEach((item) => {
-    const tipo = item.tipo === "Promoción" ? "Promoción" : "Oficio";
-
+  getData("registrales", []).forEach((item) => {
     movimientos.push({
       id: item.id,
-
       fecha: item.creadoEn || item.fecha,
+      tipo: "Registral",
+      referencia: item.expediente || "Sin referencia",
+    });
+  });
 
-      tipo,
-
+  getData("oficios", []).forEach((item) => {
+    movimientos.push({
+      id: item.id,
+      fecha: item.creadoEn || item.fecha,
+      tipo: item.tipo === "Promoción" ? "Promoción" : "Oficio",
       referencia: item.expediente || item.numero || "Sin referencia",
-
-      movimiento:
-        tipo === "Promoción" ? "Registro de promoción" : "Registro de oficio",
+      destino: item.destino || "",
+      destinoOtro: item.destinoOtro || "",
     });
   });
 
@@ -221,6 +244,107 @@ function getMovimientos() {
 }
 
 // ============================================================
+// DESTINO Y ESTADO DE CADA DOCUMENTO
+// ============================================================
+
+// Devuelve { grupo, etiqueta } o null si todavía no tiene destino.
+function resolverDestino(item) {
+  switch (item.tipo) {
+    case "Demanda":
+    case "Exhorto":
+    case "Promoción":
+      return { grupo: "mesas", etiqueta: "Mesas" };
+
+    case "Amparo":
+      return item.subtipo === "directo"
+        ? { grupo: "amparos", etiqueta: "Mesa de Amparo Directo" }
+        : { grupo: "amparos", etiqueta: "Mesa de Amparo Indirecto" };
+
+    case "Registral":
+      return { grupo: "presidencia", etiqueta: "Presidencia" };
+
+    case "Oficio":
+      if (item.destino === "Presidencia") {
+        return { grupo: "presidencia", etiqueta: "Presidencia" };
+      }
+
+      if (item.destino === "Administrativo") {
+        return { grupo: "administrativo", etiqueta: "Administrativo" };
+      }
+
+      if (item.destino === "Otro") {
+        return {
+          grupo: "otro",
+          etiqueta: item.destinoOtro ? `Otro: ${item.destinoOtro}` : "Otro",
+        };
+      }
+
+      return null;
+
+    default:
+      return null;
+  }
+}
+
+function claveMovimiento(item) {
+  return `${item.tipo || ""}::${item.id}`;
+}
+
+// Mapa clave -> { destino, fecha } con lo que ya fue enviado.
+function getEnviados() {
+  const mapa = new Map();
+
+  // Los envíos más recientes están primero.
+  getData("enviosMesas", []).forEach((envio) => {
+    if (!Array.isArray(envio.registros)) {
+      return;
+    }
+
+    envio.registros.forEach((registro) => {
+      if (!registro?.id) {
+        return;
+      }
+
+      const clave = `${registro.tipo || ""}::${registro.id}`;
+
+      if (!mapa.has(clave)) {
+        mapa.set(clave, { destino: registro.destino || "", fecha: envio.fecha });
+      }
+    });
+  });
+
+  return mapa;
+}
+
+function getEstado(item, enviados) {
+  const destino = resolverDestino(item);
+
+  const envio = enviados.get(claveMovimiento(item));
+
+  if (envio) {
+    return {
+      clase: "enviado",
+      texto: `Enviado a ${envio.destino || destino?.etiqueta || "su destino"}`,
+      detalle: formatDateTime(envio.fecha),
+    };
+  }
+
+  if (!destino) {
+    return {
+      clase: "sin-destino",
+      texto: "Sin destino asignado",
+      detalle: "Asigna un destino al oficio",
+    };
+  }
+
+  return {
+    clase: "pendiente",
+    texto: "Pendiente de envío",
+    detalle: `Destino: ${destino.etiqueta}`,
+  };
+}
+
+// ============================================================
 // RENDER TABLA
 // ============================================================
 
@@ -233,21 +357,23 @@ export function renderHistorico() {
     return;
   }
 
-  const movimientos = getMovimientos();
+  const enviados = getEnviados();
 
-  movimientosActuales = movimientos.filter((item) => {
+  const movimientos = getMovimientos().filter((item) => {
     if (!currentFilter) {
       return true;
     }
 
+    const estado = getEstado(item, enviados);
+
     const text = `
-
-                    ${item.tipo || ""}
-                    ${item.referencia || ""}
-                    ${item.movimiento || ""}
-                    ${formatDateTime(item.fecha)}
-
-                `.toLowerCase();
+      ${item.tipo || ""}
+      ${item.subtipo || ""}
+      ${item.referencia || ""}
+      ${estado.texto}
+      ${estado.detalle || ""}
+      ${formatDateTime(item.fecha)}
+    `.toLowerCase();
 
     return text.includes(currentFilter);
   });
@@ -256,7 +382,7 @@ export function renderHistorico() {
   // SIN RESULTADOS
   // ========================================================
 
-  if (movimientosActuales.length === 0) {
+  if (movimientos.length === 0) {
     tbody.innerHTML = "";
 
     if (empty) {
@@ -276,43 +402,32 @@ export function renderHistorico() {
   // FILAS
   // ========================================================
 
-  tbody.innerHTML = movimientosActuales
-    .map(
-      (item) => `
+  tbody.innerHTML = movimientos
+    .map((item) => {
+      const estado = getEstado(item, enviados);
 
-                    <tr>
+      const subtipo =
+        item.tipo === "Amparo" && item.subtipo
+          ? ` · ${item.subtipo === "directo" ? "Directo" : "Indirecto"}`
+          : "";
 
-                        <td>
-
-                            ${escapeHTML(formatDateTime(item.fecha))}
-
-                        </td>
-
-                        <td>
-
-                            ${escapeHTML(item.tipo || "—")}
-
-                        </td>
-
-                        <td>
-
-                            ${escapeHTML(item.referencia || "—")}
-
-                        </td>
-
-                        <td>
-
-                            ${escapeHTML(item.movimiento || "—")}
-
-                        </td>
-
-                    </tr>
-
-                `,
-    )
+      return `
+        <tr>
+          <td>${escapeHTML(formatDateTime(item.fecha))}</td>
+          <td>${escapeHTML((item.tipo || "—") + subtipo)}</td>
+          <td>${escapeHTML(item.referencia || "—")}</td>
+          <td>
+            <span class="historico-estado ${estado.clase}">
+              ${escapeHTML(estado.texto)}
+            </span>
+            ${estado.detalle ? `<small class="historico-estado-detalle">${escapeHTML(estado.detalle)}</small>` : ""}
+          </td>
+        </tr>
+      `;
+    })
     .join("");
 
-  updateResumen(movimientosActuales);
+  updateResumen(movimientos);
 }
 
 // ============================================================
@@ -350,224 +465,133 @@ function updateResumen(movimientos) {
 
   setText("historicoPromociones", resumen.promociones);
 
+  setText("historicoRegistrales", resumen.registrales);
+
   setText("historicoOficios", resumen.oficios);
 }
 
 // ============================================================
-// BOTÓN MANDAR A MESAS
+// BOTONES DE ENVÍO
 // ============================================================
 
-function setupMesasButton() {
-  const button = document.getElementById("sendToMesasBtn");
-
-  if (!button) {
-    console.warn("No se encontró #sendToMesasBtn");
-
-    return;
-  }
-
-  // Evita problemas por listeners anteriores.
-  button.onclick = openMesasConfirmation;
-}
-
-
-function setupAmparosMesasButton() {
-  const button = document.getElementById("sendAmparosToMesasBtn");
-  if (!button) return;
-  button.onclick = openAmparosMesasConfirmation;
-}
-
-function openAmparosMesasConfirmation() {
-  const pendientes = getMovimientosPendientes().filter(item => item.tipo === "Amparo");
-  if (!pendientes.length) {
-    alert("No hay amparos pendientes de enviar a mesas.");
-    return;
-  }
-
-  movimientosActuales = pendientes;
-  const resumen = createResumen(pendientes);
-  showModal(`
-    <div class="mesas-confirm">
-      <div class="mesas-confirm-icon"><i class="fa-solid fa-shield-halved"></i></div>
-      <h2>Mandar solo amparos a mesas</h2>
-      <p>Se enviarán únicamente los amparos que todavía no hayan sido enviados.</p>
-      ${renderResumenModal(resumen)}
-      <div class="mesas-confirm-actions">
-        <button type="button" id="cancelAmparosMesasBtn" class="mesas-modal-btn secondary">Cancelar</button>
-        <button type="button" id="confirmAmparosMesasBtn" class="mesas-modal-btn primary"><i class="fa-solid fa-paper-plane"></i> Confirmar envío</button>
-      </div>
-    </div>`);
-
-  document.getElementById("cancelAmparosMesasBtn")?.addEventListener("click", closeForm);
-  document.getElementById("confirmAmparosMesasBtn")?.addEventListener("click", () => sendAmparosToMesas(resumen));
-}
-
-function sendAmparosToMesas(resumen) {
-  const envios = getData("enviosMesas", []);
-  const envio = {
-    id: createId(), fecha: new Date().toISOString(), tipoEnvio: "solo-amparos",
-    total: resumen.total, demandas: 0, amparos: resumen.amparos, exhortos: 0, promociones: 0, oficios: 0,
-    registros: movimientosActuales.map(item => ({ id: item.id, tipo: item.tipo, referencia: item.referencia, movimiento: item.movimiento }))
+function setupSendButtons() {
+  const botones = {
+    sendAllBtn: "todo",
+    sendAmparosBtn: "amparos",
+    sendMesasBtn: "mesas",
+    sendPresidenciaBtn: "presidencia",
   };
-  envios.unshift(envio);
-  saveData("enviosMesas", envios);
-  renderUltimoEnvio();
-  showSuccessModal(envio);
-}
 
-// ============================================================
-// MOVIMIENTOS YA ENVIADOS A MESAS
-// ============================================================
+  Object.entries(botones).forEach(([id, modo]) => {
+    const button = document.getElementById(id);
 
-function getClavesEnviadas() {
-  const envios = getData("enviosMesas", []);
-  const claves = new Set();
+    if (!button) {
+      console.warn(`No se encontró #${id}`);
 
-  envios.forEach((envio) => {
-    if (!Array.isArray(envio.registros)) {
       return;
     }
 
-    envio.registros.forEach((registro) => {
-      if (registro?.id) {
-        claves.add(`${registro.tipo || ""}::${registro.id}`);
-      }
-    });
+    // onclick evita acumular listeners al volver a entrar a la página.
+    button.onclick = () => openEnvioConfirmation(modo);
   });
-
-  return claves;
 }
 
-function getMovimientosPendientes() {
-  const enviados = getClavesEnviadas();
+// Documentos pendientes que le corresponden a un botón.
+function getPendientes(modo) {
+  const enviados = getEnviados();
 
   return getMovimientos().filter((item) => {
-    if (!item.id) {
-      return true;
+    if (enviados.has(claveMovimiento(item))) {
+      return false;
     }
 
-    return !enviados.has(`${item.tipo || ""}::${item.id}`);
+    const destino = resolverDestino(item);
+
+    return destino && MODOS[modo].incluye(destino);
   });
 }
 
 // ============================================================
-// ABRIR CONFIRMACIÓN
+// CONFIRMACIÓN DE ENVÍO
 // ============================================================
 
-function openMesasConfirmation() {
-  /*
-   * Volvemos a obtener los datos para asegurar
-   * que el resumen esté actualizado.
-   */
+function openEnvioConfirmation(modo) {
+  const config = MODOS[modo];
 
-  const movimientos = getMovimientosPendientes();
+  const pendientes = getPendientes(modo);
 
-  const filtrados = movimientos.filter((item) => {
-    if (!currentFilter) {
-      return true;
-    }
-
-    const text = `
-
-                    ${item.tipo || ""}
-                    ${item.referencia || ""}
-                    ${item.movimiento || ""}
-
-                `.toLowerCase();
-
-    return text.includes(currentFilter);
-  });
-
-  movimientosActuales = filtrados;
-
-  if (movimientosActuales.length === 0) {
-    alert("No hay movimientos para mandar a mesas.");
+  if (pendientes.length === 0) {
+    alert(config.vacio);
 
     return;
   }
 
-  const resumen = createResumen(movimientosActuales);
+  const resumen = createResumen(pendientes);
+
+  const destinos = contarDestinos(pendientes);
+
+  // Solo "Enviar todo" menciona los oficios que aún no tienen destino.
+  const sinDestino =
+    modo === "todo"
+      ? getMovimientos().filter(
+          (item) =>
+            !getEnviados().has(claveMovimiento(item)) && !resolverDestino(item),
+        ).length
+      : 0;
 
   showModal(`
+    <div class="mesas-confirm">
 
-        <div class="mesas-confirm">
+      <div class="mesas-confirm-icon">
+        <i class="fa-solid ${config.icono}"></i>
+      </div>
 
+      <h2>${escapeHTML(config.titulo)}</h2>
 
-            <div class="mesas-confirm-icon">
+      <p>${escapeHTML(config.descripcion)}</p>
 
-                <i class="fa-solid fa-paper-plane"></i>
+      ${renderResumenModal(resumen)}
 
-            </div>
+      ${renderDestinosModal(destinos)}
 
+      ${
+        sinDestino
+          ? `<p class="historico-confirm-note">
+               ${sinDestino} oficio(s) no tienen destino asignado y no se enviarán.
+             </p>`
+          : ""
+      }
 
-            <h2>
-                Mandar resumen a mesas
-            </h2>
+      <div class="mesas-confirm-actions">
 
+        <button type="button" id="cancelEnvioBtn" class="mesas-modal-btn secondary">
+          Cancelar
+        </button>
 
-            <p>
-                Se enviará el concentrado actual.
-                Confirma que deseas continuar.
-            </p>
+        <button type="button" id="confirmEnvioBtn" class="mesas-modal-btn primary">
+          <i class="fa-solid fa-paper-plane"></i>
+          Confirmar envío
+        </button>
 
+      </div>
 
-            ${renderResumenModal(resumen)}
+    </div>
+  `);
 
+  document.getElementById("cancelEnvioBtn").onclick = closeForm;
 
-            <div class="mesas-confirm-actions">
-
-
-                <button
-                    type="button"
-                    id="cancelMesasBtn"
-                    class="mesas-modal-btn secondary"
-                >
-
-                    Cancelar
-
-                </button>
-
-
-                <button
-                    type="button"
-                    id="confirmMesasBtn"
-                    class="mesas-modal-btn primary"
-                >
-
-                    <i class="fa-solid fa-paper-plane"></i>
-
-                    Confirmar envío
-
-                </button>
-
-
-            </div>
-
-
-        </div>
-
-    `);
-
-  const cancelButton = document.getElementById("cancelMesasBtn");
-
-  const confirmButton = document.getElementById("confirmMesasBtn");
-
-  if (cancelButton) {
-    cancelButton.onclick = closeForm;
-  }
-
-  if (confirmButton) {
-    confirmButton.onclick = () => {
-      sendToMesas(resumen);
-    };
-  }
+  document.getElementById("confirmEnvioBtn").onclick = () => {
+    sendEnvio(modo, pendientes);
+  };
 }
 
 // ============================================================
 // GUARDAR ENVÍO
 // ============================================================
 
-function sendToMesas(resumen) {
+function sendEnvio(modo, items) {
+  const resumen = createResumen(items);
+
   const envios = getData("enviosMesas", []);
 
   const envio = {
@@ -575,7 +599,7 @@ function sendToMesas(resumen) {
 
     fecha: new Date().toISOString(),
 
-    tipoEnvio: "general",
+    tipoEnvio: modo,
 
     total: resumen.total,
 
@@ -587,22 +611,31 @@ function sendToMesas(resumen) {
 
     promociones: resumen.promociones,
 
+    registrales: resumen.registrales,
+
     oficios: resumen.oficios,
 
-    registros: movimientosActuales.map((item) => ({
-      id: item.id,
+    destinos: contarDestinos(items),
 
-      tipo: item.tipo,
+    registros: items.map((item) => {
+      const destino = resolverDestino(item);
 
-      referencia: item.referencia,
-
-      movimiento: item.movimiento,
-    })),
+      return {
+        id: item.id,
+        tipo: item.tipo,
+        referencia: item.referencia,
+        destino: destino.etiqueta,
+        grupo: destino.grupo,
+      };
+    }),
   };
 
   envios.unshift(envio);
 
   saveData("enviosMesas", envios);
+
+  // La columna Estado cambia a "Enviado a ..."
+  renderHistorico();
 
   renderUltimoEnvio();
 
@@ -615,54 +648,30 @@ function sendToMesas(resumen) {
 
 function showSuccessModal(envio) {
   showModal(`
+    <div class="mesas-confirm success">
 
-        <div class="mesas-confirm success">
+      <div class="mesas-confirm-icon">
+        <i class="fa-solid fa-check"></i>
+      </div>
 
+      <h2>Documentos enviados</h2>
 
-            <div class="mesas-confirm-icon">
+      <p>Los documentos fueron enviados a su módulo de destino.</p>
 
-                <i class="fa-solid fa-check"></i>
+      ${renderResumenModal(envio)}
 
-            </div>
+      ${renderDestinosModal(envio.destinos)}
 
+      <div class="mesas-confirm-actions">
+        <button type="button" id="finishEnvioBtn" class="mesas-modal-btn primary">
+          Aceptar
+        </button>
+      </div>
 
-            <h2>
-                Resumen enviado
-            </h2>
+    </div>
+  `);
 
-
-            <p>
-                El concentrado fue enviado correctamente a mesas.
-            </p>
-
-
-            ${renderResumenModal(envio)}
-
-
-            <div class="mesas-confirm-actions">
-
-                <button
-                    type="button"
-                    id="finishMesasBtn"
-                    class="mesas-modal-btn primary"
-                >
-
-                    Aceptar
-
-                </button>
-
-            </div>
-
-
-        </div>
-
-    `);
-
-  const button = document.getElementById("finishMesasBtn");
-
-  if (button) {
-    button.onclick = closeForm;
-  }
+  document.getElementById("finishEnvioBtn").onclick = closeForm;
 }
 
 // ============================================================
@@ -676,9 +685,7 @@ function renderUltimoEnvio() {
     return;
   }
 
-  const envios = getData("enviosMesas", []);
-
-  const last = envios[0];
+  const last = getData("enviosMesas", [])[0];
 
   if (!last) {
     container.hidden = true;
@@ -688,94 +695,33 @@ function renderUltimoEnvio() {
 
   container.hidden = false;
 
+  const item = (label, value) => `
+    <span class="last-send-item">
+      ${label}: <strong>${value ?? 0}</strong>
+    </span>
+  `;
+
+  const etiqueta = ETIQUETA_ENVIO[last.tipoEnvio] || "Todo";
+
   container.innerHTML = `
+    <div class="last-send-header">
+      <strong>
+        <i class="fa-solid fa-circle-check"></i>
+        Último envío · ${escapeHTML(etiqueta)}
+      </strong>
+      <span>${escapeHTML(formatDateTime(last.fecha))}</span>
+    </div>
 
-        <div class="last-send-header">
-
-            <strong>
-
-                <i class="fa-solid fa-circle-check"></i>
-
-                Último envío a mesas
-
-            </strong>
-
-
-            <span>
-
-                ${escapeHTML(formatDateTime(last.fecha))}
-
-            </span>
-
-        </div>
-
-
-        <div class="last-send-items">
-
-
-            <span class="last-send-item">
-
-                Total:
-                <strong>
-                    ${last.total}
-                </strong>
-
-            </span>
-
-
-            <span class="last-send-item">
-
-                Demandas:
-                <strong>
-                    ${last.demandas}
-                </strong>
-
-            </span>
-
-
-            <span class="last-send-item">
-
-                Amparos:
-                <strong>
-                    ${last.amparos}
-                </strong>
-
-            </span>
-
-
-            <span class="last-send-item">
-
-                Exhortos:
-                <strong>
-                    ${last.exhortos}
-                </strong>
-
-            </span>
-
-
-            <span class="last-send-item">
-
-                Promociones:
-                <strong>
-                    ${last.promociones}
-                </strong>
-
-            </span>
-
-
-            <span class="last-send-item">
-
-                Oficios:
-                <strong>
-                    ${last.oficios}
-                </strong>
-
-            </span>
-
-
-        </div>
-
-    `;
+    <div class="last-send-items">
+      ${item("Total", last.total)}
+      ${item("Demandas", last.demandas)}
+      ${item("Amparos", last.amparos)}
+      ${item("Exhortos", last.exhortos)}
+      ${item("Promociones", last.promociones)}
+      ${item("Registrales", last.registrales)}
+      ${item("Oficios", last.oficios)}
+    </div>
+  `;
 }
 
 // ============================================================
@@ -785,15 +731,11 @@ function renderUltimoEnvio() {
 function createResumen(movimientos) {
   const resumen = {
     total: movimientos.length,
-
     demandas: 0,
-
     amparos: 0,
-
     exhortos: 0,
-
     promociones: 0,
-
+    registrales: 0,
     oficios: 0,
   };
 
@@ -801,27 +743,26 @@ function createResumen(movimientos) {
     switch (item.tipo) {
       case "Demanda":
         resumen.demandas++;
-
         break;
 
       case "Amparo":
         resumen.amparos++;
-
         break;
 
       case "Exhorto":
         resumen.exhortos++;
-
         break;
 
       case "Promoción":
         resumen.promociones++;
+        break;
 
+      case "Registral":
+        resumen.registrales++;
         break;
 
       case "Oficio":
         resumen.oficios++;
-
         break;
     }
   });
@@ -829,102 +770,75 @@ function createResumen(movimientos) {
   return resumen;
 }
 
+// { "Mesas": 3, "Presidencia": 2, ... }
+function contarDestinos(items) {
+  const destinos = {};
+
+  items.forEach((item) => {
+    const destino = resolverDestino(item);
+
+    if (destino) {
+      destinos[destino.etiqueta] = (destinos[destino.etiqueta] || 0) + 1;
+    }
+  });
+
+  return destinos;
+}
+
 // ============================================================
 // CONTENIDO MODAL RESUMEN
 // ============================================================
 
 function renderResumenModal(resumen) {
+  const fila = (label, value) => `
+    <div class="mesas-confirm-row">
+      <span>${label}</span>
+      <strong>${value ?? 0}</strong>
+    </div>
+  `;
+
   return `
+    <div class="mesas-confirm-summary">
 
-        <div class="mesas-confirm-summary">
+      ${fila("Demandas", resumen.demandas)}
+      ${fila("Amparos", resumen.amparos)}
+      ${fila("Exhortos", resumen.exhortos)}
+      ${fila("Promociones", resumen.promociones)}
+      ${fila("Registrales", resumen.registrales)}
+      ${fila("Oficios", resumen.oficios)}
 
+      <div class="mesas-confirm-row mesas-confirm-total">
+        <span>Total</span>
+        <strong>${resumen.total}</strong>
+      </div>
 
-            <div class="mesas-confirm-row">
+    </div>
+  `;
+}
 
-                <span>
-                    Demandas
-                </span>
+function renderDestinosModal(destinos = {}) {
+  const entradas = Object.entries(destinos);
 
-                <strong>
-                    ${resumen.demandas}
-                </strong>
+  if (!entradas.length) {
+    return "";
+  }
 
+  return `
+    <div class="historico-confirm-destinos">
+      <span>Destinos</span>
+      ${entradas
+        .map(
+          ([destino, cantidad]) => `
+            <div class="historico-confirm-destino">
+              <i class="fa-solid fa-arrow-right"></i>
+              ${escapeHTML(destino)}
+              <strong>${cantidad}</strong>
             </div>
-
-
-            <div class="mesas-confirm-row">
-
-                <span>
-                    Amparos
-                </span>
-
-                <strong>
-                    ${resumen.amparos}
-                </strong>
-
-            </div>
-
-
-            <div class="mesas-confirm-row">
-
-                <span>
-                    Exhortos
-                </span>
-
-                <strong>
-                    ${resumen.exhortos}
-                </strong>
-
-            </div>
-
-
-            <div class="mesas-confirm-row">
-
-                <span>
-                    Promociones
-                </span>
-
-                <strong>
-                    ${resumen.promociones}
-                </strong>
-
-            </div>
-
-
-            <div class="mesas-confirm-row">
-
-                <span>
-                    Oficios
-                </span>
-
-                <strong>
-                    ${resumen.oficios}
-                </strong>
-
-            </div>
-
-
-            <div
-                class="
-                    mesas-confirm-row
-                    mesas-confirm-total
-                "
-            >
-
-                <span>
-                    Total enviado
-                </span>
-
-                <strong>
-                    ${resumen.total}
-                </strong>
-
-            </div>
-
-
-        </div>
-
-    `;
+          `,
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 // ============================================================
