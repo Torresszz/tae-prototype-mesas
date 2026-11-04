@@ -20,6 +20,9 @@ const KEY = "mesasSeguimiento";
 let currentStatus = "todos";
 let currentSearch = "";
 let currentEtapa = "";
+let currentFechaDesde = "";
+let currentFechaHasta = "";
+let currentOrdenPromociones = "desc";
 
 let vistaInicialAplicada = false;
 
@@ -168,6 +171,8 @@ function getRegistros() {
 
 
       promovente: expediente.actor || expediente.promovente || "—",
+      demandado: expediente.demandado || "—",
+      ubicacion: expediente.ubicacion || "—",
 
       asunto:
         expediente.actoDemandado ||
@@ -218,6 +223,22 @@ function setupEvents() {
 
       renderMesas();
     };
+  }
+
+  const desde = document.getElementById("mesasFechaDesde");
+  const hasta = document.getElementById("mesasFechaHasta");
+  const orden = document.getElementById("mesasOrdenPromociones");
+  if (desde) {
+    desde.value = currentFechaDesde;
+    desde.onchange = (event) => { currentFechaDesde = event.target.value; renderMesas(); };
+  }
+  if (hasta) {
+    hasta.value = currentFechaHasta;
+    hasta.onchange = (event) => { currentFechaHasta = event.target.value; renderMesas(); };
+  }
+  if (orden) {
+    orden.value = currentOrdenPromociones;
+    orden.onchange = (event) => { currentOrdenPromociones = event.target.value; renderMesas(); };
   }
 
   document.querySelectorAll(".mesas-status-tab").forEach((button) => {
@@ -353,6 +374,8 @@ function renderTable(registros) {
 
                         ${item.numero}
                         ${item.promovente}
+                        ${item.demandado}
+                        ${item.ubicacion}
                         ${item.asunto}
                         ${item.seguimiento.ultimoMovimiento || ""}
 
@@ -360,6 +383,22 @@ function renderTable(registros) {
 
       return texto.includes(currentSearch);
     });
+  }
+
+  // Comparación inclusiva por día; fechas inválidas no coinciden con el filtro.
+  if (currentFechaDesde || currentFechaHasta) {
+    visibles = visibles.filter((item) => {
+      const dia = normalizarDiaMesa(item.fecha);
+      return dia && (!currentFechaDesde || dia >= currentFechaDesde) &&
+        (!currentFechaHasta || dia <= currentFechaHasta);
+    });
+  }
+
+  // Orden estable: conserva el orden previo cuando dos expedientes empatan.
+  if (currentOrdenPromociones !== "sin-orden") {
+    visibles.sort((a, b) => currentOrdenPromociones === "asc"
+      ? a.promociones.length - b.promociones.length
+      : b.promociones.length - a.promociones.length);
   }
 
   if (!visibles.length) {
@@ -377,6 +416,16 @@ function renderTable(registros) {
   }
 
   tbody.innerHTML = visibles.map((item) => renderRow(item)).join("");
+}
+
+function normalizarDiaMesa(valor) {
+  if (!valor) return "";
+  const texto = String(valor).trim();
+  const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const local = texto.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (local) return `${local[3]}-${local[2]}-${local[1]}`;
+  return "";
 }
 
 // ============================================================
@@ -410,11 +459,11 @@ function renderRow(item) {
             </td>
 
 
-            <td>
+            <td>${escapeHTML(item.demandado)}</td>
 
-                ${escapeHTML(item.asunto)}
+            <td>${escapeHTML(item.asunto)}</td>
 
-            </td>
+            <td>${escapeHTML(item.ubicacion)}</td>
 
 
             <td>
@@ -703,7 +752,7 @@ function renderAlerts(registros) {
 
     if (item.seguimiento.etapa === "pendiente" && count > 0) {
       alertas.push({
-        clase: count >= 5 ? "danger" : "",
+        clase: count >= 10 ? "danger" : count >= 5 ? "warning" : "",
 
         icono: "fa-triangle-exclamation",
 
@@ -712,6 +761,13 @@ function renderAlerts(registros) {
         texto: `Pendiente de recibir · ${count} ${
           count === 1 ? "promoción" : "promociones"
         }`,
+      });
+    }
+
+    if (item.seguimiento.etapa !== "pendiente" && count >= 10) {
+      alertas.push({
+        clase: "danger", icono: "fa-triangle-exclamation", numero: item.numero,
+        texto: `${count} promociones acumuladas · Requiere revisión`,
       });
     }
 

@@ -157,7 +157,7 @@
                     <input
                         id="mesasSearch"
                         type="search"
-                        placeholder="Buscar expediente, promovente o asunto..."
+                        placeholder="Buscar expediente, actor, demandado o asunto..."
                         autocomplete="off"
                     >
 
@@ -191,6 +191,19 @@
 
                 </select>
 
+                <label class="mesas-filter-field">Desde
+                    <input id="mesasFechaDesde" type="date" aria-label="Fecha desde">
+                </label>
+                <label class="mesas-filter-field">Hasta
+                    <input id="mesasFechaHasta" type="date" aria-label="Fecha hasta">
+                </label>
+                <label class="mesas-filter-field">Orden de promociones
+                    <select id="mesasOrdenPromociones" aria-label="Orden de promociones">
+                        <option value="desc">Más a menos</option>
+                        <option value="asc">Menos a más</option>
+                        <option value="sin-orden">Sin ordenar</option>
+                    </select>
+                </label>
             </div>
 
 
@@ -216,9 +229,9 @@
                                     Promovente
                                 </th>
 
-                                <th>
-                                    Asunto
-                                </th>
+                                <th>Demandado</th>
+                                <th>Asunto / Acto demandado</th>
+                                <th>Ubicación</th>
 
                                 <th>
                                     Promociones

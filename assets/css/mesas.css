@@ -1906,3 +1906,56 @@
     font-size: 8.5px;
     font-weight: 600;
 }
+
+/* Filtros añadidos al listado de Secretaría de Acuerdos */
+.mesas-secretaria-toolbar { flex-wrap: wrap; }
+.mesas-filter-field { display: inline-flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #475569; }
+.mesas-filter-field input, .mesas-filter-field select { min-height: 38px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a; }
+.mesas-alert-item.warning { border-left: 3px solid #d97706; }
+
+/* Ajuste de presentación: seis cambios de Mesas, sin modificar su lógica. */
+.mesas-secretaria-toolbar {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 190px 170px 170px;
+    gap: 10px 12px;
+    align-items: end;
+}
+.mesas-secretaria-toolbar .mesas-search { grid-column: 1 / 4; }
+.mesas-secretaria-toolbar > #mesasEtapaFilter { grid-column: 4; }
+.mesas-secretaria-toolbar .mesas-filter-field { min-width: 0; }
+.mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(1) { grid-column: 2; }
+.mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(2) { grid-column: 3; }
+.mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(3) { grid-column: 4; }
+.mesas-secretaria-toolbar .mesas-filter-field input,
+.mesas-secretaria-toolbar .mesas-filter-field select { width: 100%; box-sizing: border-box; }
+
+/* Once columnas: se conserva la tabla completa mediante scroll horizontal. */
+.mesas-secretaria-table { min-width: 1550px; table-layout: fixed; }
+.mesas-secretaria-table th { font-size: 9px; line-height: 13px; white-space: normal; }
+.mesas-secretaria-table td { font-size: 10px; }
+.mesas-secretaria-table th:nth-child(1) { width: 115px; }
+.mesas-secretaria-table th:nth-child(2) { width: 150px; }
+.mesas-secretaria-table th:nth-child(3) { width: 140px; }
+.mesas-secretaria-table th:nth-child(4) { width: 155px; }
+.mesas-secretaria-table th:nth-child(5) { width: 105px; }
+.mesas-secretaria-table th:nth-child(6) { width: 105px; }
+.mesas-secretaria-table th:nth-child(7) { width: 125px; }
+.mesas-secretaria-table th:nth-child(8) { width: 155px; }
+.mesas-secretaria-table th:nth-child(9) { width: 100px; }
+.mesas-secretaria-table th:nth-child(10) { width: 105px; }
+.mesas-secretaria-table th:nth-child(11) { width: 195px; }
+.mesas-secretaria-table td:last-child { overflow-wrap: normal; }
+.mesas-secretaria-table .mesas-actions { min-width: max-content; }
+.mesas-table-wrapper { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+
+@media (max-width: 1150px) {
+    .mesas-secretaria-toolbar { grid-template-columns: minmax(180px, 1fr) repeat(3, minmax(130px, 1fr)); }
+}
+@media (max-width: 760px) {
+    .mesas-secretaria-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mesas-secretaria-toolbar .mesas-search { grid-column: 1 / -1; }
+    .mesas-secretaria-toolbar > #mesasEtapaFilter { grid-column: 1 / -1; }
+    .mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(1),
+    .mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(2) { grid-column: auto; }
+    .mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(3) { grid-column: 1 / -1; }
+}
