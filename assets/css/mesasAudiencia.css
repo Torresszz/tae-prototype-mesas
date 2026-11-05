@@ -1,0 +1,210 @@
+/* ============================================================
+   AUDIENCIA · FASE 5 · T-16
+   assets/css/mesasAudiencia.css
+   ============================================================ */
+
+
+/* ============================================================
+   CONTENEDOR
+   ============================================================ */
+
+#mesasPage .mesas-fase5-section {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* ============================================================
+   BUSCADOR
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-toolbar {
+    display: grid;
+
+    grid-template-columns:
+        minmax(300px, 520px);
+
+    margin-bottom: 12px;
+}
+
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-table {
+    width: 100%;
+    min-width: 1350px;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+}
+
+#mesasPage .mesas-audiencia-table thead {
+    background: #f7f9fb;
+}
+
+#mesasPage .mesas-audiencia-table th {
+    height: 42px;
+
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #dce3ea;
+
+    color: #60758a;
+
+    font-size: 8.5px;
+    line-height: 11px;
+
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+}
+
+#mesasPage .mesas-audiencia-table td {
+    min-height: 52px;
+
+    padding: 11px 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #e6ecf1;
+
+    color: #455e76;
+
+    font-size: 9.5px;
+    line-height: 14px;
+
+    vertical-align: middle;
+
+    overflow-wrap: anywhere;
+}
+
+#mesasPage .mesas-audiencia-table tbody tr:hover {
+    background: #fafcff;
+}
+
+#mesasPage .mesas-audiencia-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ============================================================
+   ANCHOS DE COLUMNAS
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-table th:nth-child(1) {
+    width: 120px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(2) {
+    width: 100px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(3) {
+    width: 85px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(4) {
+    width: 220px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(5) {
+    width: 130px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(6) {
+    width: 165px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(7) {
+    width: 220px;
+}
+
+#mesasPage .mesas-audiencia-table th:nth-child(8) {
+    width: 150px;
+}
+
+
+/* ============================================================
+   NOTAS
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-notas-text {
+    display: block;
+
+    max-width: 100%;
+
+    color: #60758a;
+
+    font-size: 9px;
+    line-height: 14px;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   SELECTS
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-table
+.mesas-fase4-state-select {
+    width: 100%;
+}
+
+
+/* ============================================================
+   ESTADO POR DESAHOGAR
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-table
+.mesas-fase4-category-badge.pending {
+    background: #fff4e0;
+
+    color: #a26005;
+}
+
+
+/* ============================================================
+   ESTADO DESAHOGADA
+   ============================================================ */
+
+#mesasPage .mesas-audiencia-table
+.mesas-fase4-category-badge.done {
+    background: #e4f6e8;
+
+    color: #14833b;
+}
+
+
+/* ============================================================
+   CALENDARIO
+   ============================================================ */
+
+#mesasPage .mesas-fase5-section
+.mesas-fase4-agenda-block {
+    margin-top: 18px;
+
+    padding-top: 16px;
+
+    border-top: 1px solid #e3e9ef;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+
+    #mesasPage .mesas-audiencia-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+}
