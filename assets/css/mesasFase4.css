@@ -1,0 +1,936 @@
+/* ============================================================
+   MESAS · FASE 4
+   assets/css/mesasFase4.css
+
+   Compartido por:
+   - Demanda
+   - Promociones
+   - Calificación
+   ============================================================ */
+
+
+/* ============================================================
+   CONTENEDOR
+   ============================================================ */
+
+#mesasPage .mesas-fase4-section {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* ============================================================
+   ENCABEZADO INTERNO
+   ============================================================ */
+
+#mesasPage .mesas-fase4-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-bottom: 14px;
+}
+
+#mesasPage .mesas-fase4-header h2 {
+    margin: 3px 0 4px;
+
+    color: #102b45;
+
+    font-size: 18px;
+    line-height: 23px;
+}
+
+#mesasPage .mesas-fase4-header p {
+    margin: 0;
+
+    color: #71869a;
+
+    font-size: 10px;
+    line-height: 15px;
+}
+
+
+/* ============================================================
+   CONTADORES
+   ============================================================ */
+
+#mesasPage .mesas-fase4-counters {
+    display: flex;
+    align-items: stretch;
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+}
+
+#mesasPage .mesas-fase4-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    min-width: 135px;
+    min-height: 42px;
+
+    padding: 0 13px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #536b82;
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+#mesasPage .mesas-fase4-counter:hover {
+    border-color: #aac9ee;
+
+    background: #f7faff;
+
+    color: #1768cf;
+}
+
+#mesasPage .mesas-fase4-counter.active {
+    border-color: #8eb4e5;
+
+    background: #edf4ff;
+
+    color: #1768cf;
+}
+
+#mesasPage .mesas-fase4-counter strong {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 23px;
+    height: 23px;
+
+    padding: 0 6px;
+
+    box-sizing: border-box;
+
+    border-radius: 999px;
+
+    background: #e3ebf5;
+
+    color: #1768cf;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+#mesasPage .mesas-fase4-counter.active strong {
+    background: #1768cf;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   CAMPOS
+   ============================================================ */
+
+#mesasPage .mesas-fase4-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    min-width: 0;
+
+    color: #536b82;
+
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+#mesasPage .mesas-fase4-field > span {
+    color: #536b82;
+
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+#mesasPage .mesas-fase4-field small {
+    color: #8a9aaa;
+
+    font-size: 8px;
+    line-height: 12px;
+
+    font-weight: 500;
+}
+
+
+/* ============================================================
+   DEMANDA · DOS BUSCADORES
+   ============================================================ */
+
+#mesasPage .mesas-demanda-search-grid {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(300px, 0.8fr);
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+}
+
+#mesasPage .mesas-demanda-search-grid .mesas-search input {
+    height: 40px;
+}
+
+
+/* ============================================================
+   BÚSQUEDA EXACTA
+   ============================================================ */
+
+#mesasPage .mesas-demanda-exact-search {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+
+    gap: 7px;
+}
+
+#mesasPage .mesas-demanda-exact-search input {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 11px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-family: inherit;
+    font-size: 10px;
+}
+
+#mesasPage .mesas-demanda-exact-search input:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ============================================================
+   TABLA DE DEMANDA
+   ============================================================ */
+
+#mesasPage .mesas-demanda-table {
+    width: 100%;
+    min-width: 1050px;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+}
+
+#mesasPage .mesas-demanda-table thead {
+    background: #f7f9fb;
+}
+
+#mesasPage .mesas-demanda-table th {
+    height: 42px;
+
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #dce3ea;
+
+    color: #60758a;
+
+    font-size: 8.5px;
+    line-height: 11px;
+
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+}
+
+#mesasPage .mesas-demanda-table td {
+    min-height: 52px;
+
+    padding: 11px 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #e6ecf1;
+
+    color: #455e76;
+
+    font-size: 9.5px;
+    line-height: 14px;
+
+    vertical-align: middle;
+
+    overflow-wrap: anywhere;
+}
+
+#mesasPage .mesas-demanda-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+#mesasPage .mesas-demanda-table tbody tr:hover {
+    background: #fafcff;
+}
+
+
+/* Anchos */
+
+#mesasPage .mesas-demanda-table th:nth-child(1) {
+    width: 130px;
+}
+
+#mesasPage .mesas-demanda-table th:nth-child(2) {
+    width: 105px;
+}
+
+#mesasPage .mesas-demanda-table th:nth-child(3) {
+    width: 165px;
+}
+
+#mesasPage .mesas-demanda-table th:nth-child(4) {
+    width: 165px;
+}
+
+#mesasPage .mesas-demanda-table th:nth-child(5) {
+    width: 155px;
+}
+
+#mesasPage .mesas-demanda-table th:nth-child(6) {
+    width: 120px;
+}
+
+#mesasPage .mesas-demanda-table th:nth-child(7) {
+    width: 230px;
+}
+
+
+/* ============================================================
+   SELECT DE ESTADO
+   ============================================================ */
+
+#mesasPage .mesas-fase4-state-select {
+    width: 100%;
+    min-width: 135px;
+    height: 34px;
+
+    padding: 0 8px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-family: inherit;
+    font-size: 9px;
+
+    cursor: pointer;
+}
+
+#mesasPage .mesas-fase4-state-select:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ============================================================
+   BADGES DE CATEGORÍA
+   ============================================================ */
+
+#mesasPage .mesas-fase4-category-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 25px;
+
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border-radius: 999px;
+
+    font-size: 8.5px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* Por radicar */
+
+#mesasPage .mesas-fase4-category-badge.pending {
+    background: #fff4e0;
+
+    color: #a26005;
+}
+
+
+/* Radicado */
+
+#mesasPage .mesas-fase4-category-badge.done {
+    background: #e4f6e8;
+
+    color: #14833b;
+}
+
+
+/* ============================================================
+   PLANTILLAS DENTRO DE FASE 4
+   ============================================================ */
+
+#mesasPage .mesas-fase4-section [data-plantillas-slot] {
+    margin-top: 16px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    #mesasPage .mesas-demanda-search-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    #mesasPage .mesas-fase4-counters {
+        flex-wrap: wrap;
+    }
+
+    #mesasPage .mesas-fase4-counter {
+        flex: 1 1 130px;
+    }
+
+    #mesasPage .mesas-demanda-exact-search {
+        grid-template-columns: 1fr;
+    }
+
+    #mesasPage .mesas-demanda-exact-search .mesas-primary-btn {
+        width: 100%;
+    }
+
+}
+/* ============================================================
+   PROMOCIONES · T-14
+   ============================================================ */
+
+
+/* ---------- Banner de prioridad ---------- */
+
+#mesasPage .mesas-promociones-priority {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+    padding: 12px 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d7e5f7;
+    border-left: 4px solid #1768cf;
+    border-radius: 8px;
+
+    background: #f6faff;
+}
+
+#mesasPage .mesas-promociones-priority.danger {
+    border-color: #f2c7c2;
+    border-left-color: #b42318;
+
+    background: #fff7f6;
+}
+
+
+/* ---------- Icono ---------- */
+
+#mesasPage .mesas-promociones-priority-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 38px;
+    height: 38px;
+
+    min-width: 38px;
+
+    border-radius: 8px;
+
+    background: #e8f1ff;
+
+    color: #1768cf;
+
+    font-size: 13px;
+}
+
+#mesasPage .mesas-promociones-priority.danger
+.mesas-promociones-priority-icon {
+    background: #fdecea;
+
+    color: #b42318;
+}
+
+
+/* ---------- Contenido ---------- */
+
+#mesasPage .mesas-promociones-priority-body {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 0;
+
+    flex: 1 1 auto;
+}
+
+#mesasPage .mesas-promociones-priority-body > span {
+    color: #1768cf;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+#mesasPage .mesas-promociones-priority.danger
+.mesas-promociones-priority-body > span {
+    color: #b42318;
+}
+
+#mesasPage .mesas-promociones-priority-body strong {
+    color: #29445c;
+
+    font-size: 11px;
+}
+
+#mesasPage .mesas-promociones-priority-body small {
+    color: #71869a;
+
+    font-size: 8.5px;
+}
+
+
+/* ---------- Botón crítico ---------- */
+
+#mesasPage .mesas-promociones-priority-btn.danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    height: 32px;
+
+    padding: 0 11px;
+
+    border: 1px solid #b42318;
+    border-radius: 6px;
+
+    background: #b42318;
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 9px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+#mesasPage .mesas-promociones-priority-btn.danger:hover {
+    background: #8f1d14;
+
+    border-color: #8f1d14;
+}
+
+
+/* ============================================================
+   BUSCADOR
+   ============================================================ */
+
+#mesasPage .mesas-promociones-toolbar {
+    display: grid;
+
+    grid-template-columns:
+        minmax(300px, 520px);
+
+    margin-bottom: 12px;
+}
+
+
+/* ============================================================
+   TABLA PROMOCIONES
+   ============================================================ */
+
+#mesasPage .mesas-promociones-table {
+    width: 100%;
+    min-width: 1250px;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+}
+
+#mesasPage .mesas-promociones-table thead {
+    background: #f7f9fb;
+}
+
+#mesasPage .mesas-promociones-table th {
+    height: 42px;
+
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #dce3ea;
+
+    color: #60758a;
+
+    font-size: 8.5px;
+    line-height: 11px;
+
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+}
+
+#mesasPage .mesas-promociones-table td {
+    min-height: 52px;
+
+    padding: 11px 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #e6ecf1;
+
+    color: #455e76;
+
+    font-size: 9.5px;
+    line-height: 14px;
+
+    vertical-align: middle;
+
+    overflow-wrap: anywhere;
+}
+
+#mesasPage .mesas-promociones-table tbody tr:hover {
+    background: #fafcff;
+}
+
+#mesasPage .mesas-promociones-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ---------- Anchuras ---------- */
+
+#mesasPage .mesas-promociones-table th:nth-child(1) {
+    width: 120px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(2) {
+    width: 100px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(3) {
+    width: 150px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(4) {
+    width: 150px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(5) {
+    width: 190px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(6) {
+    width: 160px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(7) {
+    width: 120px;
+}
+
+#mesasPage .mesas-promociones-table th:nth-child(8) {
+    width: 170px;
+}
+
+
+/* ============================================================
+   AGENDA DE FASE 4
+   ============================================================ */
+
+#mesasPage .mesas-fase4-agenda-block {
+    margin-top: 16px;
+}
+
+#mesasPage .mesas-fase4-subheader {
+    margin-bottom: 10px;
+}
+
+#mesasPage .mesas-fase4-subheader h3 {
+    margin: 3px 0 3px;
+
+    color: #102b45;
+
+    font-size: 15px;
+}
+
+#mesasPage .mesas-fase4-subheader p {
+    margin: 0;
+
+    color: #71869a;
+
+    font-size: 9px;
+}
+
+
+/* ============================================================
+   RESPONSIVE PROMOCIONES
+   ============================================================ */
+
+@media (max-width: 760px) {
+
+    #mesasPage .mesas-promociones-priority {
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+    }
+
+    #mesasPage .mesas-promociones-priority-body {
+        flex: 1 1 calc(100% - 55px);
+    }
+
+    #mesasPage .mesas-promociones-priority
+    > button {
+        width: 100%;
+    }
+
+    #mesasPage .mesas-promociones-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+}
+/* ============================================================
+   CALIFICACIÓN · T-15
+   ============================================================ */
+
+
+/* ---------- Toolbar ---------- */
+
+#mesasPage .mesas-calificacion-toolbar {
+    display: grid;
+    grid-template-columns: minmax(300px, 520px);
+
+    margin-bottom: 12px;
+}
+
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+#mesasPage .mesas-calificacion-table {
+    width: 100%;
+    min-width: 1100px;
+
+    border-collapse: collapse;
+
+    table-layout: fixed;
+}
+
+#mesasPage .mesas-calificacion-table thead {
+    background: #f7f9fb;
+}
+
+#mesasPage .mesas-calificacion-table th {
+    height: 42px;
+
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #dce3ea;
+
+    color: #60758a;
+
+    font-size: 8.5px;
+    line-height: 11px;
+
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+}
+
+#mesasPage .mesas-calificacion-table td {
+    min-height: 52px;
+
+    padding: 11px 10px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid #e6ecf1;
+
+    color: #455e76;
+
+    font-size: 9.5px;
+    line-height: 14px;
+
+    vertical-align: middle;
+
+    overflow-wrap: anywhere;
+}
+
+#mesasPage .mesas-calificacion-table tbody tr:hover {
+    background: #fafcff;
+}
+
+#mesasPage .mesas-calificacion-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ---------- Anchuras ---------- */
+
+#mesasPage .mesas-calificacion-table th:nth-child(1) {
+    width: 125px;
+}
+
+#mesasPage .mesas-calificacion-table th:nth-child(2) {
+    width: 165px;
+}
+
+#mesasPage .mesas-calificacion-table th:nth-child(3) {
+    width: 165px;
+}
+
+#mesasPage .mesas-calificacion-table th:nth-child(4) {
+    width: 165px;
+}
+
+#mesasPage .mesas-calificacion-table th:nth-child(5) {
+    width: 125px;
+}
+
+#mesasPage .mesas-calificacion-table th:nth-child(6) {
+    width: 190px;
+}
+
+#mesasPage .mesas-calificacion-table th:nth-child(7) {
+    width: 170px;
+}
+
+
+/* ============================================================
+   NOTAS
+   ============================================================ */
+
+#mesasPage .mesas-calificacion-notas {
+    width: 100%;
+    height: 34px;
+
+    padding: 0 9px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-family: inherit;
+    font-size: 9px;
+}
+
+#mesasPage .mesas-calificacion-notas:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ============================================================
+   SEPARACIÓN DE LAS DOS AGENDAS
+   ============================================================ */
+
+#mesasPage .mesas-fase4-agenda-block
++ .mesas-fase4-agenda-block {
+    padding-top: 16px;
+
+    border-top: 1px solid #e3e9ef;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+
+    #mesasPage .mesas-calificacion-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+}

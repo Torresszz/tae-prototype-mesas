@@ -1,0 +1,798 @@
+/* ============================================================
+   MESAS · AGENDA
+   assets/css/mesasAgenda.css
+   FASE 3 - T-09 / T-10 / T-11 / T-12
+
+   Todo está limitado a #mesasPage para evitar afectar
+   otros módulos del sistema.
+   ============================================================ */
+
+
+/* ============================================================
+   CONTENEDOR PRINCIPAL
+   ============================================================ */
+
+#mesasPage .mesas-agenda {
+    width: 100%;
+    overflow: hidden;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dce3ea;
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+#mesasPage .mesas-agenda-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    padding: 15px 16px;
+
+    border-bottom: 1px solid #e3e9ef;
+}
+
+#mesasPage .mesas-agenda-header h2 {
+    margin: 2px 0 0;
+
+    color: #102b45;
+
+    font-size: 16px;
+    line-height: 21px;
+}
+
+
+/* ============================================================
+   CONTROLES
+   ============================================================ */
+
+#mesasPage .mesas-agenda-controls {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    padding: 12px 16px;
+
+    border-bottom: 1px solid #e7edf2;
+
+    background: #fafbfd;
+}
+
+
+/* Navegación de mes */
+
+#mesasPage .mesas-agenda-month-nav {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+}
+
+#mesasPage .mesas-agenda-month-nav strong {
+    min-width: 125px;
+
+    color: #29445c;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-align: center;
+}
+
+
+/* Filtro */
+
+#mesasPage .mesas-agenda-filter {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    color: #60758a;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+#mesasPage .mesas-agenda-filter select {
+    min-width: 190px;
+    height: 34px;
+
+    padding: 0 9px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-size: 9.5px;
+
+    cursor: pointer;
+}
+
+#mesasPage .mesas-agenda-filter select:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ============================================================
+   LEYENDA
+   ============================================================ */
+
+#mesasPage .mesas-agenda-legend {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 9px 16px;
+
+    border-bottom: 1px solid #e7edf2;
+}
+
+#mesasPage .mesas-agenda-legend-item {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 4px 8px;
+
+    border-radius: 999px;
+
+    font-size: 8.5px;
+    font-weight: 700;
+}
+
+
+/* Audiencia */
+
+#mesasPage .mesas-agenda-legend-item.audiencia {
+    background: #e8f1ff;
+    color: #1768cf;
+}
+
+
+/* Calificación */
+
+#mesasPage .mesas-agenda-legend-item.calificacion {
+    background: #f1eaff;
+    color: #7045bd;
+}
+
+
+/* ============================================================
+   CALENDARIO
+   ============================================================ */
+
+#mesasPage .mesas-agenda-calendar {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+
+/* Días de semana */
+
+#mesasPage .mesas-agenda-weekdays {
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, minmax(115px, 1fr));
+
+    min-width: 805px;
+
+    border-bottom: 1px solid #dce3ea;
+
+    background: #f7f9fb;
+}
+
+#mesasPage .mesas-agenda-weekdays span {
+    padding: 8px;
+
+    color: #60758a;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    text-align: center;
+    text-transform: uppercase;
+}
+
+
+/* ============================================================
+   CUADRÍCULA
+   ============================================================ */
+
+#mesasPage .mesas-agenda-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, minmax(115px, 1fr));
+
+    min-width: 805px;
+
+    background: #dfe6ed;
+
+    gap: 1px;
+}
+
+
+/* Día */
+
+#mesasPage .mesas-agenda-day {
+    position: relative;
+
+    min-height: 115px;
+
+    padding: 7px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+}
+
+#mesasPage .mesas-agenda-day:hover {
+    background: #fbfdff;
+}
+
+
+/* Espacios antes del primer día */
+
+#mesasPage .mesas-agenda-day.is-empty {
+    background: #f7f9fb;
+}
+
+
+/* Día actual */
+
+#mesasPage .mesas-agenda-day.is-today {
+    box-shadow:
+        inset 0 0 0 2px #8eb4e5;
+
+    background: #fbfdff;
+}
+
+
+/* Número del día */
+
+#mesasPage .mesas-agenda-day-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 25px;
+    height: 25px;
+
+    margin-bottom: 5px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: transparent;
+
+    color: #536b82;
+
+    font-family: inherit;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+#mesasPage .mesas-agenda-day-number:hover {
+    background: #edf4ff;
+
+    color: #1768cf;
+}
+
+#mesasPage .mesas-agenda-day.is-today
+.mesas-agenda-day-number {
+    background: #1768cf;
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   EVENTOS DEL DÍA
+   ============================================================ */
+
+#mesasPage .mesas-agenda-day-events {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+
+/* Evento base */
+
+#mesasPage .mesas-agenda-event {
+    display: grid;
+
+    grid-template-columns:
+        13px
+        minmax(0, 1fr);
+
+    gap: 2px 5px;
+
+    width: 100%;
+
+    padding: 6px 7px;
+
+    box-sizing: border-box;
+
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 5px;
+
+    font-family: inherit;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        filter 0.15s ease,
+        transform 0.15s ease;
+}
+
+#mesasPage .mesas-agenda-event:hover {
+    filter: brightness(0.97);
+
+    transform: translateY(-1px);
+}
+
+#mesasPage .mesas-agenda-event i {
+    grid-row: 1 / 3;
+
+    margin-top: 1px;
+
+    font-size: 8px;
+}
+
+#mesasPage .mesas-agenda-event strong {
+    overflow: hidden;
+
+    font-size: 8px;
+    line-height: 10px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#mesasPage .mesas-agenda-event span {
+    font-size: 7.5px;
+    line-height: 10px;
+}
+
+#mesasPage .mesas-agenda-event small {
+    grid-column: 2;
+
+    overflow: hidden;
+
+    font-size: 7.5px;
+    line-height: 9px;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   AUDIENCIA
+   ============================================================ */
+
+#mesasPage .mesas-agenda-event.audiencia {
+    border-left-color: #1768cf;
+
+    background: #e8f1ff;
+
+    color: #185aa8;
+}
+
+#mesasPage .mesas-agenda-event.audiencia i {
+    color: #1768cf;
+}
+
+
+/* ============================================================
+   CALIFICACIÓN
+   ============================================================ */
+
+#mesasPage .mesas-agenda-event.calificacion {
+    border-left-color: #7045bd;
+
+    background: #f1eaff;
+
+    color: #62409d;
+}
+
+#mesasPage .mesas-agenda-event.calificacion i {
+    color: #7045bd;
+}
+
+
+/* ============================================================
+   FORMULARIO DEL EVENTO
+   ============================================================ */
+
+#mesasPage .mesas-agenda-form {
+    width: 100%;
+}
+
+#mesasPage .mesas-agenda-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+}
+
+#mesasPage .mesas-agenda-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    min-width: 0;
+
+    color: #60758a;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+#mesasPage .mesas-agenda-field.full {
+    grid-column: 1 / -1;
+}
+
+#mesasPage .mesas-agenda-field > span {
+    display: flex;
+    align-items: center;
+
+    gap: 4px;
+}
+
+#mesasPage .mesas-agenda-field small {
+    color: #8293a3;
+
+    font-size: 8px;
+    font-weight: 500;
+}
+
+#mesasPage .mesas-agenda-field input,
+#mesasPage .mesas-agenda-field select {
+    width: 100%;
+    height: 38px;
+
+    padding: 0 10px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-family: inherit;
+
+    font-size: 10px;
+}
+
+#mesasPage .mesas-agenda-field input:focus,
+#mesasPage .mesas-agenda-field select:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ============================================================
+   BOTÓN DE ELIMINACIÓN
+   ============================================================ */
+
+#modal.show:has(.mesas-modal-shell)
+.mesas-modal-confirm.danger {
+    border-color: #b42318;
+
+    background: #b42318;
+}
+
+#modal.show:has(.mesas-modal-shell)
+.mesas-modal-confirm.danger:hover {
+    border-color: #8f1d14;
+
+    background: #8f1d14;
+}
+
+
+/* ============================================================
+   T-12 · ALERTAS DE AGENDA
+   Se utilizarán cuando conectemos el panel de Alertas.
+   ============================================================ */
+
+#mesasPage .mesas-alert-item.agenda {
+    border-left: 3px solid #1768cf;
+}
+
+#mesasPage .mesas-alert-item.agenda
+.mesas-alert-icon {
+    background: #e8f1ff;
+
+    color: #1768cf;
+}
+
+
+/* Destinatario */
+
+#mesasPage .mesas-alert-destinatario {
+    display: inline-flex;
+    align-items: center;
+
+    width: max-content;
+
+    margin-top: 5px;
+
+    padding: 2px 7px;
+
+    border-radius: 999px;
+
+    background: #edf4ff;
+
+    color: #1768cf;
+
+    font-size: 7.5px;
+    font-weight: 700;
+}
+
+
+/* Marcar como leída */
+
+#mesasPage .mesas-alert-read-btn {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 4px;
+
+    margin-top: 6px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #1768cf;
+
+    font-family: inherit;
+
+    font-size: 8px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+#mesasPage .mesas-alert-read-btn:hover {
+    text-decoration: underline;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+
+    #mesasPage .mesas-agenda-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    #mesasPage .mesas-agenda-controls {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    #mesasPage .mesas-agenda-month-nav {
+        justify-content: space-between;
+    }
+
+    #mesasPage .mesas-agenda-filter select {
+        width: 100%;
+    }
+
+    #mesasPage .mesas-agenda-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #mesasPage .mesas-agenda-field.full {
+        grid-column: auto;
+    }
+
+}
+/* ============================================================
+   MODAL DE AGENDA
+   El modal global está fuera de #mesasPage, por eso estos
+   estilos se aplican directamente a .mesas-agenda-modal.
+   ============================================================ */
+
+#modal.show:has(.mesas-agenda-modal) .modal-card {
+    width: 680px;
+    max-width: calc(100vw - 40px);
+}
+
+
+/* ---------- Formulario ---------- */
+
+.mesas-agenda-modal .mesas-agenda-form {
+    width: 100%;
+}
+
+.mesas-agenda-modal .mesas-agenda-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 14px;
+}
+
+
+/* ---------- Campo ---------- */
+
+.mesas-agenda-modal .mesas-agenda-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.mesas-agenda-modal .mesas-agenda-field.full {
+    grid-column: 1 / -1;
+}
+
+
+/* ---------- Etiquetas ---------- */
+
+.mesas-agenda-modal .mesas-agenda-field > span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    color: #536b82;
+
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+.mesas-agenda-modal .mesas-agenda-field small {
+    color: #8293a3;
+
+    font-size: 8px;
+    font-weight: 500;
+}
+
+
+/* ---------- Inputs y selects ---------- */
+
+.mesas-agenda-modal .mesas-agenda-field input,
+.mesas-agenda-modal .mesas-agenda-field select {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 11px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-family: inherit;
+    font-size: 10px;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.mesas-agenda-modal .mesas-agenda-field input:focus,
+.mesas-agenda-modal .mesas-agenda-field select:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ---------- Anotaciones ---------- */
+
+.mesas-agenda-modal .mesas-agenda-field textarea {
+    width: 100%;
+    min-height: 125px;
+
+    padding: 10px 12px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #29445c;
+
+    font-family: inherit;
+    font-size: 10px;
+    line-height: 15px;
+
+    resize: vertical;
+}
+
+.mesas-agenda-modal .mesas-agenda-field textarea:focus {
+    border-color: #8eb4e5;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(43, 114, 214, 0.08);
+}
+
+
+/* ---------- Error ---------- */
+
+.mesas-agenda-modal .mesas-form-error {
+    margin-top: 14px;
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 650px) {
+    .mesas-agenda-modal .mesas-agenda-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mesas-agenda-modal .mesas-agenda-field.full {
+        grid-column: auto;
+    }
+}
