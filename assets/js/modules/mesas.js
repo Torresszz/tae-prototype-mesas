@@ -11,28 +11,48 @@ import { showModal, closeForm } from "../forms/formHelper.js";
 
 import { getSession, canSign } from "../auth.js";
 
+import { MESAS_CONFIG, esCritico, nivelPromociones } from "./mesas/config.js";
+
+import {
+  ESTADOS,
+  ESTADO_INICIAL,
+  MAPA_ESTADOS_ANTIGUOS,
+  etiquetaEstado,
+} from "./mesas/estados.js";
+
+import {
+  getFiltros,
+  setFiltro,
+  coincideExpediente,
+  coincideFecha,
+  coincideEstado,
+  initBarraFiltros,
+  sincronizarBarraFiltros,
+} from "./mesas/filtros.js";
+
+import {
+  initNavegacionMesas,
+  registrarSeccion,
+  renderSeccionActiva,
+} from "./mesas/navegacion.js";
+
+import { renderPlantillas } from "./mesas/plantillas.js";
+
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
 
 const KEY = "mesasSeguimiento";
 
-let currentStatus = "todos";
-let currentSearch = "";
-let currentEtapa = "";
-let currentFechaDesde = "";
-let currentFechaHasta = "";
+// Pestañas internas que ya tienen su propio render (una línea por fase)
+registrarSeccion("plantillas", renderPlantillas);
+
+// Búsqueda propia de la vista Mesas (actor, demandado, acto).
+// El resto de filtros (expediente, fechas, estado) son globales: mesas/filtros.js
+let currentTexto = "";
 let currentOrdenPromociones = "desc";
 
 let vistaInicialAplicada = false;
-
-const ETAPA_LABELS = {
-  pendiente: "Pendiente de recibir",
-  acuerdo: "En acuerdo",
-  firma: "En firma",
-  firmado: "Firmado",
-  archivo: "En archivo",
-};
 
 // ============================================================
 // INICIALIZACIÓN
@@ -40,8 +60,6 @@ const ETAPA_LABELS = {
 
 export function initMesas() {
   window.renderMesas = renderMesas;
-
-  window.openRecibirExpediente = openRecibirExpediente;
 
   window.openCrearAcuerdos = openCrearAcuerdos;
 }
@@ -57,28 +75,31 @@ export function renderMesas() {
     return;
   }
 
-    prepararSeguimiento();
+  prepararSeguimiento();
 
   // La Magistrada entra directo a lo que tiene por firmar
   if (!vistaInicialAplicada) {
     vistaInicialAplicada = true;
 
     if (canSign()) {
-      currentStatus = "firma";
+      setFiltro("estado", "en-firma");
     }
   }
 
-    renderTituloMesa();
+  renderTituloMesa();
 
   setupEvents();
 
   const registros = getRegistros();
 
-  renderCounts(registros);
+  renderTabsEstado(registros);
 
   renderTable(registros);
 
   renderAlerts(registros);
+
+  // Pestañas que no son "Mesas" (las fases siguientes registran su render)
+  renderSeccionActiva();
 }
 
 // ============================================================
@@ -92,6 +113,19 @@ function prepararSeguimiento() {
 
   let changed = false;
 
+  // Limpieza de datos guardados con el catálogo anterior (etapa -> estado)
+  Object.values(seguimiento).forEach((registro) => {
+    if (registro && registro.etapa !== undefined) {
+      if (!registro.estado) {
+        registro.estado = MAPA_ESTADOS_ANTIGUOS[registro.etapa] || ESTADO_INICIAL;
+      }
+
+      delete registro.etapa;
+
+      changed = true;
+    }
+  });
+
   expedientes.forEach((expediente) => {
     const numero = getNumero(expediente);
 
@@ -104,7 +138,7 @@ function prepararSeguimiento() {
     }
 
     seguimiento[numero] = {
-      etapa: "pendiente",
+      estado: ESTADO_INICIAL,
 
       recibidoEn: null,
 
@@ -154,7 +188,7 @@ function getRegistros() {
     const numero = getNumero(expediente);
 
     const estado = seguimiento[numero] || {
-      etapa: "pendiente",
+      estado: ESTADO_INICIAL,
     };
 
     const promocionesExp = promociones.filter(
@@ -201,53 +235,54 @@ function getRegistros() {
 function setupEvents() {
   const page = document.getElementById("mesasPage");
 
+  // Pestañas internas y barra global de búsqueda
+  initNavegacionMesas(renderMesas);
+
+  initBarraFiltros(renderMesas);
+
+  // Búsqueda propia de la vista Mesas
   const search = document.getElementById("mesasSearch");
 
-  const etapa = document.getElementById("mesasEtapaFilter");
-
   if (search) {
-    search.value = currentSearch;
+    search.value = currentTexto;
 
     search.oninput = (event) => {
-      currentSearch = event.target.value.trim().toLowerCase();
+      currentTexto = event.target.value.trim().toLowerCase();
 
       renderMesas();
     };
   }
 
-  if (etapa) {
-    etapa.value = currentEtapa;
-
-    etapa.onchange = (event) => {
-      currentEtapa = event.target.value;
-
-      renderMesas();
-    };
-  }
-
-  const desde = document.getElementById("mesasFechaDesde");
-  const hasta = document.getElementById("mesasFechaHasta");
   const orden = document.getElementById("mesasOrdenPromociones");
-  if (desde) {
-    desde.value = currentFechaDesde;
-    desde.onchange = (event) => { currentFechaDesde = event.target.value; renderMesas(); };
-  }
-  if (hasta) {
-    hasta.value = currentFechaHasta;
-    hasta.onchange = (event) => { currentFechaHasta = event.target.value; renderMesas(); };
-  }
+
   if (orden) {
     orden.value = currentOrdenPromociones;
-    orden.onchange = (event) => { currentOrdenPromociones = event.target.value; renderMesas(); };
-  }
 
-  document.querySelectorAll(".mesas-status-tab").forEach((button) => {
-    button.onclick = () => {
-      currentStatus = button.dataset.status;
+    orden.onchange = (event) => {
+      currentOrdenPromociones = event.target.value;
 
       renderMesas();
     };
-  });
+  }
+
+  // Pestañas de estado: comparten el filtro global de Estado
+  const tabs = document.getElementById("mesasStatusTabs");
+
+  if (tabs) {
+    tabs.onclick = (event) => {
+      const button = event.target.closest(".mesas-status-tab");
+
+      if (!button) {
+        return;
+      }
+
+      setFiltro("estado", button.dataset.status);
+
+      sincronizarBarraFiltros();
+
+      renderMesas();
+    };
+  }
 
   const demoButton = document.getElementById("mesasLoadDemoBtn");
 
@@ -268,18 +303,35 @@ function setupEvents() {
       const numero = button.dataset.expediente;
 
       switch (action) {
-        case "recibir":
-          openRecibirExpediente(numero);
-
-          break;
-
         case "crear-acuerdo":
           openCrearAcuerdos(numero);
 
           break;
 
-                case "firmar":
+        case "enviar-firma":
+          avanzarEstado(
+            numero,
+            "en-firma",
+            "Proyecto de acuerdo enviado a firma de la Magistrada",
+            { enviadoFirmaEn: new Date().toISOString() },
+          );
+
+          break;
+
+        case "firmar":
           openFirmarAcuerdo(numero);
+
+          break;
+
+        case "a-actuaria":
+          avanzarEstado(numero, "en-actuaria", "Turnado a Actuaría");
+
+          break;
+
+        case "a-archivo":
+          avanzarEstado(numero, "en-archivo", "Turnado a Archivo", {
+            archivadoEn: new Date().toISOString(),
+          });
 
           break;
 
@@ -296,37 +348,40 @@ function setupEvents() {
 // CONTADORES
 // ============================================================
 
-function renderCounts(registros) {
-  setText("mesasCountTodos", registros.length);
+function renderTabsEstado(registros) {
+  const contenedor = document.getElementById("mesasStatusTabs");
 
-  setText(
-    "mesasCountPendientes",
-    registros.filter((r) => r.seguimiento.etapa === "pendiente").length,
-  );
+  if (!contenedor) {
+    return;
+  }
 
-  setText(
-    "mesasCountAcuerdo",
-    registros.filter((r) => r.seguimiento.etapa === "acuerdo").length,
-  );
+  const activo = getFiltros().estado;
 
-  setText(
-    "mesasCountFirma",
-    registros.filter((r) => r.seguimiento.etapa === "firma").length,
-  );
+  const tabs = [
+    { clave: "", etiqueta: "Todos", total: registros.length },
 
-    setText(
-    "mesasCountFirmado",
-    registros.filter((r) => r.seguimiento.etapa === "firmado").length,
-  );
+    ...ESTADOS.map((estado) => ({
+      clave: estado.clave,
+      etiqueta: estado.etiqueta,
+      total: registros.filter((r) => r.seguimiento.estado === estado.clave)
+        .length,
+    })),
+  ];
 
-  setText(
-    "mesasCountArchivo",
-    registros.filter((r) => r.seguimiento.etapa === "archivo").length,
-  );
-
-  document.querySelectorAll(".mesas-status-tab").forEach((button) => {
-    button.classList.toggle("active", button.dataset.status === currentStatus);
-  });
+  contenedor.innerHTML = tabs
+    .map(
+      (tab) => `
+        <button
+            type="button"
+            class="mesas-status-tab ${tab.clave === activo ? "active" : ""}"
+            data-status="${tab.clave}"
+        >
+            <span>${tab.etiqueta}</span>
+            <strong>${tab.total}</strong>
+        </button>
+    `,
+    )
+    .join("");
 }
 
 // ============================================================
@@ -342,63 +397,35 @@ function renderTable(registros) {
     return;
   }
 
-  let visibles = [...registros];
+  // Filtros globales: No. de expediente, fecha de recepción y estado
+  let visibles = registros.filter(
+    (item) =>
+      coincideEstado(item.seguimiento.estado) &&
+      coincideExpediente(item.numero) &&
+      coincideFecha(item.fecha),
+  );
 
-  // ========================================================
-  // FILTRO DE STATUS
-  // ========================================================
-
-  if (currentStatus !== "todos") {
-    visibles = visibles.filter(
-      (item) => item.seguimiento.etapa === currentStatus,
-    );
-  }
-
-  // ========================================================
-  // SELECT DE ETAPA
-  // ========================================================
-
-  if (currentEtapa) {
-    visibles = visibles.filter(
-      (item) => item.seguimiento.etapa === currentEtapa,
-    );
-  }
-
-  // ========================================================
-  // BUSCADOR
-  // ========================================================
-
-  if (currentSearch) {
+  // Búsqueda propia de esta vista
+  if (currentTexto) {
     visibles = visibles.filter((item) => {
       const texto = `
+                ${item.promovente}
+                ${item.demandado}
+                ${item.asunto}
+                ${item.ubicacion}
+            `.toLowerCase();
 
-                        ${item.numero}
-                        ${item.promovente}
-                        ${item.demandado}
-                        ${item.ubicacion}
-                        ${item.asunto}
-                        ${item.seguimiento.ultimoMovimiento || ""}
-
-                    `.toLowerCase();
-
-      return texto.includes(currentSearch);
-    });
-  }
-
-  // Comparación inclusiva por día; fechas inválidas no coinciden con el filtro.
-  if (currentFechaDesde || currentFechaHasta) {
-    visibles = visibles.filter((item) => {
-      const dia = normalizarDiaMesa(item.fecha);
-      return dia && (!currentFechaDesde || dia >= currentFechaDesde) &&
-        (!currentFechaHasta || dia <= currentFechaHasta);
+      return texto.includes(currentTexto);
     });
   }
 
   // Orden estable: conserva el orden previo cuando dos expedientes empatan.
   if (currentOrdenPromociones !== "sin-orden") {
-    visibles.sort((a, b) => currentOrdenPromociones === "asc"
-      ? a.promociones.length - b.promociones.length
-      : b.promociones.length - a.promociones.length);
+    visibles.sort((a, b) =>
+      currentOrdenPromociones === "asc"
+        ? a.promociones.length - b.promociones.length
+        : b.promociones.length - a.promociones.length,
+    );
   }
 
   if (!visibles.length) {
@@ -418,113 +445,45 @@ function renderTable(registros) {
   tbody.innerHTML = visibles.map((item) => renderRow(item)).join("");
 }
 
-function normalizarDiaMesa(valor) {
-  if (!valor) return "";
-  const texto = String(valor).trim();
-  const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
-  const local = texto.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-  if (local) return `${local[3]}-${local[2]}-${local[1]}`;
-  return "";
-}
 
 // ============================================================
 // FILA
 // ============================================================
 
 function renderRow(item) {
-  const etapa = item.seguimiento.etapa;
+  const estado = item.seguimiento.estado;
 
   const promoCount = item.promociones.length;
 
   return `
-
         <tr>
-
-
             <td>
-
                 <span class="mesas-expediente-number">
                     ${escapeHTML(item.numero)}
                 </span>
                 <span class="mesas-mesa-tag">Mesa ${item.mesa}</span>
-
             </td>
-
 
             <td>
-
-                ${escapeHTML(item.promovente)}
-
+                <span class="mesas-promos-count ${nivelPromociones(promoCount)}">
+                    ${promoCount}
+                </span>
             </td>
 
+            <td>${escapeHTML(formatFecha(item.fecha))}</td>
+
+            <td>${escapeHTML(item.promovente)}</td>
 
             <td>${escapeHTML(item.demandado)}</td>
 
             <td>${escapeHTML(item.asunto)}</td>
 
+            <td>${renderEstadoBadge(estado)}</td>
+
             <td>${escapeHTML(item.ubicacion)}</td>
 
-
-            <td>
-
-                <span
-                    class="
-                        mesas-promos-count
-                        ${
-                          promoCount >= 10
-                            ? "danger"
-                            : promoCount >= 5
-                              ? "warning"
-                              : ""
-                        }
-                    "
-                >
-
-                    ${promoCount}
-
-                </span>
-
-            </td>
-
-
-            <td>
-
-                ${renderEtapaBadge(etapa)}
-
-            </td>
-
-
-            <td>
-
-                ${escapeHTML(item.seguimiento.ultimoMovimiento || "—")}
-
-            </td>
-
-
-            <td>
-
-                ${escapeHTML(formatFecha(item.fecha))}
-
-            </td>
-
-
-            <td>
-
-                ${renderEstadoBadge(etapa)}
-
-            </td>
-
-
-            <td>
-
-                ${renderActions(item)}
-
-            </td>
-
-
+            <td>${renderActions(item)}</td>
         </tr>
-
     `;
 }
 
@@ -532,70 +491,16 @@ function renderRow(item) {
 // BADGE ETAPA
 // ============================================================
 
-function renderEtapaBadge(etapa) {
-  const labels = {
-    pendiente: "Pendiente de recibir",
-
-    acuerdo: "En acuerdo",
-
-    firma: "En firma", firmado: "Firmado", archivo: "En archivo",
-  };
-
-  return `
-
-        <span
-            class="
-                mesas-stage-badge
-                ${etapa}
-            "
-        >
-
-            ${labels[etapa] || etapa}
-
-        </span>
-
-    `;
-}
 
 // ============================================================
 // BADGE ESTADO
 // ============================================================
 
-function renderEstadoBadge(etapa) {
-  const estados = {
-    pendiente: {
-      clase: "mesa",
-      texto: "En mesa",
-    },
-
-    acuerdo: {
-      clase: "tramite",
-      texto: "En trámite",
-    },
-
-    firma: {
-      clase: "firmar",
-      texto: "Por firmar",
-    },
-
-    firmado: { clase: "firmado", texto: "Firmado", }, archivo: { clase: "concluido", texto: "Concluido", },
-  };
-
-  const estado = estados[etapa] || estados.pendiente;
-
+function renderEstadoBadge(estado) {
   return `
-
-        <span
-            class="
-                mesas-status-badge
-                ${estado.clase}
-            "
-        >
-
-            ${estado.texto}
-
+        <span class="mesas-estado-badge ${escapeHTML(estado)}">
+            ${escapeHTML(etiquetaEstado(estado))}
         </span>
-
     `;
 }
 
@@ -606,69 +511,64 @@ function renderEstadoBadge(etapa) {
 function renderActions(item) {
   const numero = escapeHTML(item.numero);
 
-  const etapa = item.seguimiento.etapa;
+  const estado = item.seguimiento.estado;
 
-  if (etapa === "pendiente") {
-    return `
+  const esMagistrada = canSign();
 
-            <div class="mesas-actions">
+  const boton = (accion, texto, icono, clase = "mesas-secondary-btn") => `
+        <button
+            type="button"
+            class="${clase}"
+            data-mesas-action="${accion}"
+            data-expediente="${numero}"
+        >
+            <i class="${icono}"></i>
+            ${texto}
+        </button>
+    `;
 
-                <button
-                    type="button"
-                    class="mesas-primary-btn"
-                    data-mesas-action="recibir"
-                    data-expediente="${numero}"
-                >
+  const verDocumentos = boton(
+    "ver",
+    "Ver documentos",
+    "fa-regular fa-folder-open",
+  );
 
-                    <i class="fa-solid fa-inbox"></i>
+  let principal = "";
 
-                    Recibir expediente
+  switch (estado) {
+    case "en-proceso":
+      if (!esMagistrada) {
+        principal = boton(
+          "crear-acuerdo",
+          "Crear acuerdos",
+          "fa-regular fa-file-lines",
+        );
+      }
 
-                </button>
+      break;
 
-            </div>
+    case "en-revision-interna":
+      if (!esMagistrada) {
+        principal = boton(
+          "enviar-firma",
+          "Enviar a firma",
+          "fa-solid fa-paper-plane",
+          "mesas-primary-btn",
+        );
+      }
 
-        `;
-  }
+      break;
 
-  if (etapa === "acuerdo") {
-    return `
-
-            <div class="mesas-actions">
-
-                <button
-                    type="button"
-                    class="mesas-secondary-btn"
-                    data-mesas-action="crear-acuerdo"
-                    data-expediente="${numero}"
-                >
-
-                    <i class="fa-regular fa-file-lines"></i>
-
-                    Crear acuerdos
-
-                </button>
-
-            </div>
-
-        `;
-  }
-
-  if (etapa === "firma") {
-    // Solo la Magistrada de Presidencia puede firmar
-    const botonFirma = canSign()
-      ? `
-                <button
-                    type="button"
-                    class="mesas-primary-btn"
-                    data-mesas-action="firmar"
-                    data-expediente="${numero}"
-                >
-                    <i class="fa-solid fa-signature"></i>
-                    Firmar acuerdo
-                </button>
-            `
-      : `
+    case "en-firma":
+      // Solo la Magistrada de Presidencia puede firmar
+      principal = esMagistrada
+        ? boton(
+            "firmar",
+            "Firmar acuerdo",
+            "fa-solid fa-signature",
+            "mesas-primary-btn",
+          )
+        : `
                 <button
                     type="button"
                     class="mesas-secondary-btn"
@@ -680,63 +580,77 @@ function renderActions(item) {
                 </button>
             `;
 
-    return `
+      return `
             <div class="mesas-actions">
-                ${botonFirma}
-                <button
-                    type="button"
-                    class="mesas-secondary-btn"
-                    data-mesas-action="ver"
-                    data-expediente="${numero}"
-                >
-                    <i class="fa-regular fa-eye"></i>
-                    Ver acuerdo
-                </button>
+                ${principal}
+                ${boton("ver", "Ver acuerdo", "fa-regular fa-eye")}
             </div>
         `;
-  }
 
-  if (etapa === "firmado") {
-    return `
-            <div class="mesas-actions">
-                <button
-                    type="button"
-                    class="mesas-secondary-btn"
-                    data-mesas-action="ver"
-                    data-expediente="${numero}"
-                >
-                    <i class="fa-solid fa-file-signature"></i>
-                    Ver acuerdo firmado
-                </button>
-            </div>
-        `;
+    case "en-lista":
+      if (!esMagistrada) {
+        principal = boton(
+          "a-actuaria",
+          "Pasar a Actuaría",
+          "fa-solid fa-building-columns",
+          "mesas-primary-btn",
+        );
+      }
+
+      break;
+
+    case "en-actuaria":
+      if (!esMagistrada) {
+        principal = boton(
+          "a-archivo",
+          "Pasar a Archivo",
+          "fa-solid fa-box-archive",
+          "mesas-primary-btn",
+        );
+      }
+
+      break;
   }
 
   return `
-
         <div class="mesas-actions">
-
-            <button
-                type="button"
-                class="mesas-secondary-btn"
-                data-mesas-action="ver"
-                data-expediente="${numero}"
-            >
-
-                <i class="fa-regular fa-folder-open"></i>
-
-                Ver documentos
-
-            </button>
-
+            ${principal}
+            ${verDocumentos}
         </div>
-
     `;
 }
 
 // ============================================================
 // ALERTAS
 // ============================================================
+
+function renderAlertItem(alerta) {
+  return `
+        <div class="mesas-alert-item ${alerta.clase}">
+            <div class="mesas-alert-icon">
+                <i class="fa-solid ${alerta.icono}"></i>
+            </div>
+            <div class="mesas-alert-body">
+                <strong>${escapeHTML(alerta.numero)}</strong>
+                <span>${escapeHTML(alerta.texto)}</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderAlertGroup(titulo, alertas) {
+  if (!alertas.length) {
+    return "";
+  }
+
+  return `
+        <div class="mesas-alert-group-title">
+            ${escapeHTML(titulo)}
+            <span>${alertas.length}</span>
+        </div>
+        ${alertas.map(renderAlertItem).join("")}
+    `;
+}
 
 function renderAlerts(registros) {
   const container = document.getElementById("mesasAlerts");
@@ -745,320 +659,57 @@ function renderAlerts(registros) {
     return;
   }
 
-  const alertas = [];
+  // Críticos: más de 10 promociones, de mayor a menor
+  const criticos = registros
+    .filter((item) => esCritico(item.promociones.length))
+    .sort((a, b) => b.promociones.length - a.promociones.length)
+    .map((item) => ({
+      clase: "danger",
+      icono: "fa-triangle-exclamation",
+      numero: item.numero,
+      texto: `${item.promociones.length} promociones · ${etiquetaEstado(item.seguimiento.estado)}`,
+    }));
 
-  registros.forEach((item) => {
-    const count = item.promociones.length;
+  const porFirmar = registros
+    .filter((item) => item.seguimiento.estado === "en-firma")
+    .map((item) => ({
+      clase: "blue",
+      icono: "fa-flag",
+      numero: item.numero,
+      texto: "Proyecto de acuerdo pendiente de firma",
+    }));
 
-    if (item.seguimiento.etapa === "pendiente" && count > 0) {
-      alertas.push({
-        clase: count >= 10 ? "danger" : count >= 5 ? "warning" : "",
+  const total = criticos.length + porFirmar.length;
 
-        icono: "fa-triangle-exclamation",
+  setText("mesasAlertCount", total);
 
-        numero: item.numero,
-
-        texto: `Pendiente de recibir · ${count} ${
-          count === 1 ? "promoción" : "promociones"
-        }`,
-      });
-    }
-
-    if (item.seguimiento.etapa !== "pendiente" && count >= 10) {
-      alertas.push({
-        clase: "danger", icono: "fa-triangle-exclamation", numero: item.numero,
-        texto: `${count} promociones acumuladas · Requiere revisión`,
-      });
-    }
-
-    if (item.seguimiento.etapa === "firma") {
-      alertas.push({
-        clase: "blue",
-
-        icono: "fa-flag",
-
-        numero: item.numero,
-
-        texto: "Proyecto de acuerdo pendiente de firma",
-      });
-    }
-  });
-
-  setText("mesasAlertCount", alertas.length);
-
-  if (!alertas.length) {
+  if (!total) {
     container.innerHTML = `
-
             <div class="mesas-no-alerts">
-
                 <i class="fa-regular fa-bell"></i>
-
-                <span>
-                    Sin alertas pendientes.
-                </span>
-
+                <span>Sin alertas pendientes.</span>
             </div>
-
         `;
 
     return;
   }
 
-  container.innerHTML = alertas
-    .slice(0, 8)
-    .map(
-      (alerta) => `
-
-                    <div
-                        class="
-                            mesas-alert-item
-                            ${alerta.clase}
-                        "
-                    >
-
-                        <div class="mesas-alert-icon">
-
-                            <i
-                                class="
-                                    fa-solid
-                                    ${alerta.icono}
-                                "
-                            ></i>
-
-                        </div>
-
-
-                        <div class="mesas-alert-body">
-
-                            <strong>
-
-                                ${escapeHTML(alerta.numero)}
-
-                            </strong>
-
-
-                            <span>
-
-                                ${escapeHTML(alerta.texto)}
-
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                `,
-    )
-    .join("");
+  container.innerHTML =
+    renderAlertGroup(
+      `Críticos (más de ${MESAS_CONFIG.PROMOS_CRITICO_MAYOR_A} promociones)`,
+      criticos,
+    ) + renderAlertGroup("Pendientes de firma", porFirmar);
 }
 
 // ============================================================
 // MODAL 1 - RECIBIR EXPEDIENTE
 // ============================================================
 
-function openRecibirExpediente(numero) {
-  const item = getRegistros().find(
-    (registro) => String(registro.numero) === String(numero),
-  );
-
-  if (!item) {
-    console.warn("Expediente no encontrado:", numero);
-
-    return;
-  }
-
-  showModal(`
-
-        <div class="mesas-modal-shell">
-
-
-            <header class="mesas-modal-header">
-
-                <div class="mesas-modal-step">
-
-                    1
-
-                </div>
-
-
-                <div class="mesas-modal-header-text">
-
-                    <h2>
-                        Recibir expediente
-                    </h2>
-
-                    <p>
-                        Confirma la recepción del expediente en Secretaría de Acuerdos.
-                    </p>
-
-                </div>
-
-            </header>
-
-
-            <div class="mesas-modal-body">
-
-
-                <div class="mesas-modal-info">
-
-
-                    <div class="mesas-modal-info-item">
-
-                        <span>
-                            Expediente
-                        </span>
-
-                        <strong>
-
-                            ${escapeHTML(item.numero)}
-
-                        </strong>
-
-                    </div>
-
-
-                    <div class="mesas-modal-info-item">
-
-                        <span>
-                            Promovente
-                        </span>
-
-                        <strong>
-
-                            ${escapeHTML(item.promovente)}
-
-                        </strong>
-
-                    </div>
-
-
-                    <div class="mesas-modal-info-item">
-
-                        <span>
-                            Promociones
-                        </span>
-
-                        <strong>
-
-                            ${item.promociones.length}
-
-                        </strong>
-
-                    </div>
-
-
-                    <div class="mesas-modal-info-item">
-
-                        <span>
-                            Asunto
-                        </span>
-
-                        <strong>
-
-                            ${escapeHTML(item.asunto)}
-
-                        </strong>
-
-                    </div>
-
-
-                </div>
-
-
-                <div class="mesas-modal-message">
-
-                    <i class="fa-solid fa-circle-info"></i>
-
-                    <span>
-                        Al recibir el expediente se asignará a Secretaría
-                        y quedará disponible para comenzar a trabajar
-                        en sus acuerdos.
-                    </span>
-
-                </div>
-
-
-            </div>
-
-
-            <footer class="mesas-modal-footer">
-
-
-                <button
-                    type="button"
-                    class="mesas-modal-cancel"
-                    id="cancelRecibirExpediente"
-                >
-
-                    Cancelar
-
-                </button>
-
-
-                <button
-                    type="button"
-                    class="mesas-modal-confirm"
-                    id="confirmRecibirExpediente"
-                >
-
-                    <i class="fa-solid fa-inbox"></i>
-
-                    Recibir expediente
-
-                </button>
-
-
-            </footer>
-
-
-        </div>
-
-    `);
-
-  document
-    .getElementById("cancelRecibirExpediente")
-    ?.addEventListener("click", closeForm);
-
-  document
-    .getElementById("confirmRecibirExpediente")
-    ?.addEventListener("click", () => {
-      recibirExpediente(numero);
-    });
-}
 
 // ============================================================
 // CONFIRMAR RECEPCIÓN
 // ============================================================
 
-function recibirExpediente(numero) {
-  const seguimiento = getData(KEY, {});
-
-  const estado = seguimiento[numero];
-
-  if (!estado) {
-    return;
-  }
-
-  estado.etapa = "acuerdo";
-
-  estado.recibidoEn = new Date().toISOString();
-
-  estado.ultimoMovimiento = "Turnado a Secretaría de Acuerdos";
-
-  estado.historial = Array.isArray(estado.historial) ? estado.historial : [];
-
-  estado.historial.push({
-    fecha: new Date().toISOString(),
-
-    movimiento: "Expediente recibido en Secretaría de Acuerdos",
-  });
-
-  saveData(KEY, seguimiento);
-
-  closeForm();
-
-  renderMesas();
-}
 
 // ============================================================
 // MODAL 2 - CREAR ACUERDOS
@@ -1126,9 +777,9 @@ function openCrearAcuerdos(numero) {
                 <button type="button" class="mesas-modal-cancel" id="closeCrearAcuerdo">
                     Cancelar
                 </button>
-                <button type="button" class="mesas-modal-confirm" id="enviarAFirma">
+                <button type="button" class="mesas-modal-confirm" id="enviarARevision">
                     <i class="fa-solid fa-paper-plane"></i>
-                    Enviar a firma
+                    Enviar a revisión interna
                 </button>
             </footer>
         </div>
@@ -1164,7 +815,7 @@ function openCrearAcuerdos(numero) {
         : "Ningún archivo seleccionado.";
     });
 
-  document.getElementById("enviarAFirma")?.addEventListener("click", () => {
+  document.getElementById("enviarARevision")?.addEventListener("click", () => {
     const archivo =
       document.getElementById("acuerdoArchivo")?.files?.[0]?.name || null;
 
@@ -1174,14 +825,14 @@ function openCrearAcuerdos(numero) {
       const error = document.getElementById("acuerdoError");
 
       error.textContent =
-        "Sube un archivo o redacta el acuerdo antes de enviarlo a firma.";
+        "Sube un archivo o redacta el acuerdo antes de enviarlo a revisión interna.";
 
       error.hidden = false;
 
       return;
     }
 
-    enviarAFirma(numero, { archivo, texto });
+    enviarARevisionInterna(numero, { archivo, texto });
   });
 }
 
@@ -1189,12 +840,12 @@ function openCrearAcuerdos(numero) {
 // ENVIAR ACUERDO A FIRMA (Secretaría → Presidencia)
 // ============================================================
 
-function enviarAFirma(numero, { archivo, texto }) {
+function enviarARevisionInterna(numero, { archivo, texto }) {
   const seguimiento = getData(KEY, {});
 
   const estado = seguimiento[numero];
 
-  if (!estado || estado.etapa !== "acuerdo") {
+  if (!estado || estado.estado !== "en-proceso") {
     return;
   }
 
@@ -1202,25 +853,62 @@ function enviarAFirma(numero, { archivo, texto }) {
 
   estado.acuerdo = {
     texto,
+
     archivo,
+
     creadoPor: getSession()?.nombre || "Secretaría de Acuerdos",
+
     creadoEn: ahora,
   };
 
-  estado.etapa = "firma";
-  estado.enviadoFirmaEn = ahora;
-  estado.ultimoMovimiento = "Proyecto de acuerdo enviado a firma";
+  estado.estado = "en-revision-interna";
+
+  estado.ultimoMovimiento = "Proyecto de acuerdo en revisión interna";
 
   estado.historial = Array.isArray(estado.historial) ? estado.historial : [];
 
   estado.historial.push({
     fecha: ahora,
-    movimiento: "Proyecto de acuerdo enviado a firma de la Magistrada",
+
+    movimiento: "Proyecto de acuerdo enviado a revisión interna",
   });
 
   saveData(KEY, seguimiento);
 
   closeForm();
+
+  renderMesas();
+}
+
+// ============================================================
+// AVANZAR ESTADO (acciones simples del flujo)
+// ============================================================
+function avanzarEstado(numero, nuevoEstado, movimiento, extra = {}) {
+  const seguimiento = getData(KEY, {});
+
+  const registro = seguimiento[numero];
+
+  if (!registro) {
+    return;
+  }
+
+  registro.estado = nuevoEstado;
+
+  registro.ultimoMovimiento = movimiento;
+
+  Object.assign(registro, extra);
+
+  registro.historial = Array.isArray(registro.historial)
+    ? registro.historial
+    : [];
+
+  registro.historial.push({
+    fecha: new Date().toISOString(),
+
+    movimiento,
+  });
+
+  saveData(KEY, seguimiento);
 
   renderMesas();
 }
@@ -1236,7 +924,7 @@ function openFirmarAcuerdo(numero) {
 
   const item = getRegistros().find((registro) => registro.numero === numero);
 
-  if (!item || item.seguimiento.etapa !== "firma") {
+  if (!item || item.seguimiento.estado !== "en-firma") {
     return;
   }
 
@@ -1255,7 +943,7 @@ function openFirmarAcuerdo(numero) {
             <div class="mesas-modal-body">
                 <div class="mesas-modal-info">
                     <div class="mesas-modal-info-item">
-                        <span>Promovente</span>
+                        <span>Actor</span>
                         <strong>${escapeHTML(item.promovente)}</strong>
                     </div>
                     <div class="mesas-modal-info-item">
@@ -1271,7 +959,7 @@ function openFirmarAcuerdo(numero) {
 
                 <p class="mesas-upload-help">
                     Al firmar, el expediente regresa a la Secretaría de Acuerdos
-                    con el estado "Firmado".
+                    en el estado "En lista".
                 </p>
             </div>
 
@@ -1306,24 +994,24 @@ function firmarAcuerdo(numero) {
 
   const estado = seguimiento[numero];
 
-  if (!estado || estado.etapa !== "firma") {
+  if (!estado || estado.estado !== "en-firma") {
     return;
   }
 
   const ahora = new Date().toISOString();
 
-  estado.etapa = "firmado";
+  estado.estado = "en-lista";
   estado.firmadoEn = ahora;
   estado.firmadoPor = getSession()?.nombre || "Magistrada";
   estado.ultimoMovimiento =
-    "Acuerdo firmado por la Magistrada · devuelto a Secretaría de Acuerdos";
+    "Acuerdo firmado por la Magistrada · pasa a lista";
 
   estado.historial = Array.isArray(estado.historial) ? estado.historial : [];
 
   estado.historial.push({
     fecha: ahora,
     movimiento:
-      "Acuerdo firmado por la Magistrada de Presidencia; regresa a mesa como Firmado",
+      "Acuerdo firmado por la Magistrada de Presidencia; el expediente pasa a En lista",
   });
 
   saveData(KEY, seguimiento);
@@ -1393,7 +1081,7 @@ function openDetalleExpediente(numero) {
     .join("");
 
   const firma =
-    seg.etapa === "firmado" || seg.firmadoEn
+    seg.firmadoEn
       ? `
             <div class="mesas-modal-info-item">
                 <span>Firma</span>
@@ -1414,12 +1102,12 @@ function openDetalleExpediente(numero) {
             <div class="mesas-modal-body">
                 <div class="mesas-modal-info">
                     <div class="mesas-modal-info-item">
-                        <span>Promovente</span>
+                        <span>Actor</span>
                         <strong>${escapeHTML(item.promovente)}</strong>
                     </div>
                     <div class="mesas-modal-info-item">
-                        <span>Etapa</span>
-                        <strong>${escapeHTML(ETAPA_LABELS[seg.etapa] || seg.etapa)}</strong>
+                        <span>Estado</span>
+                        <strong>${escapeHTML(etiquetaEstado(seg.estado))}</strong>
                     </div>
                     <div class="mesas-modal-info-item">
                         <span>Acuerdo</span>
@@ -1461,153 +1149,87 @@ function seedSecretariaDemo() {
 
   const existentes = new Set(expedientes.map((item) => getNumero(item)));
 
+  const ubicaciones = {
+    "en-firma": "Presidencia",
+    "en-actuaria": "Actuaría",
+    "en-archivo": "Archivo",
+  };
+
+  // Hay expedientes con más de 10 promociones para probar el nivel crítico
   const demo = [
-    {
-      numero: "123/2026",
-      actor: "JUAN PÉREZ LÓPEZ",
-      actoDemandado: "Demanda de nulidad",
-      etapa: "pendiente",
-      promos: 3,
-    },
-
-    {
-      numero: "124/2026",
-      actor: "MARÍA GÓMEZ RUIZ",
-      actoDemandado: "Recurso de revisión",
-      etapa: "acuerdo",
-      promos: 5,
-    },
-
-    {
-      numero: "125/2026",
-      actor: "CARLOS MARTÍNEZ",
-      actoDemandado: "Incidente de suspensión",
-      etapa: "firma",
-      promos: 2,
-    },
-
-    {
-      numero: "126/2026",
-      actor: "ANA TORRES",
-      actoDemandado: "Cumplimiento de sentencia",
-      etapa: "acuerdo",
-      promos: 4,
-    },
-
-    {
-      numero: "127/2026",
-      actor: "LUIS HERNÁNDEZ",
-      actoDemandado: "Ampliación de demanda",
-      etapa: "archivo",
-      promos: 1,
-    },
-
-    {
-      numero: "128/2026",
-      actor: "SOFÍA RAMÍREZ",
-      actoDemandado: "Queja",
-      etapa: "firma",
-      promos: 2,
-    },
-
-    {
-      numero: "129/2026",
-      actor: "MIGUEL CASTILLO",
-      actoDemandado: "Incidente de acumulación",
-      etapa: "acuerdo",
-      promos: 3,
-    },
-
-    {
-      numero: "130/2026",
-      actor: "LAURA DÍAZ",
-      actoDemandado: "Recurso de reclamación",
-      etapa: "acuerdo",
-      promos: 1,
-    },
-
-    {
-      numero: "131/2026",
-      actor: "ROBERTO SÁNCHEZ",
-      actoDemandado: "Solicitud de copias certificadas",
-      etapa: "pendiente",
-      promos: 2,
-    },
-
-            {
-      numero: "045/2021",
-      actor: "ELENA VARGAS",
-      actoDemandado: "Cumplimiento de laudo",
-      etapa: "acuerdo",
-      promos: 4,
-    },
-    {
-      numero: "OJC-012/2026",
-      actor: "JORGE NAVARRO",
-      actoDemandado: "Oficina de Juicios (OJC)",
-      etapa: "pendiente",
-      promos: 2,
-    },
-    {
-      numero: "087/2020",
-      actor: "TERESA LUNA",
-      actoDemandado: "Ejecución de sentencia",
-      etapa: "firma",
-      promos: 1,
-    },
-    {
-      numero: "133/2026",
-      actor: "DANIELA ORTEGA",
-      actoDemandado: "Solicitud de ejecución de laudo",
-      etapa: "firmado",
-      promos: 1,
-    },
-    {
-      numero: "132/2026",
-      actor: "PATRICIA MORALES",
-      actoDemandado: "Cumplimiento de ejecutoria",
-      etapa: "firma",
-      promos: 3,
-    },
+    { numero: "123/2026", actor: "JUAN PÉREZ LÓPEZ", demandado: "Secretaría de Finanzas", actoDemandado: "Demanda de nulidad", estado: "en-proceso", promos: 3 },
+    { numero: "124/2026", actor: "MARÍA GÓMEZ RUIZ", demandado: "Ayuntamiento de Colima", actoDemandado: "Recurso de revisión", estado: "en-proceso", promos: 12 },
+    { numero: "125/2026", actor: "CARLOS MARTÍNEZ", demandado: "Secretaría de Educación", actoDemandado: "Incidente de suspensión", estado: "en-firma", promos: 2 },
+    { numero: "126/2026", actor: "ANA TORRES", demandado: "Dirección de Recursos Humanos", actoDemandado: "Cumplimiento de sentencia", estado: "en-revision-interna", promos: 11 },
+    { numero: "127/2026", actor: "LUIS HERNÁNDEZ", demandado: "Secretaría de Salud", actoDemandado: "Ampliación de demanda", estado: "en-archivo", promos: 1 },
+    { numero: "128/2026", actor: "SOFÍA RAMÍREZ", demandado: "Ayuntamiento de Villa de Álvarez", actoDemandado: "Queja", estado: "en-firma", promos: 2 },
+    { numero: "129/2026", actor: "MIGUEL CASTILLO", demandado: "Secretaría de Finanzas", actoDemandado: "Incidente de acumulación", estado: "en-proceso", promos: 7 },
+    { numero: "130/2026", actor: "LAURA DÍAZ", demandado: "Secretaría de Educación", actoDemandado: "Recurso de reclamación", estado: "en-lista", promos: 1 },
+    { numero: "131/2026", actor: "ROBERTO SÁNCHEZ", demandado: "Dirección de Recursos Humanos", actoDemandado: "Solicitud de copias certificadas", estado: "en-actuaria", promos: 2 },
+    { numero: "045/2021", actor: "ELENA VARGAS", demandado: "Secretaría de Salud", actoDemandado: "Cumplimiento de laudo", estado: "en-proceso", promos: 4 },
+    { numero: "OJC-012/2026", actor: "JORGE NAVARRO", demandado: "Oficina de Juicios (OJC)", actoDemandado: "Oficina de Juicios (OJC)", estado: "en-proceso", promos: 2 },
+    { numero: "087/2020", actor: "TERESA LUNA", demandado: "Ayuntamiento de Colima", actoDemandado: "Ejecución de sentencia", estado: "en-firma", promos: 1 },
+    { numero: "133/2026", actor: "DANIELA ORTEGA", demandado: "Secretaría de Finanzas", actoDemandado: "Solicitud de ejecución de laudo", estado: "en-lista", promos: 1 },
+    { numero: "132/2026", actor: "PATRICIA MORALES", demandado: "Secretaría de Educación", actoDemandado: "Cumplimiento de ejecutoria", estado: "en-firma", promos: 3 },
   ];
 
   demo.forEach((item, index) => {
+    const ubicacion =
+      ubicaciones[item.estado] ||
+      `Mesa ${mesaDeExpediente({ numero: item.numero })}`;
+
+    const fecha = fechaOffset(-(index + 1));
+
     if (!existentes.has(item.numero)) {
       expedientes.push({
         id: createId(),
-
         numero: item.numero,
-
         expediente: item.numero,
-
         actor: item.actor,
-
+        demandado: item.demandado,
         actoDemandado: item.actoDemandado,
-
-        fecha: fechaOffset(-(index + 1)),
-
+        ubicacion,
+        fecha,
+        fechaRecepcion: fecha,
         estado: "Recibido",
-
         demoSecretaria: true,
+      });
+    } else {
+      // Completa los campos nuevos en expedientes demo creados antes
+      expedientes.forEach((exp) => {
+        if (getNumero(exp) === item.numero && exp.demoSecretaria) {
+          exp.demandado = exp.demandado || item.demandado;
+          exp.ubicacion = exp.ubicacion || ubicacion;
+          exp.fechaRecepcion = exp.fechaRecepcion || exp.fecha || fecha;
+        }
       });
     }
 
+    const conAcuerdo = item.estado !== "en-proceso";
+
+    const firmado = ["en-lista", "en-actuaria", "en-archivo"].includes(
+      item.estado,
+    );
+
     seguimiento[item.numero] = {
-      etapa: item.etapa,
+      estado: item.estado,
 
-      recibidoEn: item.etapa !== "pendiente" ? new Date().toISOString() : null,
+      recibidoEn: new Date().toISOString(),
 
-      ultimoMovimiento: getMovimientoDemo(item.etapa),
+      ultimoMovimiento: getMovimientoDemo(item.estado),
 
-      acuerdo:
-        item.etapa === "firma" || item.etapa === "firmado"
-          ? {
-              texto: "Proyecto de acuerdo de demostración",
-              archivo: null,
-              creadoPor: "Secretaría de Acuerdos",
-              creadoEn: new Date().toISOString(),
-            }
-          : null,
+      acuerdo: conAcuerdo
+        ? {
+            texto: "Proyecto de acuerdo de demostración",
+            archivo: null,
+            creadoPor: "Secretaría de Acuerdos",
+            creadoEn: new Date().toISOString(),
+          }
+        : null,
+
+      firmadoEn: firmado ? new Date().toISOString() : null,
+
+      firmadoPor: firmado ? "Magistrada" : null,
 
       historial: [],
     };
@@ -1619,19 +1241,12 @@ function seedSecretariaDemo() {
     for (let i = existentesPromo; i < item.promos; i++) {
       promociones.push({
         id: createId(),
-
         numero: item.numero,
-
         expediente: item.numero,
-
         fecha: fechaOffset(-i),
-
         tipo: "Promoción",
-
         descripcion: "Promoción de demostración",
-
         estado: "Pendiente",
-
         creadoEn: new Date().toISOString(),
       });
     }
@@ -1650,16 +1265,22 @@ function seedSecretariaDemo() {
 // MOVIMIENTO DEMO
 // ============================================================
 
-function getMovimientoDemo(etapa) {
+function getMovimientoDemo(estado) {
   const movimientos = {
-    pendiente: "Se recibió en Oficialía de Partes",
+    "en-proceso": "Turnado a Secretaría de Acuerdos",
 
-    acuerdo: "Turnado a Secretaría",
+    "en-revision-interna": "Proyecto de acuerdo en revisión interna",
 
-    firma: "Proyecto de acuerdo", firmado: "Acuerdo firmado por la Magistrada", archivo: "Acuerdo de archivo",
+    "en-firma": "Proyecto de acuerdo enviado a firma",
+
+    "en-lista": "Acuerdo firmado · publicado en lista",
+
+    "en-actuaria": "Turnado a Actuaría",
+
+    "en-archivo": "Turnado a Archivo",
   };
 
-  return movimientos[etapa] || "Sin movimiento";
+  return movimientos[estado] || "Sin movimiento";
 }
 
 // ============================================================

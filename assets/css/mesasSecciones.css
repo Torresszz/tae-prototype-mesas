@@ -1,0 +1,254 @@
+/* ============================================================
+   MESAS · FASE 1
+   assets/css/mesasSecciones.css
+   Apartados en la barra lateral, barra global de búsqueda, badges de estado,
+   tabla de 9 columnas y alertas agrupadas.
+   Cargar DESPUÉS de mesas.css.
+   ============================================================ */
+
+/* ---------- Apartados en la barra lateral ----------
+   Los botones usan .nav-item (estilos de styles.css). Con 10 apartados el
+   menú puede no caber en pantallas bajas, así que se vuelve desplazable. */
+.sidebar .nav:has(.mesas-sidebar-item) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.sidebar .nav:has(.mesas-sidebar-item) .nav-item {
+    flex: 0 0 auto;
+}
+
+/* ---------- Barra global de búsqueda ---------- */
+#mesasPage .mesas-global-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 12px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    border: 1px solid #dce3ea;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+#mesasPage .mesas-global-bar[hidden],
+#mesasPage .mesas-global-bar [hidden] {
+    display: none;
+}
+
+#mesasPage .mesas-global-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+#mesasPage .mesas-global-field--search {
+    flex: 1 1 240px;
+}
+
+#mesasPage .mesas-global-field input,
+#mesasPage .mesas-global-field select {
+    min-height: 36px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #0f172a;
+    font-family: inherit;
+    font-size: 11px;
+}
+
+#mesasPage .mesas-global-input {
+    position: relative;
+}
+
+#mesasPage .mesas-global-input i {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #7b8fa2;
+    font-size: 11px;
+    pointer-events: none;
+}
+
+#mesasPage .mesas-global-input input {
+    width: 100%;
+    padding-left: 30px;
+}
+
+#mesasPage .mesas-global-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#mesasPage .mesas-global-clear:hover {
+    background: #f4f8ff;
+    color: #1768cf;
+}
+
+/* ---------- Vistas ---------- */
+#mesasPage .mesas-vista[hidden] {
+    display: none;
+}
+
+#mesasPage .mesas-vista-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 56px 24px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #536b82;
+    text-align: center;
+}
+
+#mesasPage .mesas-vista-placeholder i {
+    color: #9db2c8;
+    font-size: 28px;
+}
+
+#mesasPage .mesas-vista-placeholder h2 {
+    margin: 0;
+    color: #1e3a5f;
+    font-size: 16px;
+}
+
+#mesasPage .mesas-vista-placeholder p {
+    max-width: 420px;
+    margin: 0;
+    font-size: 11px;
+}
+
+#mesasPage .mesas-vista-placeholder span {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #edf4ff;
+    color: #1768cf;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+/* ---------- Panel de Alertas: solo en el apartado Mesas ---------- */
+#mesasPage .mesas-secretaria-sidebar[hidden] {
+    display: none;
+}
+
+#mesasPage .mesas-secretaria-layout.sin-alertas {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---------- Pestañas de estado: 7 pestañas ---------- */
+#mesasPage .mesas-status-tabs {
+    overflow-x: auto;
+}
+
+#mesasPage .mesas-status-tab {
+    flex: 1 1 auto;
+    gap: 5px;
+    padding: 0 8px;
+}
+
+/* ---------- Barra de filtros propia de la vista Mesas ---------- */
+#mesasPage .mesas-secretaria-toolbar {
+    grid-template-columns: minmax(260px, 1fr) 220px;
+}
+
+#mesasPage .mesas-secretaria-toolbar .mesas-search,
+#mesasPage .mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(n) {
+    grid-column: auto;
+}
+
+@media (max-width: 760px) {
+    #mesasPage .mesas-secretaria-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ---------- Tabla de 9 columnas ---------- */
+#mesasPage .mesas-secretaria-table {
+    min-width: 1250px;
+    table-layout: fixed;
+}
+
+#mesasPage .mesas-secretaria-table th:nth-child(1) { width: 120px; }
+#mesasPage .mesas-secretaria-table th:nth-child(2) { width: 95px; }
+#mesasPage .mesas-secretaria-table th:nth-child(3) { width: 105px; }
+#mesasPage .mesas-secretaria-table th:nth-child(4) { width: 160px; }
+#mesasPage .mesas-secretaria-table th:nth-child(5) { width: 150px; }
+#mesasPage .mesas-secretaria-table th:nth-child(6) { width: 160px; }
+#mesasPage .mesas-secretaria-table th:nth-child(7) { width: 125px; }
+#mesasPage .mesas-secretaria-table th:nth-child(8) { width: 130px; }
+#mesasPage .mesas-secretaria-table th:nth-child(9) { width: 200px; }
+
+/* ---------- Badges de estado ---------- */
+#mesasPage .mesas-estado-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 25px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+#mesasPage .mesas-estado-badge.en-proceso         { background: #e0f2fe; color: #0369a1; }
+#mesasPage .mesas-estado-badge.en-revision-interna { background: #ede9fe; color: #6d28d9; }
+#mesasPage .mesas-estado-badge.en-firma           { background: #ffedd5; color: #c2410c; }
+#mesasPage .mesas-estado-badge.en-lista           { background: #dcfce7; color: #15803d; }
+#mesasPage .mesas-estado-badge.en-actuaria        { background: #ccfbf1; color: #0f766e; }
+#mesasPage .mesas-estado-badge.en-archivo         { background: #e2e8f0; color: #475569; }
+
+/* ---------- Alertas agrupadas ---------- */
+#mesasPage .mesas-alert-list {
+    max-height: 560px;
+    overflow-y: auto;
+}
+
+#mesasPage .mesas-alert-group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 14px;
+    border-bottom: 1px solid #e7edf2;
+    background: #f7f9fc;
+    color: #1e3a5f;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+#mesasPage .mesas-alert-group-title span {
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #e3ebf5;
+    text-align: center;
+}

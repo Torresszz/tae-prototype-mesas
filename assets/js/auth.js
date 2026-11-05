@@ -629,3 +629,13 @@ export function clearSession() {
 export function canSign() {
     return getRole() === "presidencia";
 }
+
+// ============================================================
+// ¿PUEDE SUBIR Y BORRAR PLANTILLAS?
+// Solo los secretarios de acuerdos (rol "mesa"). Los demás
+// usuarios con acceso a Mesas solo descargan.
+// ============================================================
+
+export function canManageTemplates() {
+    return getRole() === "mesa";
+}
