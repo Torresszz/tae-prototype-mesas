@@ -9,59 +9,132 @@ SECRETARÍA DE ACUERDOS
     ====================================================== -->
     <header class="mesas-page-header">
         <div>
-            <span class="eyebrow">Mesas y Secretaría de Acuerdos</span>
-            <h1>Secretaría de Acuerdos</h1>
-            <p>Seguimiento y gestión de expedientes, acuerdos y firma.</p>
+            <span class="eyebrow">
+                Mesas y Secretaría de Acuerdos
+            </span>
+
+            <h1>
+                Secretaría de Acuerdos
+            </h1>
+
+            <p>
+                Seguimiento y gestión de expedientes, acuerdos y firma.
+            </p>
         </div>
     </header>
 
-    <!-- Los apartados del módulo (Mesas, Demanda, Promociones...) están en
-         la barra lateral. Los inserta navegacion.js. -->
+
+    <!-- Los apartados del módulo:
+         Mesas, Demanda, Promociones, etc.
+         se insertan desde navegacion.js -->
+
 
     <!-- =====================================================
-    BÚSQUEDA GLOBAL (aplica a la pestaña activa)
+    BÚSQUEDA GLOBAL
     ====================================================== -->
-    <div class="mesas-global-bar" id="mesasGlobalBar">
+    <div
+        class="mesas-global-bar"
+        id="mesasGlobalBar"
+    >
 
-        <label class="mesas-global-field mesas-global-field--search" data-filtro="expediente">
-            <span>No. de expediente</span>
+        <label
+            class="mesas-global-field mesas-global-field--search"
+            data-filtro="expediente"
+        >
+
+            <span>
+                No. de expediente
+            </span>
+
             <div class="mesas-global-input">
+
                 <i class="fa-solid fa-magnifying-glass"></i>
+
                 <input
                     id="mesasFiltroExpediente"
                     type="search"
                     placeholder="Ej. 124/2026"
                     autocomplete="off"
                 >
+
             </div>
+
         </label>
 
-        <label class="mesas-global-field" data-filtro="fechas">
-            <span>Desde</span>
-            <input id="mesasFechaDesde" type="date" aria-label="Fecha desde">
+
+        <label
+            class="mesas-global-field"
+            data-filtro="fechas"
+        >
+
+            <span>
+                Desde
+            </span>
+
+            <input
+                id="mesasFechaDesde"
+                type="date"
+                aria-label="Fecha desde"
+            >
+
         </label>
 
-        <label class="mesas-global-field" data-filtro="fechas">
-            <span>Hasta</span>
-            <input id="mesasFechaHasta" type="date" aria-label="Fecha hasta">
+
+        <label
+            class="mesas-global-field"
+            data-filtro="fechas"
+        >
+
+            <span>
+                Hasta
+            </span>
+
+            <input
+                id="mesasFechaHasta"
+                type="date"
+                aria-label="Fecha hasta"
+            >
+
         </label>
 
-        <label class="mesas-global-field" data-filtro="estado">
-            <span>Estado</span>
-            <select id="mesasFiltroEstado" aria-label="Estado"></select>
+
+        <label
+            class="mesas-global-field"
+            data-filtro="estado"
+        >
+
+            <span>
+                Estado
+            </span>
+
+            <select
+                id="mesasFiltroEstado"
+                aria-label="Estado"
+            ></select>
+
         </label>
 
-        <button type="button" class="mesas-global-clear" id="mesasFiltroLimpiar">
+
+        <button
+            type="button"
+            class="mesas-global-clear"
+            id="mesasFiltroLimpiar"
+        >
+
             <i class="fa-solid fa-eraser"></i>
+
             Limpiar
+
         </button>
 
     </div>
+
 
     <!-- =====================================================
     CONTENIDO
     ====================================================== -->
     <div class="mesas-secretaria-layout">
+
 
         <!-- =================================================
         COLUMNA PRINCIPAL
@@ -70,101 +143,250 @@ SECRETARÍA DE ACUERDOS
 
             <div id="mesasVistas">
 
+
                 <!-- =========================================
-                VISTA: MESAS (estado general de expedientes)
+                VISTA: MESAS
                 ========================================== -->
-                <section class="mesas-vista" data-mesas-vista="mesas">
+                <section
+                    class="mesas-vista"
+                    data-mesas-vista="mesas"
+                >
 
-                    <!-- Pestañas de estado (las llena mesas.js) -->
-                    <div class="mesas-status-tabs" id="mesasStatusTabs"></div>
 
-                    <!-- Filtros propios de esta vista -->
+                    <!-- Pestañas de estado -->
+                    <div
+                        class="mesas-status-tabs"
+                        id="mesasStatusTabs"
+                    ></div>
+
+
+                    <!-- =====================================
+                    FILTROS DE MESAS
+                    ====================================== -->
                     <div class="mesas-secretaria-toolbar">
+
                         <div class="mesas-search">
+
                             <i class="fa-solid fa-magnifying-glass"></i>
+
                             <input
                                 id="mesasSearch"
                                 type="search"
                                 placeholder="Buscar por actor, demandado o acto demandado..."
                                 autocomplete="off"
                             >
+
                         </div>
 
-                        <label class="mesas-filter-field">Orden de promociones
-                            <select id="mesasOrdenPromociones" aria-label="Orden de promociones">
-                                <option value="desc">Más a menos</option>
-                                <option value="asc">Menos a más</option>
-                                <option value="sin-orden">Sin ordenar</option>
+
+                        <label class="mesas-filter-field">
+
+                            Orden de promociones
+
+                            <select
+                                id="mesasOrdenPromociones"
+                                aria-label="Orden de promociones"
+                            >
+
+                                <option value="desc">
+                                    Más a menos
+                                </option>
+
+                                <option value="asc">
+                                    Menos a más
+                                </option>
+
+                                <option value="sin-orden">
+                                    Sin ordenar
+                                </option>
+
                             </select>
+
                         </label>
+
                     </div>
 
-                    <!-- Tabla -->
+
+                    <!-- =====================================
+                    TABLA
+                    ====================================== -->
                     <section class="mesas-secretaria-table-card">
+
                         <div class="mesas-table-wrapper">
+
                             <table class="mesas-secretaria-table">
+
                                 <thead>
+
                                     <tr>
-                                        <th>No. de expediente</th>
-                                        <th>Promociones</th>
-                                        <th>Fecha de recepción</th>
-                                        <th>Actor</th>
-                                        <th>Demandado</th>
-                                        <th>Acto demandado</th>
-                                        <th>Estado</th>
-                                        <th>Ubicación del expediente</th>
-                                        <th>Acciones</th>
+
+                                        <th>
+                                            No. de expediente
+                                        </th>
+
+                                        <th>
+                                            Promociones
+                                        </th>
+
+                                        <th>
+                                            Fecha de recepción
+                                        </th>
+
+                                        <th>
+                                            Actor
+                                        </th>
+
+                                        <th>
+                                            Demandado
+                                        </th>
+
+                                        <th>
+                                            Acto demandado
+                                        </th>
+
+                                        <th>
+                                            Estado
+                                        </th>
+
+                                        <th>
+                                            Ubicación del expediente
+                                        </th>
+
+                                        <th>
+                                            Acciones
+                                        </th>
+
                                     </tr>
+
                                 </thead>
+
+
                                 <tbody id="mesasTable">
-                                    <!-- mesas.js llenará esta tabla. -->
+
+                                    <!-- mesas.js llena la tabla -->
+
                                 </tbody>
+
                             </table>
+
                         </div>
 
-                        <!-- Estado vacío -->
-                        <div class="mesas-empty-state" id="mesasEmpty" hidden>
+
+                        <!-- =================================
+                        ESTADO VACÍO
+                        ================================== -->
+                        <div
+                            class="mesas-empty-state"
+                            id="mesasEmpty"
+                            hidden
+                        >
+
                             <div class="mesas-empty-icon">
+
                                 <i class="fa-regular fa-folder-open"></i>
+
                             </div>
-                            <strong>No hay expedientes en esta vista</strong>
-                            <span>Cambia los filtros o carga datos de demostración.</span>
-                            <button type="button" class="mesas-primary-btn" id="mesasLoadDemoBtn">
+
+
+                            <strong>
+                                No hay expedientes en esta vista
+                            </strong>
+
+
+                            <span>
+                                Cambia los filtros o carga datos de demostración.
+                            </span>
+
+
+                            <button
+                                type="button"
+                                class="mesas-primary-btn"
+                                id="mesasLoadDemoBtn"
+                            >
+
                                 <i class="fa-solid fa-flask"></i>
+
                                 Cargar datos de demostración
+
                             </button>
+
                         </div>
+
                     </section>
 
                 </section>
 
-                <!-- Las demás vistas las crea navegacion.js
-                     hasta que cada fase agregue la suya. -->
+
+                <!-- Las demás vistas son creadas
+                     y renderizadas por navegacion.js -->
 
             </div>
 
         </main>
 
+
         <!-- =================================================
-        PANEL DERECHO - ALERTAS
+        PANEL DERECHO
         ================================================== -->
         <aside class="mesas-secretaria-sidebar">
+
+
+            <!-- =============================================
+            PROMOCIONES POR RECIBIR
+            Oficialía → Mesa
+            ============================================== -->
+            <div id="mesasRecepcionPromociones"></div>
+
+
+            <!-- =============================================
+            ALERTAS
+            ============================================== -->
             <section class="mesas-alert-card">
+
                 <div class="mesas-alert-card-header">
+
                     <div>
-                        <span class="mesas-mini-eyebrow">Seguimiento</span>
-                        <h2>Alertas</h2>
+
+                        <span class="mesas-mini-eyebrow">
+                            Seguimiento
+                        </span>
+
+                        <h2>
+                            Alertas
+                        </h2>
+
                     </div>
-                    <span class="mesas-alert-counter" id="mesasAlertCount">0</span>
+
+
+                    <span
+                        class="mesas-alert-counter"
+                        id="mesasAlertCount"
+                    >
+                        0
+                    </span>
+
                 </div>
 
-                <div class="mesas-alert-list" id="mesasAlerts">
+
+                <div
+                    class="mesas-alert-list"
+                    id="mesasAlerts"
+                >
+
                     <div class="mesas-no-alerts">
+
                         <i class="fa-regular fa-bell"></i>
-                        <span>Sin alertas pendientes.</span>
+
+                        <span>
+                            Sin alertas pendientes.
+                        </span>
+
                     </div>
+
                 </div>
+
             </section>
+
         </aside>
 
     </div>

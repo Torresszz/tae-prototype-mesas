@@ -1,0 +1,352 @@
+/* ============================================================
+   RECEPCIÓN DE PROMOCIONES · MESAS
+   assets/css/mesasRecepcionPromociones.css
+   ============================================================ */
+
+
+/* ============================================================
+   HOST EN PANEL DERECHO
+   ============================================================ */
+
+#mesasRecepcionPromociones {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+
+/* ============================================================
+   TARJETA
+   ============================================================ */
+
+.mesas-recepcion-card {
+    width: 100%;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dce3ea;
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+
+.mesas-recepcion-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 14px;
+
+    border-bottom: 1px solid #e3e9ef;
+}
+
+
+.mesas-recepcion-card-header h2 {
+    margin: 0;
+
+    color: #102b45;
+
+    font-size: 14px;
+    line-height: 18px;
+}
+
+
+.mesas-recepcion-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 25px;
+    height: 25px;
+
+    padding: 0 7px;
+
+    box-sizing: border-box;
+
+    border-radius: 999px;
+
+    background: #e8f1ff;
+
+    color: #1768cf;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   CUERPO
+   ============================================================ */
+
+.mesas-recepcion-card-body {
+    padding: 13px 14px;
+}
+
+
+.mesas-recepcion-card-body p {
+    margin: 0 0 10px;
+
+    color: #60758a;
+
+    font-size: 9px;
+    line-height: 14px;
+}
+
+
+.mesas-recepcion-open-btn {
+    width: 100%;
+
+    justify-content: center;
+}
+
+
+.mesas-recepcion-open-btn:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+
+#modal.show:has(.mesas-recepcion-modal) .modal-card {
+    width: 760px;
+
+    max-width: calc(100vw - 50px);
+}
+
+
+.mesas-recepcion-modal {
+    max-height: 85vh;
+}
+
+
+/* ============================================================
+   LISTA DE PROMOCIONES
+   ============================================================ */
+
+.mesas-recepcion-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.mesas-recepcion-item {
+    display: flex;
+    align-items: stretch;
+
+    gap: 12px;
+
+    padding: 13px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dce5ed;
+    border-radius: 8px;
+
+    background: #ffffff;
+}
+
+
+.mesas-recepcion-item-main {
+    flex: 1 1 auto;
+
+    min-width: 0;
+}
+
+
+.mesas-recepcion-item-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    margin-bottom: 10px;
+}
+
+
+.mesas-recepcion-item-top > strong {
+    color: #102b45;
+
+    font-size: 11px;
+    line-height: 15px;
+}
+
+
+.mesas-recepcion-mesa-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 23px;
+
+    padding: 0 9px;
+
+    box-sizing: border-box;
+
+    border-radius: 999px;
+
+    background: #e8f1ff;
+
+    color: #1768cf;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   DATOS
+   ============================================================ */
+
+.mesas-recepcion-item-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 8px;
+
+    margin-bottom: 9px;
+}
+
+
+.mesas-recepcion-item-grid > div {
+    min-width: 0;
+
+    padding: 8px 9px;
+
+    box-sizing: border-box;
+
+    border-radius: 6px;
+
+    background: #f7f9fb;
+}
+
+
+.mesas-recepcion-item-grid span,
+.mesas-recepcion-descripcion > span {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #8293a3;
+
+    font-size: 7.5px;
+    line-height: 10px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+}
+
+
+.mesas-recepcion-item-grid strong {
+    display: block;
+
+    color: #405a72;
+
+    font-size: 9px;
+    line-height: 13px;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   DESCRIPCIÓN
+   ============================================================ */
+
+.mesas-recepcion-descripcion {
+    padding: 8px 9px;
+
+    border-radius: 6px;
+
+    background: #f7f9fb;
+}
+
+
+.mesas-recepcion-descripcion p {
+    margin: 0;
+
+    color: #536b82;
+
+    font-size: 9px;
+    line-height: 14px;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   ACCIONES
+   ============================================================ */
+
+.mesas-recepcion-item-actions {
+    display: flex;
+    align-items: center;
+
+    min-width: 90px;
+}
+
+
+.mesas-recepcion-item-actions .mesas-primary-btn {
+    width: 100%;
+
+    justify-content: center;
+}
+
+
+/* ============================================================
+   ESTADO VACÍO
+   ============================================================ */
+
+.mesas-recepcion-empty {
+    min-height: 180px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 760px) {
+
+    .mesas-recepcion-item {
+        flex-direction: column;
+    }
+
+
+    .mesas-recepcion-item-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .mesas-recepcion-item-actions {
+        width: 100%;
+
+        min-width: 0;
+    }
+
+}
+
+
+@media (max-width: 520px) {
+
+    .mesas-recepcion-item-grid {
+        grid-template-columns: 1fr;
+    }
+
+}

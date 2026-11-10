@@ -48,6 +48,10 @@ import { renderEstadistica } from "./mesas/estadistica.js";
 import { sembrarDemoFases } from "./mesas/demo.js";
 
 import {
+  renderRecepcionPromociones,
+} from "./mesas/recepcionPromociones.js";
+
+import {
   getAvisosAgendaPendientes,
   marcarNotificacionLeida,
 } from "./mesas/notificaciones.js";
@@ -63,7 +67,7 @@ import {
 
 const KEY = "mesasSeguimiento";
 
-// Pestañas internas que ya tienen su propio render (una línea por fase)
+// Pestañas internas que ya tienen su propio render
 registrarSeccion("plantillas", renderPlantillas);
 registrarSeccion("audiencia", renderAudiencia);
 registrarSeccion("demanda", renderDemanda);
@@ -73,8 +77,7 @@ registrarSeccion("consultas", renderConsultas);
 registrarSeccion("intersindicales", renderIntersindicales);
 registrarSeccion("oficios", renderOficiosMesas);
 registrarSeccion("estadistica", renderEstadistica);
-// Búsqueda propia de la vista Mesas (actor, demandado, acto).
-// El resto de filtros (expediente, fechas, estado) son globales: mesas/filtros.js
+
 let currentTexto = "";
 let currentOrdenPromociones = "desc";
 
@@ -103,7 +106,6 @@ export function renderMesas() {
 
   prepararSeguimiento();
 
-  // La Magistrada entra directo a lo que tiene por firmar
   if (!vistaInicialAplicada) {
     vistaInicialAplicada = true;
 
@@ -124,7 +126,8 @@ export function renderMesas() {
 
   renderAlerts(registros);
 
-  // Pestañas que no son "Mesas" (las fases siguientes registran su render)
+  renderRecepcionPromociones();
+
   renderSeccionActiva();
 }
 
@@ -139,7 +142,6 @@ function prepararSeguimiento() {
 
   let changed = false;
 
-  // Limpieza de datos guardados con el catálogo anterior (etapa -> estado)
   Object.values(seguimiento).forEach((registro) => {
     if (registro && registro.etapa !== undefined) {
       if (!registro.estado) {
@@ -224,6 +226,7 @@ function getRegistros() {
 
       const promocionesExp = promociones.filter(
         (promo) =>
+          promo.recibidaMesa === true &&
           String(
             promo.expediente ||
               promo.numero ||
@@ -278,12 +281,10 @@ function getRegistros() {
 function setupEvents() {
   const page = document.getElementById("mesasPage");
 
-  // Pestañas internas y barra global de búsqueda
   initNavegacionMesas(renderMesas);
 
   initBarraFiltros(renderMesas);
 
-  // Búsqueda propia de la vista Mesas
   const search = document.getElementById("mesasSearch");
 
   if (search) {
@@ -316,7 +317,6 @@ function setupEvents() {
     };
   }
 
-  // Pestañas de estado: comparten el filtro global de Estado
   const tabs =
     document.getElementById(
       "mesasStatusTabs",
@@ -356,10 +356,6 @@ function setupEvents() {
 
   if (page) {
     page.onclick = (event) => {
-      // ========================================================
-      // ALERTAS DE AGENDA
-      // ========================================================
-
       const agendaButton =
         event.target.closest(
           "[data-agenda-alert-action]",
@@ -387,10 +383,6 @@ function setupEvents() {
 
         return;
       }
-
-      // ========================================================
-      // ACCIONES EXISTENTES DE MESAS
-      // ========================================================
 
       const button =
         event.target.closest(
@@ -544,8 +536,6 @@ function renderTable(registros) {
     return;
   }
 
-  // Filtros globales:
-  // No. de expediente, fecha de recepción y estado.
   let visibles =
     registros.filter(
       (item) =>
@@ -560,7 +550,6 @@ function renderTable(registros) {
         ),
     );
 
-  // Búsqueda propia de esta vista.
   if (currentTexto) {
     visibles =
       visibles.filter(
@@ -579,7 +568,6 @@ function renderTable(registros) {
       );
   }
 
-  // Orden estable.
   if (
     currentOrdenPromociones !==
     "sin-orden"
@@ -922,10 +910,8 @@ function renderAlertGroup(
   `;
 }
 
-
 // ============================================================
 // ALERTAS DE AGENDA
-// FASE 3 - T-12
 // ============================================================
 
 function renderAgendaAlertItem(
@@ -1027,7 +1013,6 @@ function renderAgendaAlertGroup(
   `;
 }
 
-
 // ============================================================
 // RENDER ALERTAS
 // ============================================================
@@ -1044,9 +1029,6 @@ function renderAlerts(
     return;
   }
 
-
-  // Críticos:
-  // más de 10 promociones.
   const criticos =
     registros
       .filter(
@@ -1078,7 +1060,6 @@ function renderAlerts(
       );
 
 
-  // Pendientes de firma.
   const porFirmar =
     registros
       .filter(
@@ -1103,10 +1084,6 @@ function renderAlerts(
       );
 
 
-  // ==========================================================
-  // AGENDA
-  // ==========================================================
-
   const mesa =
     mesaUsuario();
 
@@ -1124,10 +1101,6 @@ function renderAlerts(
       );
 
 
-  // ==========================================================
-  // TOTAL
-  // ==========================================================
-
   const total =
     criticos.length +
     porFirmar.length +
@@ -1138,10 +1111,6 @@ function renderAlerts(
     total,
   );
 
-
-  // ==========================================================
-  // SIN ALERTAS
-  // ==========================================================
 
   if (!total) {
     container.innerHTML = `
@@ -1160,10 +1129,6 @@ function renderAlerts(
   }
 
 
-  // ==========================================================
-  // MOSTRAR GRUPOS
-  // ==========================================================
-
   container.innerHTML =
     renderAlertGroup(
       `Críticos (más de ${MESAS_CONFIG.PROMOS_CRITICO_MAYOR_A} promociones)`,
@@ -1179,7 +1144,6 @@ function renderAlerts(
       agenda,
     );
 }
-
 
 // ============================================================
 // MODAL 2 - CREAR ACUERDOS
@@ -1390,9 +1354,7 @@ function openCrearAcuerdos(
         );
       },
     );
-
-
-  document
+      document
     .getElementById(
       "acuerdoArchivo",
     )
@@ -1467,7 +1429,6 @@ function openCrearAcuerdos(
       },
     );
 }
-
 
 // ============================================================
 // ENVIAR ACUERDO A REVISIÓN INTERNA
@@ -1545,7 +1506,6 @@ function enviarARevisionInterna(
   renderMesas();
 }
 
-
 // ============================================================
 // AVANZAR ESTADO
 // ============================================================
@@ -1601,7 +1561,6 @@ function avanzarEstado(
 
   renderMesas();
 }
-
 
 // ============================================================
 // MODAL FIRMAR ACUERDO
@@ -1770,7 +1729,6 @@ function openFirmarAcuerdo(
     );
 }
 
-
 // ============================================================
 // FIRMAR
 // ============================================================
@@ -1839,7 +1797,6 @@ function firmarAcuerdo(
   renderMesas();
 }
 
-
 // ============================================================
 // ACUERDO
 // ============================================================
@@ -1891,7 +1848,6 @@ function describirAcuerdo(
     "Sin acuerdo registrado."
   );
 }
-
 
 // ============================================================
 // VER EXPEDIENTE
@@ -2100,7 +2056,6 @@ function openDetalleExpediente(
       closeForm,
     );
 }
-
 
 // ============================================================
 // DEMO
@@ -2484,14 +2439,12 @@ function seedSecretariaDemo() {
     seguimiento,
   );
 
-  // Datos de demostración de las demás secciones (Fase 8 · T-21)
   sembrarDemoFases(
     demo.map((item) => item.numero),
   );
 
   renderMesas();
 }
-
 
 // ============================================================
 // MOVIMIENTO DEMO
@@ -2526,13 +2479,8 @@ function getMovimientoDemo(
   );
 }
 
-
 // ============================================================
 // ASIGNACIÓN DE MESA
-//
-// Mesa 1 = pares.
-// Mesa 2 = impares.
-// Mesa 3 = OJC y expedientes de 2021 o anteriores.
 // ============================================================
 
 function parseNumero(
@@ -2668,7 +2616,6 @@ function mesaDeExpediente(
   );
 }
 
-
 // ============================================================
 // MESA DEL USUARIO
 // ============================================================
@@ -2679,7 +2626,6 @@ function mesaUsuario() {
     null
   );
 }
-
 
 // ============================================================
 // TÍTULOS
@@ -2735,7 +2681,6 @@ function renderTituloMesa() {
       ][1];
   }
 }
-
 
 // ============================================================
 // HELPERS

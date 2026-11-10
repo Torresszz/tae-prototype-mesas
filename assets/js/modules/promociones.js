@@ -1,549 +1,772 @@
 // =====================================================
-// MODULO PROMOCIONES
+// MÓDULO PROMOCIONES
+// Oficialía de Partes
+// assets/js/modules/promociones.js
 // =====================================================
 
-import { getData, saveData } from "../storage.js";
+import {
+  getData,
+  saveData,
+} from "../storage.js";
 
-import { createId, escapeHTML, escapeJS, formatDate } from "../utils.js";
+import {
+  createId,
+  escapeHTML,
+  escapeJS,
+  formatDate,
+} from "../utils.js";
+
+
+// =====================================================
+// ESTADO LOCAL
+// =====================================================
 
 let promociones = [];
+
 
 // =====================================================
 // INICIALIZAR
 // =====================================================
 
 export function initPromociones() {
-  promociones = getData("promociones", []);
+  promociones =
+    getData(
+      "promociones",
+      [],
+    );
 
-  window.openPromocionForm = openPromocionForm;
 
-  window.renderPromociones = renderPromociones;
+  if (!Array.isArray(promociones)) {
+    promociones = [];
+  }
 
-  window.viewPromocion = viewPromocion;
+
+  window.openPromocionForm =
+    openPromocionForm;
+
+  window.renderPromociones =
+    renderPromociones;
+
+  window.viewPromocion =
+    viewPromocion;
 }
+
 
 // =====================================================
 // RENDER TABLA
 // =====================================================
 
 export function renderPromociones() {
-  // 1. Recargar los datos actualizados desde localStorage
-  promociones = getData("promociones", []);
+  // Recargar siempre desde localStorage.
+  promociones =
+    getData(
+      "promociones",
+      [],
+    );
 
-  const table = document.getElementById("promocionesTable");
+
+  if (!Array.isArray(promociones)) {
+    promociones = [];
+  }
+
+
+  const table =
+    document.getElementById(
+      "promocionesTable",
+    );
+
 
   if (!table) {
     return;
   }
 
-  if (promociones.length === 0) {
+
+  if (
+    promociones.length === 0
+  ) {
     table.innerHTML = `
       <tr>
-        <td colspan="5">No existen promociones registradas.</td>
+        <td colspan="6">
+          No existen promociones registradas.
+        </td>
       </tr>
     `;
+
     return;
   }
 
-  // 2. Renderizar filas (Como quitaste Número de Promoción, usamos item.expediente en la primera columna o ajustamos las columnas)
-  table.innerHTML = promociones
-    .map(
-      (item) => `
-      <tr>
-        <td>${escapeHTML(item.expediente)}</td>
-        <td>${escapeHTML(item.oficio || "-")}</td>
-        <td>${formatDate(item.fecha)}</td>
-        <td>${escapeHTML(item.tipo)}</td>
-        <td>${escapeHTML(item.descripcion)}</td>
-        <td>
-          <button class="table-action" onclick="viewPromocion('${escapeJS(item.id)}')">
-            Ver
-          </button>
-        </td>
-      </tr>
-    `
-    )
-    .join("");
+
+  table.innerHTML =
+    promociones
+      .map(
+        (item) => `
+          <tr>
+
+            <td>
+              ${escapeHTML(
+                item.expediente ||
+                "-",
+              )}
+            </td>
+
+
+            <td>
+              ${escapeHTML(
+                item.oficio ||
+                "-",
+              )}
+            </td>
+
+
+            <td>
+              ${formatDate(
+                item.fecha,
+              )}
+            </td>
+
+
+            <td>
+              ${escapeHTML(
+                item.tipo ||
+                "-",
+              )}
+            </td>
+
+
+            <td>
+              ${escapeHTML(
+                item.descripcion ||
+                "-",
+              )}
+            </td>
+
+
+            <td>
+
+              <button
+                class="table-action"
+                onclick="viewPromocion('${escapeJS(
+                  item.id,
+                )}')"
+              >
+                Ver
+              </button>
+
+            </td>
+
+          </tr>
+        `,
+      )
+      .join("");
 }
+
 
 // =====================================================
 // FORMULARIO
 // =====================================================
 
 export function openPromocionForm() {
-  const modal = document.getElementById("modalContent");
+  const modal =
+    document.getElementById(
+      "modalContent",
+    );
+
+
+  if (!modal) {
+    return;
+  }
+
 
   modal.innerHTML = `
 
+    <div class="form-header">
 
+      <span>
+        Promociones
+      </span>
 
-<div class="form-header">
+      <h2>
+        Nueva promoción
+      </h2>
 
+    </div>
 
-<span>
-Promociones
-</span>
 
+    <div class="form-body">
 
-<h2>
-Nueva promoción
-</h2>
+      <form id="promocionForm">
 
+        <div class="form-grid">
 
-</div>
 
+          <div class="field">
 
+            <label>
+              Número promoción
+            </label>
 
+            <input
+              id="numeroPromocion"
+              required
+            >
 
+          </div>
 
 
-<div class="form-body">
+          <div class="field">
 
+            <label>
+              Número expediente
+            </label>
 
+            <input
+              id="expedientePromocion"
+              required
+            >
 
-<form id="promocionForm">
+          </div>
 
 
+          <div class="field">
 
+            <label>
+              Número oficio relacionado
+            </label>
 
+            <input
+              id="oficioPromocion"
+            >
 
-<div class="form-grid">
+          </div>
 
 
+          <div class="field">
 
+            <label>
+              Fecha
+            </label>
 
+            <input
+              type="date"
+              id="fechaPromocion"
+              required
+            >
 
-<div class="field">
+          </div>
 
 
-<label>
-Número promoción
-</label>
+          <div class="field">
 
+            <label>
+              Tipo de promoción
+            </label>
 
-<input
+            <select
+              id="tipoPromocion"
+            >
 
-id="numeroPromocion"
+              <option value="Escrito">
+                Escrito
+              </option>
 
-required
+              <option value="Solicitud">
+                Solicitud
+              </option>
 
->
+              <option value="Notificación">
+                Notificación
+              </option>
 
+              <option value="Otro">
+                Otro
+              </option>
 
-</div>
+            </select>
 
+          </div>
 
 
+          <div class="field">
 
+            <label>
+              Estado
+            </label>
 
+            <select
+              id="estadoPromocion"
+            >
 
+              <option value="Recibida">
+                Recibida
+              </option>
 
-<div class="field">
+              <option value="En revisión">
+                En revisión
+              </option>
 
+              <option value="Atendida">
+                Atendida
+              </option>
 
-<label>
-Número expediente
-</label>
+            </select>
 
+          </div>
 
-<input
 
-id="expedientePromocion"
+          <div class="field full">
 
-required
+            <label>
+              Descripción
+            </label>
 
->
+            <textarea
+              id="descripcionPromocion"
+              rows="4"
+            ></textarea>
 
+          </div>
 
-</div>
+        </div>
 
 
+        <div class="form-actions">
 
+          <button
+            type="button"
+            class="secondary-btn"
+            onclick="closeModal()"
+          >
+            Cancelar
+          </button>
 
 
+          <button
+            type="submit"
+            class="primary-btn"
+          >
+            Guardar promoción
+          </button>
 
+        </div>
 
-<div class="field">
+      </form>
 
+    </div>
+  `;
 
-<label>
-Número oficio relacionado
-</label>
 
+  document
+    .getElementById(
+      "modal",
+    )
+    ?.classList.add(
+      "show",
+    );
 
-<input
 
-id="oficioPromocion"
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Fecha
-</label>
-
-
-<input
-
-type="date"
-
-id="fechaPromocion"
-
-required
-
->
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Tipo de promoción
-</label>
-
-
-<select
-
-id="tipoPromocion"
-
->
-
-
-<option>
-Escrito
-</option>
-
-
-<option>
-Solicitud
-</option>
-
-
-<option>
-Notificación
-</option>
-
-
-<option>
-Otro
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field">
-
-
-<label>
-Estado
-</label>
-
-
-<select
-
-id="estadoPromocion"
-
->
-
-
-<option>
-Recibida
-</option>
-
-
-<option>
-En revisión
-</option>
-
-
-<option>
-Atendida
-</option>
-
-
-</select>
-
-
-</div>
-
-
-
-
-
-
-
-<div class="field full">
-
-
-<label>
-Descripción
-</label>
-
-
-<textarea
-
-id="descripcionPromocion"
-
-rows="4"
-
-></textarea>
-
-
-</div>
-
-
-
-
-
-
-</div>
-
-
-
-
-
-
-
-<div class="form-actions">
-
-
-<button
-
-type="button"
-
-class="secondary-btn"
-
-onclick="closeModal()"
-
->
-
-Cancelar
-
-</button>
-
-
-
-
-
-<button
-
-class="primary-btn"
-
->
-
-Guardar promoción
-
-</button>
-
-
-
-</div>
-
-
-
-
-
-</form>
-
-
-
-</div>
-
-
-
-`;
-
-  document.getElementById("modal").classList.add("show");
-
-  document.getElementById("promocionForm").addEventListener(
-    "submit",
-
-    savePromocion,
-  );
+  document
+    .getElementById(
+      "promocionForm",
+    )
+    ?.addEventListener(
+      "submit",
+      savePromocion,
+    );
 }
 
+
 // =====================================================
-// GUARDAR
+// GUARDAR PROMOCIÓN
 // =====================================================
 
-function savePromocion(event) {
+function savePromocion(
+  event,
+) {
   event.preventDefault();
 
-  const expedienteVal = document.getElementById("expedientePromocion")?.value.trim() || "";
+
+  const numeroPromocion =
+    document
+      .getElementById(
+        "numeroPromocion",
+      )
+      ?.value
+      .trim() ||
+    "";
+
+
+  const expedienteVal =
+    document
+      .getElementById(
+        "expedientePromocion",
+      )
+      ?.value
+      .trim() ||
+    "";
+
+
+  if (
+    !numeroPromocion ||
+    !expedienteVal
+  ) {
+    return;
+  }
+
 
   const promocion = {
-    id: createId(),
-    numero: expedienteVal, // Reemplazamos numeroPromocion por expedienteVal
-    expediente: expedienteVal,
-    oficio: document.getElementById("oficioPromocion")?.value || "",
-    fecha: document.getElementById("fechaPromocion")?.value || "",
-    tipo: document.getElementById("tipoPromocion")?.value || "",
-    descripcion: document.getElementById("descripcionPromocion")?.value || "",
-    estado: document.getElementById("estadoPromocion")?.value || "",
-    creadoEn: new Date().toISOString(),
+
+    id:
+      createId(),
+
+
+    // Número propio de la promoción.
+    numeroPromocion,
+
+
+    // Se conserva "numero" por compatibilidad
+    // con partes antiguas del prototipo.
+    numero:
+      expedienteVal,
+
+
+    expediente:
+      expedienteVal,
+
+
+    oficio:
+      document
+        .getElementById(
+          "oficioPromocion",
+        )
+        ?.value
+        .trim() ||
+      "",
+
+
+    fecha:
+      document
+        .getElementById(
+          "fechaPromocion",
+        )
+        ?.value ||
+      "",
+
+
+    tipo:
+      document
+        .getElementById(
+          "tipoPromocion",
+        )
+        ?.value ||
+      "",
+
+
+    descripcion:
+      document
+        .getElementById(
+          "descripcionPromocion",
+        )
+        ?.value
+        .trim() ||
+      "",
+
+
+    estado:
+      document
+        .getElementById(
+          "estadoPromocion",
+        )
+        ?.value ||
+      "",
+
+
+    creadoEn:
+      new Date()
+        .toISOString(),
+
+
+    // =================================================
+    // RECEPCIÓN POR MESA
+    // =================================================
+    // Oficialía registra la promoción, pero Mesa
+    // todavía no la ha recibido.
+    // =================================================
+
+    recibidaMesa:
+      false,
+
+
+    recibidaMesaEn:
+      null,
+
+
+    recibidaMesaPor:
+      null,
+
+
+    mesaRecepcion:
+      null,
   };
 
-  // 1. Obtener lista actual de localStorage
-  const promocionesActuales = getData("promociones", []);
-  
-  // 2. Agregar nuevo elemento al inicio
-  promocionesActuales.unshift(promocion);
 
-  // 3. Guardar en localStorage
-  saveData("promociones", promocionesActuales);
+  // ===================================================
+  // GUARDAR
+  // ===================================================
 
-  // 4. Actualizar tabla y cerrar modal
+  const promocionesActuales =
+    getData(
+      "promociones",
+      [],
+    );
+
+
+  const lista =
+    Array.isArray(
+      promocionesActuales,
+    )
+      ? promocionesActuales
+      : [];
+
+
+  lista.unshift(
+    promocion,
+  );
+
+
+  saveData(
+    "promociones",
+    lista,
+  );
+
+
+  promociones =
+    lista;
+
+
+  // ===================================================
+  // ACTUALIZAR
+  // ===================================================
+
   renderPromociones();
-  closeModal();
+
+
+  if (
+    typeof window.closeModal ===
+    "function"
+  ) {
+    window.closeModal();
+  }
 }
+
 
 // =====================================================
 // DETALLE
 // =====================================================
 
-export function viewPromocion(id) {
-  const promocion = promociones.find((item) => item.id === id);
+export function viewPromocion(
+  id,
+) {
+  promociones =
+    getData(
+      "promociones",
+      [],
+    );
+
+
+  if (!Array.isArray(promociones)) {
+    promociones = [];
+  }
+
+
+  const promocion =
+    promociones.find(
+      (item) =>
+        item.id === id,
+    );
+
 
   if (!promocion) {
     return;
   }
 
-  const modal = document.getElementById("modalContent");
+
+  const modal =
+    document.getElementById(
+      "modalContent",
+    );
+
+
+  if (!modal) {
+    return;
+  }
+
 
   modal.innerHTML = `
 
+    <div class="form-header">
+
+      <span>
+        Detalle promoción
+      </span>
+
+      <h2>
+        ${
+          escapeHTML(
+            promocion.numeroPromocion ||
+            promocion.expediente ||
+            "-",
+          )
+        }
+      </h2>
+
+    </div>
 
 
-<div class="form-header">
+    <div class="form-body">
+
+      <div class="detail-grid">
 
 
-<span>
-Detalle promoción
-</span>
+        <div class="detail-item">
+
+          <span>
+            Número promoción
+          </span>
+
+          <strong>
+            ${escapeHTML(
+              promocion.numeroPromocion ||
+              "-",
+            )}
+          </strong>
+
+        </div>
 
 
-<h2>
-${escapeHTML(promocion.numero)}
-</h2>
+        <div class="detail-item">
+
+          <span>
+            Expediente
+          </span>
+
+          <strong>
+            ${escapeHTML(
+              promocion.expediente ||
+              "-",
+            )}
+          </strong>
+
+        </div>
 
 
-</div>
+        <div class="detail-item">
+
+          <span>
+            Oficio relacionado
+          </span>
+
+          <strong>
+            ${escapeHTML(
+              promocion.oficio ||
+              "-",
+            )}
+          </strong>
+
+        </div>
 
 
+        <div class="detail-item">
+
+          <span>
+            Fecha
+          </span>
+
+          <strong>
+            ${formatDate(
+              promocion.fecha,
+            )}
+          </strong>
+
+        </div>
 
 
+        <div class="detail-item">
+
+          <span>
+            Tipo
+          </span>
+
+          <strong>
+            ${escapeHTML(
+              promocion.tipo ||
+              "-",
+            )}
+          </strong>
+
+        </div>
 
 
-<div class="form-body">
+        <div class="detail-item">
+
+          <span>
+            Estado en Oficialía
+          </span>
+
+          <strong>
+            ${escapeHTML(
+              promocion.estado ||
+              "-",
+            )}
+          </strong>
+
+        </div>
 
 
-<div class="detail-grid">
+        <div class="detail-item full">
+
+          <span>
+            Descripción
+          </span>
+
+          <strong>
+            ${escapeHTML(
+              promocion.descripcion ||
+              "-",
+            )}
+          </strong>
+
+        </div>
 
 
+        <div class="detail-item full">
 
-<div class="detail-item">
+          <span>
+            Recepción en Mesa
+          </span>
 
-<span>
-Expediente
-</span>
+          <strong>
+            ${
+              promocion.recibidaMesa ===
+              true
+                ? "Recibida por Mesa"
+                : "Pendiente de recibir"
+            }
+          </strong>
 
-
-<strong>
-${escapeHTML(promocion.expediente)}
-</strong>
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Oficio relacionado
-</span>
+        </div>
 
 
-<strong>
-${escapeHTML(promocion.oficio)}
-</strong>
+      </div>
 
-</div>
-
+    </div>
+  `;
 
 
-
-
-<div class="detail-item">
-
-<span>
-Tipo
-</span>
-
-
-<strong>
-${escapeHTML(promocion.tipo)}
-</strong>
-
-</div>
-
-
-
-
-
-<div class="detail-item">
-
-<span>
-Descripción
-</span>
-
-
-<strong>
-${escapeHTML(promocion.descripcion)}
-</strong>
-
-</div>
-
-
-
-
-</div>
-
-
-</div>
-
-
-
-`;
-
-  document.getElementById("modal").classList.add("show");
+  document
+    .getElementById(
+      "modal",
+    )
+    ?.classList.add(
+      "show",
+    );
 }
