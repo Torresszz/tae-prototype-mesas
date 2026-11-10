@@ -5,7 +5,7 @@
 // ============================================================
 
 import { getData, saveData } from "../../storage.js";
-import { escapeHTML } from "../../utils.js";
+import { escapeHTML, todayISO } from "../../utils.js";
 import { showModal, closeForm } from "../../forms/formHelper.js";
 
 import {
@@ -819,6 +819,10 @@ function marcarComoRadicada(
 
   demandas[numero].categoria =
     "radicado";
+
+  // Fase 7 (Estadística): fecha en que se marcó como radicada
+  demandas[numero].radicadoEn =
+    todayISO();
 
 
   saveData(

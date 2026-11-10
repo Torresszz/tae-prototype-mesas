@@ -41,6 +41,11 @@ import { renderAudiencia } from "./mesas/audiencia.js";
 import { renderDemanda } from "./mesas/demanda.js";
 import { renderPromociones } from "./mesas/promociones.js";
 import { renderCalificacion } from "./mesas/calificacion.js";
+import { renderConsultas } from "./mesas/consultas.js";
+import { renderIntersindicales } from "./mesas/intersindicales.js";
+import { renderOficiosMesas } from "./mesas/oficios.js";
+import { renderEstadistica } from "./mesas/estadistica.js";
+import { sembrarDemoFases } from "./mesas/demo.js";
 
 import {
   getAvisosAgendaPendientes,
@@ -64,6 +69,10 @@ registrarSeccion("audiencia", renderAudiencia);
 registrarSeccion("demanda", renderDemanda);
 registrarSeccion("promociones", renderPromociones);
 registrarSeccion("calificacion", renderCalificacion);
+registrarSeccion("consultas", renderConsultas);
+registrarSeccion("intersindicales", renderIntersindicales);
+registrarSeccion("oficios", renderOficiosMesas);
+registrarSeccion("estadistica", renderEstadistica);
 // Búsqueda propia de la vista Mesas (actor, demandado, acto).
 // El resto de filtros (expediente, fechas, estado) son globales: mesas/filtros.js
 let currentTexto = "";
@@ -2473,6 +2482,11 @@ function seedSecretariaDemo() {
   saveData(
     KEY,
     seguimiento,
+  );
+
+  // Datos de demostración de las demás secciones (Fase 8 · T-21)
+  sembrarDemoFases(
+    demo.map((item) => item.numero),
   );
 
   renderMesas();

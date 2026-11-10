@@ -5,7 +5,7 @@
 // ============================================================
 
 import { getData, saveData } from "../../storage.js";
-import { createId, escapeHTML } from "../../utils.js";
+import { createId, escapeHTML, todayISO } from "../../utils.js";
 
 import {
   aplicarFiltrosGlobales,
@@ -1059,6 +1059,13 @@ function toggleResultado(
     "acordado"
       ? "por-acordar"
       : "acordado";
+
+  // Fase 7 (Estadística): fecha en que se concluyó la calificación
+  if (item.resultado === "acordado") {
+    item.concluidaEn = todayISO();
+  } else {
+    delete item.concluidaEn;
+  }
 
 
   saveData(

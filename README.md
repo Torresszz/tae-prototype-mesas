@@ -566,7 +566,18 @@ exhortos
 promociones
 oficios
 enviosMesas
+mesasSeguimiento
+mesasDemandas
+mesasCalificaciones
+mesasAgenda
+mesasNotificaciones
+mesasConsultas
+mesasAcumulados
+registroOficios
+mesasPlantillas
 ```
+
+Nota: `oficios` (módulo Oficios general) y `registroOficios` (consecutivos de Mesas, Fase 6) son claves distintas; no mezclarlas.
 
 No cambiar los nombres de las claves sin revisar todos los módulos relacionados.
 

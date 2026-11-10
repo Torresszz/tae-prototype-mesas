@@ -1,0 +1,419 @@
+/* ============================================================
+   MESAS · FASE 6 Y 7
+   assets/css/mesasFase6.css
+   Compartido por:
+   - Consultas
+   - Intersindicales
+   - Oficios
+   - Estadística
+   Reutiliza las clases base de mesas.css y mesasFase4.css
+   (encabezado, contadores, tarjeta de tabla, botones, modal).
+   Los estilos de formulario NO van acotados a #mesasPage porque
+   el modal vive fuera de la página.
+   ============================================================ */
+
+
+/* ============================================================
+   CONTENEDOR
+   ============================================================ */
+
+#mesasPage .mesas-fase6-section {
+    width: 100%;
+    min-width: 0;
+}
+
+
+#mesasPage .mesas-fase6-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+
+#mesasPage .mesas-fase6-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+}
+
+#mesasPage .mesas-fase6-table thead {
+    background: #f7f9fb;
+}
+
+#mesasPage .mesas-fase6-table th {
+    height: 42px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #dce3ea;
+    color: #60758a;
+    font-size: 8.5px;
+    line-height: 11px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+#mesasPage .mesas-fase6-table td {
+    min-height: 52px;
+    padding: 11px 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #e6ecf1;
+    color: #455e76;
+    font-size: 9.5px;
+    line-height: 14px;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+#mesasPage .mesas-fase6-table tbody tr:hover {
+    background: #fafcff;
+}
+
+#mesasPage .mesas-fase6-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+
+.mesas-fase6-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 23px;
+    padding: 0 9px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    font-size: 8.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.mesas-fase6-badge.enviar {
+    background: #e8f1ff;
+    color: #1768cf;
+}
+
+.mesas-fase6-badge.regresar {
+    background: #e0f4f1;
+    color: #0f766e;
+}
+
+.mesas-fase6-badge.pendiente {
+    background: #fff4e0;
+    color: #8a4b08;
+}
+
+.mesas-fase6-estado {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f1f4f8;
+    color: #455e76;
+    font-size: 8.5px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   TARJETA GENÉRICA (Intersindicales)
+   ============================================================ */
+
+#mesasPage .mesas-fase6-card {
+    border: 1px solid #dce3ea;
+    border-radius: 9px;
+    background: #ffffff;
+}
+
+#mesasPage .mesas-fase6-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e6ecf1;
+}
+
+#mesasPage .mesas-fase6-card-header h3 {
+    margin: 0;
+    color: #102b45;
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   BARRA DE HERRAMIENTAS Y CHIPS (Oficios)
+   ============================================================ */
+
+#mesasPage .mesas-fase6-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+#mesasPage .mesas-fase6-toolbar .mesas-fase6-field {
+    min-width: 150px;
+}
+
+.mesas-fase6-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 13px;
+    box-sizing: border-box;
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #536b82;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.mesas-fase6-chip strong {
+    color: #1768cf;
+    font-size: 12px;
+}
+
+
+/* ============================================================
+   FORMULARIOS (dentro del modal y en la página)
+   ============================================================ */
+
+.mesas-fase6-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mesas-fase6-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    color: #536b82;
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+.mesas-fase6-field > span {
+    color: #536b82;
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+.mesas-fase6-field input,
+.mesas-fase6-field select,
+.mesas-fase6-field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: 1px solid #d5dfe8;
+    border-radius: 7px;
+    outline: none;
+    background: #ffffff;
+    color: #29445c;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.mesas-fase6-field input,
+.mesas-fase6-field select {
+    height: 38px;
+}
+
+.mesas-fase6-field textarea {
+    padding: 9px 10px;
+    line-height: 15px;
+    resize: vertical;
+}
+
+.mesas-fase6-field input:focus,
+.mesas-fase6-field select:focus,
+.mesas-fase6-field textarea:focus {
+    border-color: #8eb4e5;
+    box-shadow: 0 0 0 3px rgba(43, 114, 214, 0.08);
+}
+
+.mesas-fase6-field input[readonly] {
+    background: #f5f7fa;
+    color: #6b7f93;
+}
+
+.mesas-fase6-help {
+    margin: 0;
+    color: #71869a;
+    font-size: 9px;
+    line-height: 14px;
+}
+
+.mesas-fase6-error {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 7px;
+    background: #fdecea;
+    color: #b42318;
+    font-size: 9.5px;
+    line-height: 14px;
+}
+
+.mesas-fase6-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 9px 11px;
+    border-radius: 7px;
+    background: #fff4e0;
+    color: #8a4b08;
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+.mesas-fase6-link {
+    align-self: flex-end;
+    min-height: 38px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: #1768cf;
+    font-family: inherit;
+    font-size: 9.5px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   ESTADÍSTICA
+   ============================================================ */
+
+#mesasPage .mesas-estadistica-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+#mesasPage .mesas-estadistica-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    box-sizing: border-box;
+    border: 1px solid #dce3ea;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+#mesasPage .mesas-estadistica-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+}
+
+#mesasPage .mesas-estadistica-head h3 {
+    margin: 0 0 3px;
+    color: #102b45;
+    font-size: 13px;
+}
+
+#mesasPage .mesas-estadistica-head p {
+    margin: 0;
+    color: #71869a;
+    font-size: 9.5px;
+    line-height: 14px;
+}
+
+#mesasPage .mesas-estadistica-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #e8f1ff;
+    color: #1768cf;
+    font-size: 14px;
+}
+
+#mesasPage .mesas-estadistica-rango {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 10px;
+}
+
+#mesasPage .mesas-estadistica-resultado {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 12px;
+    border-top: 1px solid #e6ecf1;
+}
+
+#mesasPage .mesas-estadistica-numero {
+    color: #102b45;
+    font-size: 34px;
+    line-height: 38px;
+    font-weight: 800;
+}
+
+#mesasPage .mesas-estadistica-periodo {
+    color: #71869a;
+    font-size: 9.5px;
+}
+
+#mesasPage .mesas-estadistica-mesas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+#mesasPage .mesas-estadistica-mesas li {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f1f4f8;
+    color: #536b82;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+#mesasPage .mesas-estadistica-mesas strong {
+    color: #1768cf;
+}
+
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+
+@media (max-width: 980px) {
+    #mesasPage .mesas-estadistica-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #mesasPage .mesas-fase6-actions {
+        justify-content: flex-start;
+    }
+}

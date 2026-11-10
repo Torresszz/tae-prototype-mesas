@@ -218,3 +218,40 @@ export function etiquetaEstadoAudiencia(clave) {
     "—"
   );
 }
+
+// ============================================================
+// CONSULTAS
+// FASE 6 - T-17
+// ============================================================
+export const ACCIONES_CONSULTA = [
+  {
+    clave: "enviar",
+    etiqueta: "Enviar",
+    pasado: "Enviado",
+  },
+  {
+    clave: "regresar",
+    etiqueta: "Regresar",
+    pasado: "Regresado",
+  },
+];
+
+export function etiquetaAccionConsulta(clave) {
+  return (
+    ACCIONES_CONSULTA.find(
+      (accion) =>
+        accion.clave === clave,
+    )?.pasado ||
+    clave ||
+    "—"
+  );
+}
+
+// Destinos de Consultas (enviar / regresar)
+export const DESTINOS_CONSULTA = [
+  "Presidencia",
+  "Actuaría",
+  "Archivo",
+  "Proyectos",
+  "Mesas",
+];
