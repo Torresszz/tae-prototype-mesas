@@ -100,6 +100,28 @@ export const TIPOS_AGENDA_MANUALES = [
   "promocion",
 ];
 
+// Agenda de Promociones / Calificaciones / Exhortos: dos agendas, y cada
+// una contiene los tres tipos de evento.
+export const AGENDAS = [
+  { clave: "auxiliar", etiqueta: "Agenda Auxiliar" },
+  { clave: "titular", etiqueta: "Agenda Titular" },
+];
+
+// Agenda a la que pertenece un evento. Los eventos nuevos guardan su
+// agenda; los anteriores (sin el campo) caen por tipo:
+// calificación -> Auxiliar; promoción / exhorto -> Titular. ⚠️
+export function agendaDeEvento(evento) {
+  if (evento?.agenda === "auxiliar" || evento?.agenda === "titular") {
+    return evento.agenda;
+  }
+
+  return evento?.tipo === "calificacion" ? "auxiliar" : "titular";
+}
+
+export function etiquetaAgenda(clave) {
+  return AGENDAS.find((agenda) => agenda.clave === clave)?.etiqueta || clave || "—";
+}
+
 export function etiquetaTipoEventoAgenda(clave) {
   return (
     TIPOS_EVENTO_AGENDA.find(

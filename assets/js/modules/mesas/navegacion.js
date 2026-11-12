@@ -60,7 +60,7 @@ export const SECCIONES = [
     etiqueta: "Agenda",
     icono: "fa-calendar-days",
     fase: 9,
-    resumen: "Agenda de Promociones / Calificaciones / Exhortos.",
+    resumen: "Agenda Auxiliar y Agenda Titular (promociones, calificaciones y exhortos).",
     filtros: { estado: false },
   },
   {
@@ -103,7 +103,7 @@ export const SECCIONES = [
     etiqueta: "Estadística",
     icono: "fa-chart-column",
     fase: 7,
-    resumen: "Demandas, promociones, audiencias y calificaciones por rango de fechas.",
+    resumen: "Demandas, promociones, audiencias, calificaciones y acuerdos emitidos por rango de fechas.",
     // Cada tarjeta de estadística tendrá su propio rango desde/hasta.
     filtros: { visible: false },
   },

@@ -10,7 +10,11 @@
 //   - agenda: audiencias y calificaciones, con avisos que ya vencen
 //   - consultas (enviar / regresar) y un acumulado
 //   - oficios de varios años
-//   - plantillas de ejemplo (una por categoría)
+//   - plantillas de ejemplo (una por categoría, incluida Audiencia)
+//   - exhortos en varios estados (por recibir, en firma, con fecha...)
+//   - eventos de promoción y exhorto con aviso a Actuaría (10 días)
+//   - dos expedientes nuevos "por recibir" en Mesas
+//   - dos promociones "por recibir" (Oficialía → Mesa)
 //
 // Es IDEMPOTENTE: los registros de demostración llevan ids fijos que
 // empiezan con "demo-"; al repetir el botón se reemplazan, sin
@@ -84,6 +88,9 @@ export function sembrarDemoFases(numeros = []) {
   sembrarAcumulado(existentes, usuarioDe);
   sembrarOficios(existentes, usuarioDe);
   sembrarPlantillas();
+  sembrarExhortos(usuarioDe);
+  sembrarExpedientesPorRecibir();
+  sembrarPromocionesPorRecibir(existentes);
 }
 
 // ============================================================
@@ -179,10 +186,11 @@ function sembrarCalificaciones(numeros) {
 // ============================================================
 // AGENDA (audiencias y calificaciones) + AVISOS
 //
-// Audiencia → 2 avisos (Actuaría y Archivo). Calificación → 1 aviso
-// (Auxiliar). El aviso se activa DIAS_ALERTA_ANTICIPADA días antes,
-// así que los eventos próximos ya traen avisos vencidos (visibles en
-// el panel de Alertas). Los eventos pasados no generan avisos.
+// Audiencia → 1 aviso (Actuaría, 7 días antes). Calificación → 1 aviso
+// (Auxiliar, 7 días antes). Promoción y exhorto con fecha → 1 aviso
+// (Actuaría, 10 días antes). Los eventos próximos ya traen avisos
+// vencidos (visibles en el panel de Alertas). Los eventos pasados
+// no generan avisos.
 // ============================================================
 
 const EVENTOS = [
@@ -197,11 +205,24 @@ const EVENTOS = [
   ["audiencia", "127/2026", -25, "10:30", "Ratificación de convenio", "desahogada"],
   ["audiencia", "087/2020", -7, "09:00", "Inspección", "desahogada"],
   ["audiencia", "128/2026", -14, "11:00", "Trifásica", "desahogada"],
+  // Promociones con fecha señalada (aviso a Actuaría 10 días antes)
+  ["promocion", "131/2026", 8, "10:00"],
+  ["promocion", "129/2026", 25, "09:00"],
   // Calificaciones
   ["calificacion", "123/2026", 4, "09:00"],
   ["calificacion", "OJC-012/2026", 1, "10:00"],
   ["calificacion", "131/2026", 12, "11:30"],
 ];
+
+// Agenda Auxiliar / Titular de los eventos que no son audiencias
+// (hay de cada tipo en ambas agendas).
+const AGENDA_DEMO = {
+  "calificacion|123/2026": "auxiliar",
+  "calificacion|OJC-012/2026": "titular",
+  "calificacion|131/2026": "auxiliar",
+  "promocion|131/2026": "titular",
+  "promocion|129/2026": "auxiliar",
+};
 
 function sembrarAgenda(numeros, mesaDe) {
   const agenda = lista("mesasAgenda");
@@ -221,10 +242,14 @@ function sembrarAgenda(numeros, mesaDe) {
       notas:
         tipo === "audiencia"
           ? "Audiencia de demostración."
-          : "Calificación de demostración.",
+          : tipo === "promocion"
+            ? "Promoción de demostración."
+            : "Calificación de demostración.",
       mesa: mesaDe(numero),
       creadoPor: "Secretaría de Acuerdos",
-      ...(tipo === "audiencia" ? { tipoAudiencia, estadoAudiencia } : {}),
+      ...(tipo === "audiencia"
+        ? { tipoAudiencia, estadoAudiencia }
+        : { agenda: AGENDA_DEMO[`${tipo}|${numero}`] || (tipo === "calificacion" ? "auxiliar" : "titular") }),
     }),
   );
 
@@ -382,6 +407,7 @@ function sembrarPlantillas() {
     calificacion: "Mesa 1",
     consultas: "Mesa 3",
     oficios: "Mesa 2",
+    audiencia: "Mesa 2",
   };
 
   const nuevas = PLANTILLA_CATEGORIAS.filter(
@@ -404,4 +430,198 @@ function sembrarPlantillas() {
   });
 
   saveData("mesasPlantillas", [...restantes, ...nuevas]);
+}
+
+// ============================================================
+// EXHORTOS (los registra Oficialía; Mesa los recibe)
+// Número EXH-000/AAAA: continúa después del mayor consecutivo real.
+// Mesa por paridad del consecutivo (par → Mesa 1, impar → Mesa 2).
+// ============================================================
+
+// [estado, señalamiento, diasLlegada]
+//   por-recibir  → aún no recibido en Mesa
+//   resto        → recibido con ese estadoMesa
+const EXHORTOS = [
+  ["por-recibir", null, -2],
+  ["por-recibir", null, -1],
+  ["en-proceso", { modo: "por-senalar" }, -8],
+  ["en-proceso", { modo: "con-fecha", dias: 9, hora: "10:30" }, -10],
+  ["en-firma", { modo: "no-requiere" }, -12],
+  ["en-actuaria", { modo: "con-fecha", dias: -3, hora: "09:00" }, -20],
+];
+
+function sembrarExhortos(usuarioDe) {
+  const anio = new Date().getFullYear();
+  const todos = lista("exhortos");
+  const reales = todos.filter((exhorto) => !esDemo(exhorto));
+
+  let consecutivo = 0;
+
+  reales.forEach((exhorto) => {
+    const m = String(exhorto.numero || "").match(/^EXH-(\d+)\/(\d{4})$/i);
+
+    if (m && Number(m[2]) === anio) {
+      consecutivo = Math.max(consecutivo, Number(m[1]));
+    }
+  });
+
+  // Quita eventos y avisos de exhortos de demostración anteriores.
+  const agenda = lista("mesasAgenda");
+
+  agenda
+    .filter((evento) => String(evento.exhortoId || "").startsWith("demo-"))
+    .forEach((evento) => eliminarNotificacionesEvento(evento.id));
+
+  const agendaLimpia = agenda.filter(
+    (evento) => !String(evento.exhortoId || "").startsWith("demo-"),
+  );
+
+  const eventos = [];
+
+  const nuevos = EXHORTOS.map(([estado, senal, llegada], indice) => {
+    consecutivo += 1;
+
+    const mesa = consecutivo % 2 === 0 ? 1 : 2;
+    const id = `demo-exh-${indice + 1}`;
+    const ahora = new Date().toISOString();
+
+    const exhorto = {
+      id,
+      numero: `EXH-${String(consecutivo).padStart(3, "0")}/${anio}`,
+      fecha: dia(llegada),
+      origen: `OFICIO-${300 + indice}/${anio}`,
+      actor: ["MARÍA LÓPEZ", "JUAN PÉREZ", "ANA RUIZ", "LUIS ORTEGA", "SOFÍA CRUZ", "PEDRO NAVA"][indice],
+      demandado: "Gobierno del Estado de Colima",
+      autoridad: ["Juzgado Primero de lo Laboral", "Juzgado Segundo de lo Civil", "Tribunal Federal", "Juzgado Mixto de Tecomán", "Juzgado Tercero Familiar", "Juzgado de Manzanillo"][indice],
+      interno: false,
+      expedienteVinculado: "",
+      requerimiento: "Notificación y emplazamiento (demostración).",
+      promocion: "",
+      estado: "Recibido",
+      ubicacion: "",
+      creadoEn: ahora,
+    };
+
+    if (estado === "por-recibir") {
+      return exhorto;
+    }
+
+    exhorto.recibidoMesa = true;
+    exhorto.recibidoMesaEn = ahora;
+    exhorto.mesa = mesa;
+    exhorto.estadoMesa = estado;
+    exhorto.historialMesa = [
+      { fecha: ahora, movimiento: "Recibido en Mesa; pasa a En proceso" },
+    ];
+    exhorto.senalamiento = { modo: senal.modo, fecha: "", hora: "", eventoId: "" };
+
+    if (senal.modo === "con-fecha") {
+      const evento = {
+        id: `exh-${id}`,
+        tipo: "exhorto",
+        expediente: exhorto.numero,
+        exhortoId: id,
+        origen: "exhorto",
+        fecha: dia(senal.dias),
+        hora: senal.hora,
+        notas: `Exhorto de ${exhorto.autoridad}`,
+        mesa,
+        agenda: senal.dias > 0 ? "titular" : "auxiliar",
+        creadoPor: `Mesa ${mesa}`,
+      };
+
+      exhorto.senalamiento = {
+        modo: "con-fecha",
+        fecha: evento.fecha,
+        hora: senal.hora,
+        eventoId: evento.id,
+        agenda: evento.agenda,
+      };
+
+      eventos.push(evento);
+    }
+
+    return exhorto;
+  });
+
+  saveData("exhortos", [...nuevos, ...reales]);
+  saveData("mesasAgenda", [...agendaLimpia, ...eventos]);
+
+  // Aviso a Actuaría solo para señalamientos que todavía no ocurren.
+  const hoy = todayISO();
+
+  eventos
+    .filter((evento) => evento.fecha >= hoy)
+    .forEach((evento) => generarNotificacionesEvento(evento));
+}
+
+// ============================================================
+// EXPEDIENTES NUEVOS "POR RECIBIR" (demandas recién registradas)
+// 135/2026 (impar → Mesa 2) y 136/2026 (par → Mesa 1).
+// ============================================================
+
+const EXPEDIENTES_PENDIENTES = [
+  ["135/2026", "CARLOS MENDOZA", "Secretaría de Salud", "Pago de prestaciones", -1],
+  ["136/2026", "ELENA VARGAS", "Ayuntamiento de Colima", "Reinstalación", -2],
+];
+
+function sembrarExpedientesPorRecibir() {
+  const todos = lista("expedientes");
+
+  const restantes = todos.filter((expediente) => !esDemo(expediente));
+
+  const yaReales = new Set(restantes.map((expediente) => getNumeroExpediente(expediente)));
+
+  const nuevos = EXPEDIENTES_PENDIENTES.filter(
+    ([numero]) => !yaReales.has(numero),
+  ).map(([numero, actor, demandado, acto, offset], indice) => ({
+    id: `demo-exp-pend-${indice + 1}`,
+    numero,
+    expediente: numero,
+    fecha: dia(offset),
+    fechaRecepcion: dia(offset),
+    actor,
+    demandado,
+    actoDemandado: acto,
+    estado: "en-proceso",
+    clasificacion: "",
+    ubicacion: "Oficialía de Partes · pendiente de recibir en Mesas",
+    recibidoMesa: false,
+    origen: "demanda",
+    creadoEn: new Date().toISOString(),
+  }));
+
+  saveData("expedientes", [...nuevos, ...restantes]);
+}
+
+// ============================================================
+// PROMOCIONES "POR RECIBIR" (las registra Oficialía; Mesa las recibe)
+// ============================================================
+
+const PROMOCIONES_PENDIENTES = [
+  ["132/2026", "Solicitud de copias certificadas", -1],
+  ["133/2026", "Escrito de alegatos", -2],
+];
+
+function sembrarPromocionesPorRecibir(numeros) {
+  const restantes = lista("promociones").filter((promocion) => !esDemo(promocion));
+
+  const nuevas = PROMOCIONES_PENDIENTES.filter(([numero]) => numeros.includes(numero)).map(
+    ([numero, descripcion, offset], indice) => ({
+      id: `demo-promo-pend-${indice + 1}`,
+      numero,
+      expediente: numero,
+      fecha: dia(offset),
+      tipo: "Promoción",
+      descripcion,
+      estado: "Pendiente",
+      creadoEn: new Date().toISOString(),
+      recibidaMesa: false,
+      recibidaMesaEn: null,
+      recibidaMesaPor: null,
+      mesaRecepcion: null,
+    }),
+  );
+
+  saveData("promociones", [...nuevas, ...restantes]);
 }

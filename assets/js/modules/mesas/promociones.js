@@ -11,6 +11,7 @@ import {
 import {
   createId,
   escapeHTML,
+  todayISO,
 } from "../../utils.js";
 
 import {
@@ -1396,6 +1397,9 @@ function ejecutarAccionPromocion(
             ? {
                 estadoPromocion:
                   "acordado",
+                // Estadística "Acuerdos emitidos": fecha de la firma.
+                acordadoEn:
+                  todayISO(),
               }
             : {},
 

@@ -95,7 +95,10 @@ function leerLista(clave) {
 function getTodosLosExpedientes() {
   const datos = getData(KEY_EXPEDIENTES, []);
 
-  return Array.isArray(datos) ? datos : [];
+  // Los expedientes pendientes de recibir aún no existen para Mesas.
+  return Array.isArray(datos)
+    ? datos.filter((item) => item?.recibidoMesa !== false)
+    : [];
 }
 
 function buscarEnTodos(numero) {

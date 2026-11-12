@@ -105,16 +105,13 @@ export const ACCIONES_FLUJO = {
 };
 
 // Variaciones por tipo de asunto.
-//   exhorto: no pasa por firma; se envía a Actuaría directamente
-//   desde "En proceso". // PENDIENTE: confirmar si los exhortos
-//   también deben pasar por firma de la Magistrada.
-const ACCIONES_EXCLUIDAS = {
-  exhorto: ["enviar-firma", "firmar"],
-};
+//   Los exhortos siguen el MISMO flujo que los demás asuntos: la
+//   Magistrada también los firma (decisión confirmada por el equipo).
+//   Si en el futuro algún tipo cambia, se agregan aquí exclusiones
+//   u orígenes extra por tipo.
+const ACCIONES_EXCLUIDAS = {};
 
-const ORIGENES_EXTRA = {
-  exhorto: { "a-actuaria": ["en-proceso"] },
-};
+const ORIGENES_EXTRA = {};
 
 function origenesDe(accion, tipo) {
   const base = ACCIONES_FLUJO[accion]?.de || [];
@@ -302,7 +299,7 @@ export function renderBotonesFlujo(
 
   // La Magistrada no ve el botón mientras esté en otra etapa;
   // Mesa ve un aviso mientras espera la firma.
-  if (!esMagistrada && estado === "en-firma" && tipo !== "exhorto") {
+  if (!esMagistrada && estado === "en-firma") {
     return `
       <button
         type="button"

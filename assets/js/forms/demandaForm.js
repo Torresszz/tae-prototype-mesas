@@ -1292,7 +1292,9 @@ function saveDemanda(event) {
     actoDemandado: nuevaDemanda.actos || nuevaDemanda.accion || "",
     estado: nuevaDemanda.estado,
     clasificacion: "",
-    ubicacion: "",
+    // Pendiente de recibir en Mesas (se marca al recibirlo en Mesa).
+    ubicacion: "Oficialía de Partes · pendiente de recibir en Mesas",
+    recibidoMesa: false,
     demandaId: nuevaDemanda.id,
     origen: "demanda",
     creadoEn: nuevaDemanda.creadoEn,

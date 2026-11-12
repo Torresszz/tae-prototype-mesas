@@ -216,9 +216,51 @@
 }
 
 /* Vista previa de plantillas */
-.mesas-plantilla-preview-shell { width: min(900px, 94vw); }
-.mesas-plantilla-preview { min-height: 200px; max-height: 70vh; overflow: auto; }
-.mesas-plantilla-preview-frame { width: 100%; height: 65vh; border: 1px solid #dce3ea; border-radius: 7px; }
-.mesas-plantilla-preview-doc { padding: 16px 20px; background: #fff; border: 1px solid #dce3ea; border-radius: 7px; line-height: 1.5; }
-.mesas-plantilla-preview-doc table { border-collapse: collapse; }
-.mesas-plantilla-preview-doc td, .mesas-plantilla-preview-doc th { border: 1px solid #ccd5df; padding: 4px 8px; }
+.mesas-plantilla-preview-shell { width: 100%; }
+.mesas-plantilla-preview { min-height: 200px; max-height: calc(100vh - 320px); overflow: auto; border-radius: 8px; }
+
+/* Primera página sobre fondo gris, centrada (estilo Google Docs) */
+.mesas-preview-stage {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 28px 16px;
+    background: #f1f3f4;
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+    overflow: auto;
+}
+
+.mesas-preview-page {
+    position: relative;
+    flex: none;
+    max-width: 100%;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+}
+
+.mesas-preview-page canvas { display: block; }
+
+/* Hoja del Word a tamaño real, reducida con transform */
+.mesas-preview-paper {
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    transform-origin: top left;
+    color: #000;
+    line-height: 1.15;
+    word-wrap: break-word;
+}
+
+.mesas-preview-p { margin: 0 0 8pt; min-height: 1em; }
+.mesas-preview-p.con-vineta::before { content: "•"; margin-right: 0.5em; }
+.mesas-preview-table { border-collapse: collapse; width: 100%; margin-bottom: 8pt; }
+.mesas-preview-table td { padding: 2px 5px; vertical-align: top; }
+.mesas-preview-table.con-bordes td { border: 1px solid #000; }
+.mesas-preview-table .mesas-preview-p { margin: 0; }
+
+.mesas-preview-caption { margin: 10px 0 0; text-align: center; font-size: 12px; color: #5f6c7b; }
+.mesas-preview-loading, .mesas-preview-error { margin: 0; padding: 40px 0; text-align: center; color: #5f6c7b; }

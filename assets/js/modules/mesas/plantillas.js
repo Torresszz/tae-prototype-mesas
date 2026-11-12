@@ -19,6 +19,8 @@ import { getSession, canManageTemplates } from "../../auth.js";
 
 import { MESAS_CONFIG } from "./config.js";
 
+import { renderVistaPrevia } from "./vistaPrevia.js";
+
 import { coincideExpediente, coincideFecha } from "./filtros.js";
 
 import {
@@ -602,29 +604,9 @@ function abrirEditarPlantilla(id, onGuardado) {
 }
 
 // ============================================================
-// VISTA PREVIA
-//   PDF  -> visor nativo del navegador (iframe con blob)
-//   DOCX -> convertido a HTML con mammoth.js (cargado desde CDN)
+// VISTA PREVIA (primera página del documento, estilo Google Docs)
+// El dibujo vive en vistaPrevia.js (PDF con pdf.js, Word con lector propio).
 // ============================================================
-
-const MAMMOTH_URL =
-  "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
-
-function cargarMammoth() {
-  if (window.mammoth) return Promise.resolve(window.mammoth);
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-
-    script.src = MAMMOTH_URL;
-
-    script.onload = () => resolve(window.mammoth);
-
-    script.onerror = () => reject(new Error("No se pudo cargar mammoth.js"));
-
-    document.head.appendChild(script);
-  });
-}
 
 async function abrirVistaPrevia(id) {
   const plantilla = obtener(id);
@@ -645,7 +627,7 @@ async function abrirVistaPrevia(id) {
 
       <div class="mesas-modal-body">
         <div id="plantillaPreviewCuerpo" class="mesas-plantilla-preview">
-          Cargando vista previa...
+          <p class="mesas-preview-loading">Cargando vista previa...</p>
         </div>
       </div>
 
@@ -655,15 +637,7 @@ async function abrirVistaPrevia(id) {
     </div>
   `);
 
-  let urlPdf = "";
-
-  const cerrar = () => {
-    if (urlPdf) URL.revokeObjectURL(urlPdf);
-
-    closeForm();
-  };
-
-  document.getElementById("plantillaPreviewCerrar").onclick = cerrar;
+  document.getElementById("plantillaPreviewCerrar").onclick = closeForm;
 
   const cuerpo = document.getElementById("plantillaPreviewCuerpo");
 
@@ -673,30 +647,7 @@ async function abrirVistaPrevia(id) {
     return;
   }
 
-  if (plantilla.tipoArchivo === "pdf") {
-    urlPdf = URL.createObjectURL(blob);
-
-    cuerpo.innerHTML = `<iframe class="mesas-plantilla-preview-frame" title="Vista previa PDF" src="${urlPdf}"></iframe>`;
-
-    return;
-  }
-
-  try {
-    const mammoth = await cargarMammoth();
-
-    const { value } = await mammoth.convertToHtml({
-      arrayBuffer: await blob.arrayBuffer(),
-    });
-
-    cuerpo.innerHTML = value
-      ? `<div class="mesas-plantilla-preview-doc">${value}</div>`
-      : "El documento no tiene contenido que mostrar.";
-  } catch (error) {
-    console.error(error);
-
-    cuerpo.textContent =
-      "No se pudo generar la vista previa del Word (requiere conexión a internet). Puedes descargar el archivo.";
-  }
+  await renderVistaPrevia(cuerpo, plantilla, blob);
 }
 
 // ============================================================

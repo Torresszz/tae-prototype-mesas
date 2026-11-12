@@ -14,6 +14,10 @@ export const MESAS_CONFIG = {
   // Alertas de agenda: una semana antes (se usa a partir de la Fase 3).
   DIAS_ALERTA_ANTICIPADA: 7,
 
+  // Promociones y exhortos con fecha señalada: se avisa a Actuaría
+  // 10 días antes (decisión confirmada por el equipo).
+  DIAS_ALERTA_ACTUARIA_PROMOCION_EXHORTO: 10,
+
   // Límite por archivo de plantilla en el prototipo con localStorage (Fase 2).
   PLANTILLA_MAX_MB: 2,
 };

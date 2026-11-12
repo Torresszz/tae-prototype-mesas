@@ -20,13 +20,24 @@ const KEY_AGENDA = "mesasAgenda";
 
 // ============================================================
 // DESTINATARIOS POR TIPO DE EVENTO
-// Audiencia: solo Actuaría, una semana antes.
-// PENDIENTE: definir avisos para promoción y exhorto.
+// Audiencia:  Actuaría, una semana (7 días) antes.
+// Calificación: auxiliar, una semana (7 días) antes.
+// Promoción y exhorto con fecha: Actuaría, 10 días antes.
 // ============================================================
 export function destinatariosDeTipo(tipo) {
   if (tipo === "audiencia") return ["actuaria"];
   if (tipo === "calificacion") return ["auxiliar"];
+  if (tipo === "promocion" || tipo === "exhorto") return ["actuaria"];
   return [];
+}
+
+// Días de anticipación del aviso según el tipo de evento.
+export function diasAnticipacionDeTipo(tipo) {
+  if (tipo === "promocion" || tipo === "exhorto") {
+    return MESAS_CONFIG.DIAS_ALERTA_ACTUARIA_PROMOCION_EXHORTO;
+  }
+
+  return MESAS_CONFIG.DIAS_ALERTA_ANTICIPADA;
 }
 // ============================================================
 // OBTENER TODAS LAS NOTIFICACIONES
@@ -60,7 +71,7 @@ export function generarNotificacionesEvento(evento) {
 
   const fechaAviso = restarDias(
     evento.fecha,
-    MESAS_CONFIG.DIAS_ALERTA_ANTICIPADA,
+    diasAnticipacionDeTipo(evento.tipo),
   );
 
   if (!fechaAviso) {

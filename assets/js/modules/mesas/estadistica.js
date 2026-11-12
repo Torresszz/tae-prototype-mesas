@@ -3,7 +3,7 @@
 // assets/js/modules/mesas/estadistica.js
 // FASE 7 - T-20
 //
-// Cuatro tarjetas, cada una con su propio rango desde / hasta y su
+// Cinco tarjetas, cada una con su propio rango desde / hasta y su
 // contador. Cada mesa ve sus cifras; la Magistrada (sin mesa) ve el
 // total y, debajo, el desglose por mesa.
 //
@@ -15,6 +15,8 @@
 //   Promociones admitidas    promociones registradas    · fecha: fecha de la promoción
 //   Audiencias desahogadas   estado "desahogada"        · fecha: fecha de la audiencia
 //   Calificaciones concluidas resultado "acordado"      · fecha: concluidaEn
+//   Acuerdos emitidos        promociones ya firmadas    · fecha: acordadoEn
+//                            (estadoPromocion "acordado", se marca al firmar)
 //
 // Si un registro antiguo no trae su fecha propia (radicadoEn,
 // concluidaEn), se usa una fecha de respaldo (ver cada función).
@@ -63,6 +65,13 @@ const TARJETAS = [
     icono: "fa-scale-balanced",
     criterio: "Calificaciones con resultado Acordado.",
     items: itemsCalificaciones,
+  },
+  {
+    id: "acuerdos",
+    titulo: "Acuerdos emitidos",
+    icono: "fa-file-signature",
+    criterio: "Promociones con acuerdo firmado por la Magistrada.",
+    items: itemsAcuerdos,
   },
 ];
 
@@ -165,6 +174,33 @@ function itemsCalificaciones({ mapa }) {
           normalizarDia(calificacion.concluidaEn) ||
           normalizarDia(evento?.fecha) ||
           fechaRecepcion(mapa.get(numero)),
+      };
+    });
+}
+
+// ⚠️ Acuerdo emitido = acuerdo de una promoción ya firmado por la Magistrada
+// (promoción en estado "Acordado"). Fecha: acordadoEn; respaldo 1: fecha del
+// movimiento "Firmado" en el historial del acuerdo; respaldo 2: fecha de la
+// promoción.
+function itemsAcuerdos({ mapa }) {
+  return leerLista("promociones")
+    .filter(
+      (promocion) =>
+        promocion.estadoPromocion === "acordado" &&
+        mapa.has(String(promocion.expediente || promocion.numero || "")),
+    )
+    .map((promocion) => {
+      const firma = (Array.isArray(promocion.historialAcuerdo)
+        ? promocion.historialAcuerdo
+        : []
+      ).find((paso) => /^Firmado/i.test(String(paso.movimiento || "")));
+
+      return {
+        numero: String(promocion.expediente || promocion.numero || ""),
+        fecha:
+          normalizarDia(promocion.acordadoEn) ||
+          normalizarDia(firma?.fecha) ||
+          normalizarDia(promocion.fecha || promocion.creadoEn),
       };
     });
 }
