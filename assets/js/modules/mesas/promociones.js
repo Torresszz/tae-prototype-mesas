@@ -20,8 +20,15 @@ import {
 } from "./filtros.js";
 
 import {
-  ESTADOS,
-} from "./estados.js";
+  aplicarAccion,
+  accionDeBoton,
+  renderBotonesFlujo,
+  renderEstadoBadge,
+} from "./flujoEstados.js";
+
+import {
+  getSession,
+} from "../../auth.js";
 
 import {
   etiquetaEstadoAcuerdo,
@@ -1041,38 +1048,9 @@ function renderFilasPromociones(
 
             <td>
 
-              <select
-                class="mesas-fase4-state-select"
-                data-promociones-estado
-                data-promocion-id="${escapeHTML(
-                  item.id,
-                )}"
-              >
-
-                ${ESTADOS
-                  .map(
-                    (estado) => `
-                      <option
-                        value="${estado.clave}"
-
-                        ${
-                          item.estadoAcuerdo ===
-                          estado.clave
-                            ? "selected"
-                            : ""
-                        }
-                      >
-
-                        ${escapeHTML(
-                          estado.etiqueta,
-                        )}
-
-                      </option>
-                    `,
-                  )
-                  .join("")}
-
-              </select>
+              ${renderEstadoBadge(
+                item.estadoAcuerdo,
+              )}
 
             </td>
 
@@ -1105,34 +1083,18 @@ function renderFilasPromociones(
               <div class="mesas-actions">
 
 
-                <!-- ACORDAR -->
+                <!-- FLUJO AUTOMÁTICO -->
 
-                <button
-                  type="button"
-                  class="${
-                    acordada
-                      ? "mesas-secondary-btn"
-                      : "mesas-primary-btn"
-                  }"
-                  data-promociones-action="toggle-acuerdo"
-                  data-promocion-id="${escapeHTML(
-                    item.id,
-                  )}"
-                >
-
-                  <i class="fa-solid ${
-                    acordada
-                      ? "fa-rotate-left"
-                      : "fa-check"
-                  }"></i>
-
-                  ${
-                    acordada
-                      ? "Reabrir"
-                      : "Marcar acordada"
-                  }
-
-                </button>
+                ${renderBotonesFlujo(
+                  item.estadoAcuerdo,
+                  {
+                    actionAttr:
+                      "data-promociones-action",
+                    attrs: `data-promocion-id="${escapeHTML(
+                      item.id,
+                    )}"`,
+                  },
+                )}
 
 
                 <!-- AUDIENCIA -->
@@ -1251,10 +1213,7 @@ function actualizarListado() {
     );
 
 
-  configurarSelectsEstado(
-    vista,
-  );
-}
+  }
 
 
 // ============================================================
@@ -1348,10 +1307,13 @@ function configurarEventosPromociones(
         // ACORDADA
         // ================================================
 
-        case "toggle-acuerdo":
+                case "flujo":
 
-          toggleEstadoPromocion(
+          ejecutarAccionPromocion(
             button.dataset.promocionId,
+            accionDeBoton(
+              button,
+            ),
           );
 
           break;
@@ -1376,159 +1338,87 @@ function configurarEventosPromociones(
       }
 
     };
-
-
-  configurarSelectsEstado(
-    vista,
-  );
 }
 
 
 // ============================================================
-// SELECTS DE ESTADO
+// FLUJO AUTOMÁTICO DEL ACUERDO
+// El estado ya no se elige: lo calcula flujoEstados.js según la acción.
 // ============================================================
 
-function configurarSelectsEstado(
-  vista,
+function ejecutarAccionPromocion(
+  id,
+  accion,
 ) {
 
-  vista
+  if (
+    !accion
+  ) {
+    return;
+  }
 
-    .querySelectorAll(
-      "[data-promociones-estado]",
+
+  const promociones =
+    getData(
+      KEY_PROMOCIONES,
+      [],
+    );
+
+
+  const promocion =
+    Array.isArray(
+      promociones,
     )
+      ? promociones.find(
+          (item) =>
+            item.id ===
+            id,
+        )
+      : null;
 
-    .forEach(
-      (select) => {
 
-        select.onchange =
-          () => {
+  if (
+    !promocion
+  ) {
+    return;
+  }
 
-            cambiarEstadoAcuerdo(
-              select.dataset.promocionId,
-              select.value,
-            );
 
-          };
+  const resultado =
+    aplicarAccion(
+      promocion,
+      accion,
+      {
+        // Regla: la promoción pasa a "Acordada" al firmarse.
+        extra:
+          accion ===
+          "firmar"
+            ? {
+                estadoPromocion:
+                  "acordado",
+              }
+            : {},
 
+        campo:
+          "estadoAcuerdo",
+        campoHistorial:
+          "historialAcuerdo",
+        usuario:
+          getSession()?.nombre ||
+          "",
       },
     );
-}
-
-
-// ============================================================
-// CAMBIAR ESTADO DEL ACUERDO
-// ============================================================
-
-function cambiarEstadoAcuerdo(
-  id,
-  nuevoEstado,
-) {
-
-  const estadoValido =
-    ESTADOS.some(
-      (estado) =>
-        estado.clave ===
-        nuevoEstado,
-    );
 
 
   if (
-    !estadoValido
+    !resultado.ok
   ) {
-    return;
-  }
-
-
-  const promociones =
-    getData(
-      KEY_PROMOCIONES,
-      [],
+    window.alert(
+      resultado.error,
     );
 
-
-  if (
-    !Array.isArray(
-      promociones,
-    )
-  ) {
     return;
   }
-
-
-  const promocion =
-    promociones.find(
-      (item) =>
-        item.id ===
-        id,
-    );
-
-
-  if (
-    !promocion
-  ) {
-    return;
-  }
-
-
-  promocion.estadoAcuerdo =
-    nuevoEstado;
-
-
-  saveData(
-    KEY_PROMOCIONES,
-    promociones,
-  );
-
-
-  actualizarListado();
-}
-
-
-// ============================================================
-// POR ACORDAR / ACORDADO
-// ============================================================
-
-function toggleEstadoPromocion(
-  id,
-) {
-
-  const promociones =
-    getData(
-      KEY_PROMOCIONES,
-      [],
-    );
-
-
-  if (
-    !Array.isArray(
-      promociones,
-    )
-  ) {
-    return;
-  }
-
-
-  const promocion =
-    promociones.find(
-      (item) =>
-        item.id ===
-        id,
-    );
-
-
-  if (
-    !promocion
-  ) {
-    return;
-  }
-
-
-  promocion.estadoPromocion =
-    promocion.estadoPromocion ===
-    "acordado"
-      ? "por-acordar"
-      : "acordado";
 
 
   saveData(

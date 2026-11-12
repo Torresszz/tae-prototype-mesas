@@ -15,6 +15,15 @@ import {
 import {
   etiquetaEstado,
 } from "./estados.js";
+import {
+  aplicarAccion,
+  accionDeBoton,
+  renderBotonesFlujo,
+  renderEstadoBadge,
+} from "./flujoEstados.js";
+import {
+  getSession,
+} from "../../auth.js";
 
 import {
   etiquetaCategoriaDemanda,
@@ -571,35 +580,9 @@ function renderFilasDemanda(
 
             <td>
 
-              <select
-                class="mesas-fase4-state-select"
-                data-demanda-radicacion
-                data-expediente="${escapeHTML(item.numero)}"
-                aria-label="Radicación ${escapeHTML(item.numero)}"
-              >
-
-                ${ESTADOS_RADICACION
-                  .map(
-                    (estado) => `
-                      <option
-                        value="${estado}"
-                        ${
-                          item.demanda.radicacion === estado
-                            ? "selected"
-                            : ""
-                        }
-                      >
-                        ${escapeHTML(
-                          etiquetaEstado(
-                            estado,
-                          ),
-                        )}
-                      </option>
-                    `,
-                  )
-                  .join("")}
-
-              </select>
+              ${renderEstadoBadge(
+                item.demanda.radicacion,
+              )}
 
             </td>
 
@@ -632,27 +615,16 @@ function renderFilasDemanda(
                   data-expediente="${escapeHTML(item.numero)}"
                 >
                   <i class="fa-regular fa-eye"></i>
-                  Ver
+                                    Ver
                 </button>
-
-
-                ${
-                  !radicado
-                    ? `
-                      <button
-                        type="button"
-                        class="mesas-primary-btn"
-                        data-demanda-action="radicar"
-                        data-expediente="${escapeHTML(item.numero)}"
-                      >
-                        <i class="fa-solid fa-check"></i>
-                        Marcar radicada
-                      </button>
-                    `
-                    : ""
-                }
-
-              </div>
+                ${renderBotonesFlujo(
+                  item.demanda.radicacion,
+                  {
+                    actionAttr: "data-demanda-action",
+                    attrs: `data-expediente="${escapeHTML(item.numero)}"`,
+                  },
+                )}
+</div>
 
             </td>
 
@@ -728,76 +700,42 @@ function configurarEventosDemanda(
           break;
 
 
-        case "radicar":
-          marcarComoRadicada(
-            numero,
+                case "flujo":
+          ejecutarAccionDemanda(
+            button.dataset.expediente,
+            accionDeBoton(button),
           );
           break;
       }
     };
-
-
-  vista
-    .querySelectorAll(
-      "[data-demanda-radicacion]",
-    )
-    .forEach(
-      (select) => {
-        select.onchange =
-          () => {
-            cambiarRadicacion(
-              select.dataset.expediente,
-              select.value,
-            );
-          };
-      },
-    );
 }
 
 
 // ============================================================
-// CAMBIAR RADICACIÓN
+// FLUJO AUTOMÁTICO DE LA RADICACIÓN (sin selector manual)
 // ============================================================
-
-function cambiarRadicacion(
-  numero,
-  nuevoEstado,
-) {
-  if (
-    !ESTADOS_RADICACION.includes(
-      nuevoEstado,
-    )
-  ) {
+function ejecutarAccionDemanda(numero, accion) {
+  if (!accion) return;
+  const demandas = getData(KEY_DEMANDAS, {});
+  const registro = demandas[numero];
+  if (!registro) return;
+  const resultado = aplicarAccion(registro, accion, {
+    campo: "radicacion",
+    campoHistorial: "historialRadicacion",
+    // Regla: la demanda pasa a "Radicado" al llegar a En lista (firma).
+    extra:
+      accion === "firmar"
+        ? { categoria: "radicado", radicadoEn: todayISO() }
+        : {},
+    usuario: getSession()?.nombre || "",
+  });
+  if (!resultado.ok) {
+    window.alert(resultado.error);
     return;
   }
-
-
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
-
-
-  if (!demandas[numero]) {
-    return;
-  }
-
-
-  demandas[numero].radicacion =
-    nuevoEstado;
-
-
-  saveData(
-    KEY_DEMANDAS,
-    demandas,
-  );
-
-
+  saveData(KEY_DEMANDAS, demandas);
   renderDemanda();
 }
-
-
 // ============================================================
 // MARCAR RADICADA
 // ============================================================

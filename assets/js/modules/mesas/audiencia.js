@@ -16,6 +16,7 @@ import {
 } from "./estados.js";
 
 import {
+  TIPOS_AGENDA_AUDIENCIAS,
   TIPOS_AUDIENCIA,
   etiquetaEstadoAudiencia,
 } from "./catalogos.js";
@@ -28,6 +29,15 @@ import {
 import {
   montarAgendaEn,
 } from "./agenda.js";
+import {
+  aplicarAccionSeguimiento,
+  accionDeBoton,
+  renderBotonesFlujo,
+  renderEstadoBadge,
+} from "./flujoEstados.js";
+import {
+  getSession,
+} from "../../auth.js";
 
 
 // ============================================================
@@ -275,9 +285,8 @@ export function renderAudiencia() {
         <div
           data-audiencia-agenda
         ></div>
-
       </div>
-
+      <div data-plantillas-slot></div>
     </section>
   `;
 
@@ -298,12 +307,12 @@ export function renderAudiencia() {
   montarAgendaEn(
     agendaSlot,
     {
+      tipos:
+        TIPOS_AGENDA_AUDIENCIAS,
       tipoInicial:
         "audiencia",
-
       filtroInicial:
         "audiencia",
-
       titulo:
         "Agenda de audiencias",
     },
@@ -504,11 +513,7 @@ function getRegistrosAudiencia() {
             "por-desahogar",
 
           estadoExpediente:
-            ESTADOS_EXPEDIENTE_AUDIENCIA.includes(
-              estadoActual,
-            )
-              ? estadoActual
-              : "",
+            estadoActual,
 
           evento,
           expediente,
@@ -702,39 +707,13 @@ function renderFilasAudiencia(
 
             <td>
 
-              <select
-                class="mesas-fase4-state-select"
-                data-audiencia-expediente-estado
-                data-expediente="${escapeHTML(
-                  item.numero,
-                )}"
-              >
-
-                <option value="">
-                  Seleccionar...
-                </option>
-
-                ${ESTADOS_EXPEDIENTE_AUDIENCIA.map(
-                  (estado) => `
-                    <option
-                      value="${estado}"
-                      ${
-                        item.estadoExpediente ===
-                        estado
-                          ? "selected"
-                          : ""
-                      }
-                    >
-                      ${escapeHTML(
-                        etiquetaEstado(
-                          estado,
-                        ),
-                      )}
-                    </option>
-                  `,
-                ).join("")}
-
-              </select>
+              ${
+                item.estadoExpediente
+                  ? renderEstadoBadge(
+                      item.estadoExpediente,
+                    )
+                  : "—"
+              }
 
             </td>
 
@@ -750,7 +729,16 @@ function renderFilasAudiencia(
 
 
             <td>
-
+              <div class="mesas-actions">
+              ${renderBotonesFlujo(
+                item.estadoExpediente,
+                {
+                  actionAttr: "data-audiencia-action",
+                  attrs: `data-expediente="${escapeHTML(
+                    item.numero,
+                  )}"`,
+                },
+              )}
               <button
                 type="button"
                 class="${
@@ -777,6 +765,7 @@ function renderFilasAudiencia(
                 }
 
               </button>
+              </div>
 
             </td>
 
@@ -904,6 +893,21 @@ function configurarEventosAudiencia(
           break;
 
 
+        case "flujo": {
+          const accion = accionDeBoton(button);
+          if (!accion) break;
+          const resultado = aplicarAccionSeguimiento(
+            button.dataset.expediente,
+            accion,
+            { usuario: getSession()?.nombre || "" },
+          );
+          if (!resultado.ok) {
+            window.alert(resultado.error);
+            break;
+          }
+          renderAudiencia();
+          break;
+        }
         case "toggle-estado":
           toggleEstadoAudiencia(
             button.dataset.eventoId,
@@ -936,23 +940,6 @@ function configurarCamposAudiencia(
           () => {
             cambiarTipoAudiencia(
               select.dataset.eventoId,
-              select.value,
-            );
-          };
-      },
-    );
-
-
-  vista
-    .querySelectorAll(
-      "[data-audiencia-expediente-estado]",
-    )
-    .forEach(
-      (select) => {
-        select.onchange =
-          () => {
-            cambiarEstadoExpediente(
-              select.dataset.expediente,
               select.value,
             );
           };
@@ -1062,60 +1049,6 @@ function toggleEstadoAudiencia(
 
 
   renderAudiencia();
-}
-
-
-// ============================================================
-// ESTADO DEL EXPEDIENTE
-// ============================================================
-
-function cambiarEstadoExpediente(
-  numero,
-  nuevoEstado,
-) {
-  if (
-    !ESTADOS_EXPEDIENTE_AUDIENCIA.includes(
-      nuevoEstado,
-    )
-  ) {
-    return;
-  }
-
-
-  const seguimiento =
-    getData(
-      KEY_SEGUIMIENTO,
-      {},
-    );
-
-
-  const actual =
-    seguimiento[numero] ||
-    {};
-
-
-  seguimiento[numero] = {
-    ...actual,
-
-    estado:
-      nuevoEstado,
-
-    historial:
-      Array.isArray(
-        actual.historial,
-      )
-        ? actual.historial
-        : [],
-  };
-
-
-  saveData(
-    KEY_SEGUIMIENTO,
-    seguimiento,
-  );
-
-
-  actualizarListadoAudiencias();
 }
 
 

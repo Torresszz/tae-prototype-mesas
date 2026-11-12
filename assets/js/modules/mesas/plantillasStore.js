@@ -122,6 +122,41 @@ export function guardar({ nombre, categoria, archivo, dataUrl, subidoPor }) {
   }
 }
 
+// Edita nombre y categoría; si llega `archivo` + `dataUrl`, reemplaza el archivo.
+// Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
+export function actualizar(id, { nombre, categoria, archivo, dataUrl }) {
+  const lista = getData(KEY, []);
+  const actual = lista.find((item) => item.id === id);
+
+  if (!actual) return { ok: false, error: "otro" };
+
+  const plantilla = {
+    ...actual,
+    nombre: String(nombre || "").trim(),
+    categoria,
+    ...(archivo && dataUrl
+      ? {
+          tipoArchivo: extensionDe(archivo.name),
+          nombreArchivo: archivo.name,
+          tamano: archivo.size,
+          dataUrl,
+          fecha: todayISO(),
+        }
+      : {}),
+  };
+
+  try {
+    saveData(
+      KEY,
+      lista.map((item) => (item.id === id ? plantilla : item)),
+    );
+    return { ok: true, plantilla };
+  } catch (error) {
+    console.error("No se pudo actualizar la plantilla:", error);
+    return { ok: false, error: "cuota" };
+  }
+}
+
 export function borrar(id) {
   const lista = getData(KEY, []);
 

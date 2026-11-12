@@ -25,6 +25,11 @@ export const PLANTILLA_CATEGORIAS = [
     etiqueta: "Calificación",
     icono: "fa-scale-balanced",
   },
+    {
+    clave: "audiencia",
+    etiqueta: "Audiencia",
+    icono: "fa-gavel",
+  },
   {
     clave: "consultas",
     etiqueta: "Consultas",
@@ -60,11 +65,39 @@ export const TIPOS_EVENTO_AGENDA = [
     etiqueta: "Audiencia",
     icono: "fa-gavel",
   },
-  {
+    {
     clave: "calificacion",
     etiqueta: "Calificación",
     icono: "fa-scale-balanced",
   },
+  {
+    clave: "promocion",
+    etiqueta: "Promoción",
+    icono: "fa-file-pen",
+  },
+  {
+    clave: "exhorto",
+    etiqueta: "Exhorto",
+    icono: "fa-file-import",
+  },
+];
+
+// Dos agendas finales:
+//   1. Audiencias (apartado Audiencia)
+//   2. Promociones / Calificaciones / Exhortos (apartado Agenda)
+export const TIPOS_AGENDA_AUDIENCIAS = ["audiencia"];
+
+export const TIPOS_AGENDA_PROMOCIONES = [
+  "promocion",
+  "calificacion",
+  "exhorto",
+];
+
+// Los eventos de exhorto se crean solo desde el apartado Exhortos.
+export const TIPOS_AGENDA_MANUALES = [
+  "audiencia",
+  "calificacion",
+  "promocion",
 ];
 
 export function etiquetaTipoEventoAgenda(clave) {

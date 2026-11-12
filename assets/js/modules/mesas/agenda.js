@@ -10,6 +10,7 @@ import { getSession } from "../../auth.js";
 import { showModal, closeForm } from "../../forms/formHelper.js";
 
 import {
+  TIPOS_AGENDA_MANUALES,
   TIPOS_EVENTO_AGENDA,
   etiquetaTipoEventoAgenda,
   iconoTipoEventoAgenda,
@@ -99,9 +100,12 @@ function getEventosVisiblesParaUsuario() {
 export function montarAgendaEn(
   contenedor,
   {
-    tipoInicial = "audiencia",
+        tipoInicial = "audiencia",
     filtroInicial = "ambas",
     titulo = "Agenda",
+    tipos = TIPOS_EVENTO_AGENDA.map(
+      (tipo) => tipo.clave,
+    ),
   } = {},
 ) {
   if (!contenedor) {
@@ -116,9 +120,10 @@ export function montarAgendaEn(
     estado = {
       anio: hoy.getFullYear(),
       mes: hoy.getMonth(),
-      filtro: normalizarFiltro(filtroInicial),
+            filtro: normalizarFiltro(filtroInicial),
       tipoInicial: normalizarTipo(tipoInicial),
       titulo,
+      tipos,
     };
 
     estadosCalendario.set(
@@ -126,6 +131,7 @@ export function montarAgendaEn(
       estado,
     );
   } else {
+        estado.tipos = tipos;
     estado.tipoInicial =
       normalizarTipo(tipoInicial);
 
@@ -155,6 +161,12 @@ function renderAgenda(contenedor) {
         (evento) =>
           obtenerAnio(evento.fecha) === estado.anio &&
           obtenerMes(evento.fecha) === estado.mes,
+      )
+      .filter(
+        (evento) =>
+          estado.tipos.includes(
+            evento.tipo,
+          ),
       )
       .filter(
         (evento) =>
@@ -220,52 +232,47 @@ function renderAgenda(contenedor) {
         </div>
 
 
+        ${
+          estado.tipos.length > 1
+            ? `
         <label class="mesas-agenda-filter">
-
           <span>Mostrar</span>
-
           <select data-agenda-filter>
-
             <option
               value="ambas"
               ${estado.filtro === "ambas" ? "selected" : ""}
             >
-              Audiencias y calificaciones
+              Todos
             </option>
-
-            <option
-              value="audiencia"
-              ${estado.filtro === "audiencia" ? "selected" : ""}
-            >
-              Audiencias
-            </option>
-
-            <option
-              value="calificacion"
-              ${estado.filtro === "calificacion" ? "selected" : ""}
-            >
-              Calificaciones
-            </option>
-
+            ${estado.tipos
+              .map(
+                (clave) => `
+              <option
+                value="${clave}"
+                ${estado.filtro === clave ? "selected" : ""}
+              >
+                ${escapeHTML(etiquetaTipoEventoAgenda(clave))}
+              </option>`,
+              )
+              .join("")}
           </select>
-
-        </label>
+        </label>`
+            : ""
+        }
 
       </div>
 
 
       <div class="mesas-agenda-legend">
-
-        <span class="mesas-agenda-legend-item audiencia">
-          <i class="fa-solid fa-gavel"></i>
-          Audiencia
-        </span>
-
-        <span class="mesas-agenda-legend-item calificacion">
-          <i class="fa-solid fa-scale-balanced"></i>
-          Calificación
-        </span>
-
+        ${estado.tipos
+          .map(
+            (clave) => `
+        <span class="mesas-agenda-legend-item ${clave}">
+          <i class="fa-solid ${iconoTipoEventoAgenda(clave)}"></i>
+          ${escapeHTML(etiquetaTipoEventoAgenda(clave))}
+        </span>`,
+          )
+          .join("")}
       </div>
 
 
@@ -515,9 +522,10 @@ function configurarEventosAgenda(
 
       case "nuevo":
         openEventoForm({
+          tipos:
+            estado.tipos,
           tipoInicial:
             estado.tipoInicial,
-
           fechaInicial:
             fechaInicialParaMes(
               estado.anio,
@@ -534,9 +542,10 @@ function configurarEventosAgenda(
 
       case "nuevo-dia":
         openEventoForm({
+          tipos:
+            estado.tipos,
           tipoInicial:
             estado.tipoInicial,
-
           fechaInicial:
             boton.dataset.agendaFecha,
 
@@ -591,6 +600,7 @@ function configurarEventosAgenda(
 
 function openEventoForm({
   evento = null,
+  tipos = null,
   tipoInicial = "audiencia",
   fechaInicial = "",
   onSaved = null,
@@ -666,7 +676,17 @@ function openEventoForm({
                 required
               >
 
-                ${TIPOS_EVENTO_AGENDA.map(
+                ${TIPOS_EVENTO_AGENDA.filter(
+                  (tipo) =>
+                    tipo.clave === evento?.tipo ||
+                    (TIPOS_AGENDA_MANUALES.includes(
+                      tipo.clave,
+                    ) &&
+                      (!tipos ||
+                        tipos.includes(
+                          tipo.clave,
+                        ))),
+                ).map(
                   (tipo) => `
                     <option
                       value="${tipo.clave}"
@@ -984,6 +1004,7 @@ function guardarEventoDesdeForm(
 
 
   const nuevoEvento = {
+    ...(eventoAnterior || {}),
     id:
       eventoAnterior?.id ||
       createId(),
@@ -1233,6 +1254,11 @@ function openDetalleEvento(
     );
 
 
+    // Los exhortos se gestionan desde el apartado Exhortos.
+  if (evento.tipo === "exhorto") {
+    document.getElementById("editAgendaEvento")?.remove();
+    document.getElementById("deleteAgendaEvento")?.remove();
+  }
   document
     .getElementById(
       "editAgendaEvento",
@@ -1690,20 +1716,23 @@ function getNumeroExpediente(
 function normalizarTipo(
   tipo,
 ) {
-  return (
-    tipo === "calificacion"
-      ? "calificacion"
-      : "audiencia"
-  );
+  return TIPOS_EVENTO_AGENDA.some(
+    (item) =>
+      item.clave === tipo,
+  )
+    ? tipo
+    : "audiencia";
 }
 
 
 function normalizarFiltro(
   filtro,
 ) {
-  if (
-    filtro === "audiencia" ||
-    filtro === "calificacion"
+    if (
+    TIPOS_EVENTO_AGENDA.some(
+      (item) =>
+        item.clave === filtro,
+    )
   ) {
     return filtro;
   }
