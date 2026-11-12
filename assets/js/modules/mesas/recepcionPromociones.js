@@ -11,6 +11,7 @@
 import { getData, saveData } from "../../storage.js";
 import { escapeHTML } from "../../utils.js";
 import { getSession } from "../../auth.js";
+import { reactivarPorPromocionNueva } from "./flujoEstados.js";
 import { showModal, closeForm } from "../../forms/formHelper.js";
 
 import {
@@ -691,6 +692,24 @@ function recibirPromocion(
   registrarMovimientoExpediente(
     registro.numero,
     ahora,
+  );
+  // Oficialía -> Mesa: el acuerdo de la promoción queda "En proceso".
+  promocion.historialAcuerdo = [
+    ...(Array.isArray(promocion.historialAcuerdo)
+      ? promocion.historialAcuerdo
+      : []),
+    {
+      fecha: ahora,
+      movimiento: "Recibida en Mesa; pasa a En proceso",
+    },
+  ];
+  saveData(
+    KEY_PROMOCIONES,
+    promociones,
+  );
+  // Actuaría / Archivo -> En proceso (promoción nueva).
+  reactivarPorPromocionNueva(
+    registro.numero,
   );
 
 

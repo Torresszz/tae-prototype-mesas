@@ -29,7 +29,8 @@ import {
 import {
   listar,
   obtener,
-  guardar,
+    guardar,
+  actualizar,
   borrar,
   validarArchivo,
   leerComoDataUrl,
@@ -144,8 +145,18 @@ export function montarPlantillasEn(contenedor, { categoria = "" } = {}) {
     const id = boton.dataset.id;
 
     switch (boton.dataset.plantillaAction) {
-      case "descargar":
+            case "descargar":
         descargarPlantilla(id);
+
+        break;
+
+      case "vista-previa":
+        abrirVistaPrevia(id);
+
+        break;
+
+      case "editar":
+        abrirEditarPlantilla(id, refrescar);
 
         break;
 
@@ -187,6 +198,21 @@ function renderTabla(lista, { mostrarCategoria, puedeGestionar }) {
           <td>${escapeHTML(formatDate(item.fecha))}</td>
           <td>
             <div class="mesas-actions">
+                            <button type="button" class="mesas-secondary-btn"
+                data-plantilla-action="vista-previa" data-id="${escapeHTML(item.id)}">
+                <i class="fa-regular fa-eye"></i>
+                Vista previa
+              </button>
+              ${
+                puedeGestionar
+                  ? `
+                <button type="button" class="mesas-secondary-btn"
+                  data-plantilla-action="editar" data-id="${escapeHTML(item.id)}">
+                  <i class="fa-solid fa-pen"></i>
+                  Editar
+                </button>`
+                  : ""
+              }
               <button type="button" class="mesas-secondary-btn"
                 data-plantilla-action="descargar" data-id="${escapeHTML(item.id)}">
                 <i class="fa-solid fa-download"></i>
@@ -442,6 +468,235 @@ function abrirSubirPlantilla({ categoria = "", onGuardado }) {
       mostrarError("No se pudo leer el archivo seleccionado.");
     }
   };
+}
+
+// ============================================================
+// EDITAR (nombre, categoría y/o reemplazar el archivo)
+// Solo el rol "mesa". No edita el contenido del documento.
+// ============================================================
+
+function abrirEditarPlantilla(id, onGuardado) {
+  if (!canManageTemplates()) return;
+
+  const plantilla = obtener(id);
+
+  if (!plantilla) return;
+
+  showModal(`
+    <div class="mesas-modal-shell">
+      <header class="mesas-modal-header">
+        <div class="mesas-modal-step"><i class="fa-solid fa-pen"></i></div>
+        <div class="mesas-modal-header-text">
+          <h2>Editar plantilla</h2>
+          <p>Archivo actual: ${escapeHTML(plantilla.nombreArchivo)}</p>
+        </div>
+      </header>
+
+      <div class="mesas-modal-body">
+        <label class="mesas-plantillas-field">
+          <span>Nombre de la plantilla</span>
+          <input type="text" id="plantillaEditNombre" maxlength="120"
+            autocomplete="off" value="${escapeHTML(plantilla.nombre)}">
+        </label>
+
+        <label class="mesas-plantillas-field">
+          <span>Categoría</span>
+          <select id="plantillaEditCategoria">
+            ${PLANTILLA_CATEGORIAS.map(
+              (c) =>
+                `<option value="${c.clave}" ${c.clave === plantilla.categoria ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
+            ).join("")}
+          </select>
+        </label>
+
+        <label class="mesas-upload-area" for="plantillaEditArchivo">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <strong>Reemplazar archivo (opcional)</strong>
+          <span>DOCX o PDF</span>
+          <input type="file" id="plantillaEditArchivo" accept=".docx,.pdf" hidden>
+        </label>
+
+        <div class="mesas-upload-help" id="plantillaEditArchivoNombre">
+          Se conserva el archivo actual.
+        </div>
+
+        <p class="mesas-form-error" id="plantillaEditError" hidden></p>
+      </div>
+
+      <footer class="mesas-modal-footer">
+        <button type="button" class="mesas-modal-cancel" id="plantillaEditCancelar">Cancelar</button>
+        <button type="button" class="mesas-modal-confirm" id="plantillaEditGuardar">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Guardar cambios
+        </button>
+      </footer>
+    </div>
+  `);
+
+  const $ = (idEl) => document.getElementById(idEl);
+
+  const mostrarError = (mensaje) => {
+    $("plantillaEditError").textContent = mensaje;
+
+    $("plantillaEditError").hidden = !mensaje;
+  };
+
+  $("plantillaEditCancelar").onclick = closeForm;
+
+  $("plantillaEditArchivo").onchange = (event) => {
+    const archivo = event.target.files?.[0];
+
+    $("plantillaEditArchivoNombre").textContent = archivo
+      ? `Nuevo archivo: ${archivo.name} (${formatoTamano(archivo.size)})`
+      : "Se conserva el archivo actual.";
+
+    mostrarError(archivo ? validarArchivo(archivo) : "");
+  };
+
+  $("plantillaEditGuardar").onclick = async () => {
+    const nombre = $("plantillaEditNombre").value.trim();
+
+    const archivo = $("plantillaEditArchivo").files?.[0];
+
+    if (!nombre) return mostrarError("Escribe el nombre de la plantilla.");
+
+    if (archivo) {
+      const errorArchivo = validarArchivo(archivo);
+
+      if (errorArchivo) return mostrarError(errorArchivo);
+    }
+
+    const boton = $("plantillaEditGuardar");
+
+    boton.disabled = true;
+
+    try {
+      const dataUrl = archivo ? await leerComoDataUrl(archivo) : "";
+
+      const resultado = actualizar(id, {
+        nombre,
+        categoria: $("plantillaEditCategoria").value,
+        archivo,
+        dataUrl,
+      });
+
+      if (!resultado.ok) {
+        boton.disabled = false;
+
+        return mostrarError(
+          "No se pudo guardar. El almacenamiento del navegador puede estar lleno.",
+        );
+      }
+
+      closeForm();
+
+      onGuardado?.();
+    } catch (error) {
+      console.error(error);
+
+      boton.disabled = false;
+
+      mostrarError("No se pudo leer el archivo seleccionado.");
+    }
+  };
+}
+
+// ============================================================
+// VISTA PREVIA
+//   PDF  -> visor nativo del navegador (iframe con blob)
+//   DOCX -> convertido a HTML con mammoth.js (cargado desde CDN)
+// ============================================================
+
+const MAMMOTH_URL =
+  "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+
+function cargarMammoth() {
+  if (window.mammoth) return Promise.resolve(window.mammoth);
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+
+    script.src = MAMMOTH_URL;
+
+    script.onload = () => resolve(window.mammoth);
+
+    script.onerror = () => reject(new Error("No se pudo cargar mammoth.js"));
+
+    document.head.appendChild(script);
+  });
+}
+
+async function abrirVistaPrevia(id) {
+  const plantilla = obtener(id);
+
+  if (!plantilla) return;
+
+  const blob = dataUrlABlob(plantilla.dataUrl);
+
+  showModal(`
+    <div class="mesas-modal-shell mesas-plantilla-preview-shell">
+      <header class="mesas-modal-header">
+        <div class="mesas-modal-step"><i class="fa-regular fa-eye"></i></div>
+        <div class="mesas-modal-header-text">
+          <h2>${escapeHTML(plantilla.nombre)}</h2>
+          <p>${escapeHTML(plantilla.nombreArchivo)} · vista previa</p>
+        </div>
+      </header>
+
+      <div class="mesas-modal-body">
+        <div id="plantillaPreviewCuerpo" class="mesas-plantilla-preview">
+          Cargando vista previa...
+        </div>
+      </div>
+
+      <footer class="mesas-modal-footer">
+        <button type="button" class="mesas-modal-cancel" id="plantillaPreviewCerrar">Cerrar</button>
+      </footer>
+    </div>
+  `);
+
+  let urlPdf = "";
+
+  const cerrar = () => {
+    if (urlPdf) URL.revokeObjectURL(urlPdf);
+
+    closeForm();
+  };
+
+  document.getElementById("plantillaPreviewCerrar").onclick = cerrar;
+
+  const cuerpo = document.getElementById("plantillaPreviewCuerpo");
+
+  if (!blob) {
+    cuerpo.textContent = "No se pudo leer el archivo de la plantilla.";
+
+    return;
+  }
+
+  if (plantilla.tipoArchivo === "pdf") {
+    urlPdf = URL.createObjectURL(blob);
+
+    cuerpo.innerHTML = `<iframe class="mesas-plantilla-preview-frame" title="Vista previa PDF" src="${urlPdf}"></iframe>`;
+
+    return;
+  }
+
+  try {
+    const mammoth = await cargarMammoth();
+
+    const { value } = await mammoth.convertToHtml({
+      arrayBuffer: await blob.arrayBuffer(),
+    });
+
+    cuerpo.innerHTML = value
+      ? `<div class="mesas-plantilla-preview-doc">${value}</div>`
+      : "El documento no tiene contenido que mostrar.";
+  } catch (error) {
+    console.error(error);
+
+    cuerpo.textContent =
+      "No se pudo generar la vista previa del Word (requiere conexión a internet). Puedes descargar el archivo.";
+  }
 }
 
 // ============================================================

@@ -37,6 +37,13 @@ import {
 } from "./mesas/navegacion.js";
 
 import { renderPlantillas } from "./mesas/plantillas.js";
+import { renderExhortosMesa } from "./mesas/exhortos.js";
+import { renderAgendaCombinada } from "./mesas/agendaCombinada.js";
+
+import {
+  aplicarAccionSeguimiento,
+  actualizarUbicacionExpediente,
+} from "./mesas/flujoEstados.js";
 import { renderAudiencia } from "./mesas/audiencia.js";
 import { renderDemanda } from "./mesas/demanda.js";
 import { renderPromociones } from "./mesas/promociones.js";
@@ -69,6 +76,9 @@ const KEY = "mesasSeguimiento";
 
 // Pestañas internas que ya tienen su propio render
 registrarSeccion("plantillas", renderPlantillas);
+registrarSeccion("exhortos", renderExhortosMesa);
+registrarSeccion("agenda", renderAgendaCombinada);
+
 registrarSeccion("audiencia", renderAudiencia);
 registrarSeccion("demanda", renderDemanda);
 registrarSeccion("promociones", renderPromociones);
@@ -407,15 +417,14 @@ function setupEvents() {
           break;
 
         case "enviar-firma":
-          avanzarEstado(
-            numero,
-            "en-firma",
-            "Proyecto de acuerdo enviado a firma de la Magistrada",
-            {
+          ejecutarAccionFlujo(numero, "enviar-firma", {
+            movimiento:
+              "Proyecto de acuerdo enviado a firma de la Magistrada",
+            extra: {
               enviadoFirmaEn:
                 new Date().toISOString(),
             },
-          );
+          });
           break;
 
         case "firmar":
@@ -425,23 +434,19 @@ function setupEvents() {
           break;
 
         case "a-actuaria":
-          avanzarEstado(
-            numero,
-            "en-actuaria",
-            "Turnado a Actuaría",
-          );
+          ejecutarAccionFlujo(numero, "a-actuaria");
           break;
 
         case "a-archivo":
-          avanzarEstado(
-            numero,
-            "en-archivo",
-            "Turnado a Archivo",
-            {
+          ejecutarAccionFlujo(numero, "archivar", {
+            extra: {
               archivadoEn:
                 new Date().toISOString(),
             },
-          );
+          });
+          break;
+        case "regresar-mesa":
+          ejecutarAccionFlujo(numero, "regresar-mesa");
           break;
 
         case "ver":
@@ -829,8 +834,14 @@ function renderActions(item) {
 
 
     case "en-actuaria":
+      // Actuaría tiene dos salidas: regresar a Mesa o enviar a Archivo.
       if (!esMagistrada) {
         principal =
+          boton(
+            "regresar-mesa",
+            "Regresar a Mesa",
+            "fa-solid fa-rotate-left",
+          ) +
           boton(
             "a-archivo",
             "Pasar a Archivo",
@@ -838,7 +849,6 @@ function renderActions(item) {
             "mesas-primary-btn",
           );
       }
-
       break;
   }
 
@@ -1507,7 +1517,21 @@ function enviarARevisionInterna(
 }
 
 // ============================================================
-// AVANZAR ESTADO
+// EJECUTAR ACCIÓN DEL FLUJO (el estado lo calcula flujoEstados.js)
+// ============================================================
+function ejecutarAccionFlujo(numero, accion, opciones = {}) {
+  const resultado = aplicarAccionSeguimiento(numero, accion, {
+    ...opciones,
+    usuario: getSession()?.nombre || "",
+  });
+  if (!resultado.ok) {
+    window.alert(resultado.error);
+    return;
+  }
+  renderMesas();
+}
+// ============================================================
+// AVANZAR ESTADO (heredado; ya no se usa desde los botones)
 // ============================================================
 
 function avanzarEstado(
@@ -1791,12 +1815,10 @@ function firmarAcuerdo(
     KEY,
     seguimiento,
   );
-
+  actualizarUbicacionExpediente(numero, "mesa");
   closeForm();
-
   renderMesas();
 }
-
 // ============================================================
 // ACUERDO
 // ============================================================

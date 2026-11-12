@@ -25,8 +25,14 @@ import {
 } from "./mesaUtils.js";
 
 import {
-  montarAgendaEn,
-} from "./agenda.js";
+  aplicarAccion,
+  accionDeBoton,
+  renderBotonesFlujo,
+  renderEstadoBadge,
+} from "./flujoEstados.js";
+import {
+  getSession,
+} from "../../auth.js";
 
 
 // ============================================================
@@ -98,7 +104,7 @@ export function renderCalificacion() {
           </h2>
 
           <p>
-            Calificación de la demanda y agendas de auxiliar y titular.
+            Calificación de la demanda. Su agenda está en el apartado Agenda.
           </p>
         </div>
 
@@ -248,64 +254,6 @@ export function renderCalificacion() {
 
 
       <!-- ================================================
-      AGENDA AUXILIAR
-      Calificaciones → 1 aviso a auxiliar
-      ================================================= -->
-      <div class="mesas-fase4-agenda-block">
-
-        <div class="mesas-fase4-subheader">
-
-          <div>
-            <span class="mesas-mini-eyebrow">
-              Agenda
-            </span>
-
-            <h3>
-              Agenda auxiliar
-            </h3>
-
-            <p>
-              Programación de calificaciones.
-            </p>
-          </div>
-
-        </div>
-
-        <div data-calificacion-agenda-auxiliar></div>
-
-      </div>
-
-
-      <!-- ================================================
-      AGENDA TITULAR
-      Audiencias → Actuaría + Archivo
-      ================================================= -->
-      <div class="mesas-fase4-agenda-block">
-
-        <div class="mesas-fase4-subheader">
-
-          <div>
-            <span class="mesas-mini-eyebrow">
-              Agenda
-            </span>
-
-            <h3>
-              Agenda del titular
-            </h3>
-
-            <p>
-              Audiencias programadas para la mesa.
-            </p>
-          </div>
-
-        </div>
-
-        <div data-calificacion-agenda-titular></div>
-
-      </div>
-
-
-      <!-- ================================================
       PLANTILLAS
       ================================================= -->
       <div data-plantillas-slot></div>
@@ -319,50 +267,7 @@ export function renderCalificacion() {
   configurarEventosCalificacion(
     vista,
   );
-
-
-  // ========================================================
-  // AGENDA AUXILIAR
-  // ========================================================
-
-  montarAgendaEn(
-    vista.querySelector(
-      "[data-calificacion-agenda-auxiliar]",
-    ),
-    {
-      tipoInicial:
-        "calificacion",
-
-      filtroInicial:
-        "calificacion",
-
-      titulo:
-        "Agenda auxiliar · Calificaciones",
-    },
-  );
-
-
-  // ========================================================
-  // AGENDA TITULAR
-  // ========================================================
-
-  montarAgendaEn(
-    vista.querySelector(
-      "[data-calificacion-agenda-titular]",
-    ),
-    {
-      tipoInicial:
-        "audiencia",
-
-      filtroInicial:
-        "audiencia",
-
-      titulo:
-        "Agenda del titular · Audiencias",
-    },
-  );
 }
-
 
 // ============================================================
 // PREPARAR DATOS
@@ -674,35 +579,9 @@ function renderFilasCalificacion(
 
             <td>
 
-              <select
-                class="mesas-fase4-state-select"
-                data-calificacion-estado
-                data-calificacion-id="${escapeHTML(
-                  item.calificacion.id,
-                )}"
-              >
-
-                ${ESTADOS_CALIFICACION.map(
-                  (estado) => `
-                    <option
-                      value="${estado}"
-                      ${
-                        item.calificacion.estado ===
-                        estado
-                          ? "selected"
-                          : ""
-                      }
-                    >
-                      ${escapeHTML(
-                        etiquetaEstado(
-                          estado,
-                        ),
-                      )}
-                    </option>
-                  `,
-                ).join("")}
-
-              </select>
+              ${renderEstadoBadge(
+                item.calificacion.estado,
+              )}
 
             </td>
 
@@ -746,7 +625,16 @@ function renderFilasCalificacion(
 
 
             <td>
-
+              <div class="mesas-actions">
+              ${renderBotonesFlujo(
+                item.calificacion.estado,
+                {
+                  actionAttr: "data-calificacion-action",
+                  attrs: `data-calificacion-id="${escapeHTML(
+                    item.calificacion.id,
+                  )}"`,
+                },
+              )}
               <button
                 type="button"
                 class="${
@@ -773,6 +661,7 @@ function renderFilasCalificacion(
                 }
 
               </button>
+              </div>
 
             </td>
 
@@ -898,6 +787,12 @@ function configurarEventosCalificacion(
           break;
 
 
+        case "flujo":
+          ejecutarAccionCalificacion(
+            button.dataset.calificacionId,
+            accionDeBoton(button),
+          );
+          break;
         case "toggle-resultado":
           toggleResultado(
             button.dataset
@@ -921,23 +816,6 @@ function configurarEventosCalificacion(
 function configurarCamposListado(
   vista,
 ) {
-  vista
-    .querySelectorAll(
-      "[data-calificacion-estado]",
-    )
-    .forEach(
-      (select) => {
-        select.onchange =
-          () => {
-            cambiarEstado(
-              select.dataset
-                .calificacionId,
-
-              select.value,
-            );
-          };
-      },
-    );
 
 
   vista
@@ -961,63 +839,25 @@ function configurarCamposListado(
 
 
 // ============================================================
-// ESTADO
+// FLUJO AUTOMÁTICO (sin selector manual de estado)
 // ============================================================
-
-function cambiarEstado(
-  id,
-  nuevoEstado,
-) {
-  if (
-    !ESTADOS_CALIFICACION.includes(
-      nuevoEstado,
-    )
-  ) {
+function ejecutarAccionCalificacion(id, accion) {
+  if (!accion) return;
+  const calificaciones = getData(KEY_CALIFICACIONES, []);
+  const item = Array.isArray(calificaciones)
+    ? calificaciones.find((registro) => registro.id === id)
+    : null;
+  if (!item) return;
+  const resultado = aplicarAccion(item, accion, {
+    usuario: getSession()?.nombre || "",
+  });
+  if (!resultado.ok) {
+    window.alert(resultado.error);
     return;
   }
-
-
-  const calificaciones =
-    getData(
-      KEY_CALIFICACIONES,
-      [],
-    );
-
-
-  if (
-    !Array.isArray(
-      calificaciones,
-    )
-  ) {
-    return;
-  }
-
-
-  const item =
-    calificaciones.find(
-      (registro) =>
-        registro.id === id,
-    );
-
-
-  if (!item) {
-    return;
-  }
-
-
-  item.estado =
-    nuevoEstado;
-
-
-  saveData(
-    KEY_CALIFICACIONES,
-    calificaciones,
-  );
-
-
+  saveData(KEY_CALIFICACIONES, calificaciones);
   actualizarListado();
 }
-
 
 // ============================================================
 // RESULTADO

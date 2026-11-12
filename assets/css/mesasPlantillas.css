@@ -214,3 +214,11 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+
+/* Vista previa de plantillas */
+.mesas-plantilla-preview-shell { width: min(900px, 94vw); }
+.mesas-plantilla-preview { min-height: 200px; max-height: 70vh; overflow: auto; }
+.mesas-plantilla-preview-frame { width: 100%; height: 65vh; border: 1px solid #dce3ea; border-radius: 7px; }
+.mesas-plantilla-preview-doc { padding: 16px 20px; background: #fff; border: 1px solid #dce3ea; border-radius: 7px; line-height: 1.5; }
+.mesas-plantilla-preview-doc table { border-collapse: collapse; }
+.mesas-plantilla-preview-doc td, .mesas-plantilla-preview-doc th { border: 1px solid #ccd5df; padding: 4px 8px; }

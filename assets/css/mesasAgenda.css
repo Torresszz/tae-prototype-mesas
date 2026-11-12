@@ -796,3 +796,13 @@
         grid-column: auto;
     }
 }
+
+/* Promoción */
+#mesasPage .mesas-agenda-legend-item.promocion { background: #e6f6ee; color: #1d7a4c; }
+#mesasPage .mesas-agenda-event.promocion { border-left-color: #1d7a4c; background: #e6f6ee; color: #1b6a43; }
+#mesasPage .mesas-agenda-event.promocion i { color: #1d7a4c; }
+
+/* Exhorto */
+#mesasPage .mesas-agenda-legend-item.exhorto { background: #fff1e0; color: #b8610f; }
+#mesasPage .mesas-agenda-event.exhorto { border-left-color: #b8610f; background: #fff1e0; color: #9a520c; }
+#mesasPage .mesas-agenda-event.exhorto i { color: #b8610f; }

@@ -19,6 +19,16 @@ const KEY_AGENDA = "mesasAgenda";
 
 
 // ============================================================
+// DESTINATARIOS POR TIPO DE EVENTO
+// Audiencia: solo Actuaría, una semana antes.
+// PENDIENTE: definir avisos para promoción y exhorto.
+// ============================================================
+export function destinatariosDeTipo(tipo) {
+  if (tipo === "audiencia") return ["actuaria"];
+  if (tipo === "calificacion") return ["auxiliar"];
+  return [];
+}
+// ============================================================
 // OBTENER TODAS LAS NOTIFICACIONES
 // ============================================================
 
@@ -58,22 +68,10 @@ export function generarNotificacionesEvento(evento) {
   }
 
 
-  let destinatarios = [];
-
-  if (evento.tipo === "audiencia") {
-    destinatarios = [
-      "actuaria",
-      "archivo",
-    ];
-  }
-
-  if (evento.tipo === "calificacion") {
-    destinatarios = [
-      "auxiliar",
-    ];
-  }
-
-
+    const destinatarios =
+    destinatariosDeTipo(
+      evento.tipo,
+    );
   const nuevas =
     destinatarios.map(
       (destinatario) => ({
@@ -255,7 +253,17 @@ export function getAvisosAgendaPendientes() {
           return null;
         }
 
-        if (!eventoAunNoOcurre(evento)) {
+                if (!eventoAunNoOcurre(evento)) {
+          return null;
+        }
+        // Ignora avisos antiguos (p. ej. a Archivo) que ya no aplican.
+        if (
+          !destinatariosDeTipo(
+            evento.tipo,
+          ).includes(
+            notificacion.destinatario,
+          )
+        ) {
           return null;
         }
 

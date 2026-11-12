@@ -16,6 +16,7 @@ import {
 import { createId, escapeHTML, normalizeText } from "../utils.js";
 
 import { getData, saveData } from "../storage.js";
+import { siguienteNumeroExhorto } from "../modules/mesas/exhortos.js";
 
 export function initExhortoForm() {
   window.openExhortoForm = openExhortoForm;
@@ -205,7 +206,15 @@ export function openExhortoForm() {
     ],
   });
 
-  setupInternoListener();
+    setupInternoListener();
+
+  // Numeración propia EXH-001/2026: la asigna el sistema, no se captura.
+  const numero = document.getElementById("numeroExhorto");
+
+  if (numero) {
+    numero.value = siguienteNumeroExhorto();
+    numero.readOnly = true;
+  }
 }
 
 function saveExhorto(event) {
