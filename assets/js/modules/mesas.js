@@ -37,6 +37,7 @@ import {
 } from "./mesas/navegacion.js";
 
 import { renderPlantillas } from "./mesas/plantillas.js";
+import { renderRecepcionExpedientes } from "./mesas/recepcionExpedientes.js";
 import { renderExhortosMesa } from "./mesas/exhortos.js";
 import { renderAgendaCombinada } from "./mesas/agendaCombinada.js";
 
@@ -136,6 +137,8 @@ export function renderMesas() {
 
   renderAlerts(registros);
 
+  renderRecepcionExpedientes();
+
   renderRecepcionPromociones();
 
   renderSeccionActiva();
@@ -173,6 +176,11 @@ function prepararSeguimiento() {
     }
 
     if (seguimiento[numero]) {
+      return;
+    }
+
+    // Pendiente de recibir: el seguimiento se crea al recibirlo en Mesa.
+    if (expediente.recibidoMesa === false) {
       return;
     }
 
@@ -222,6 +230,9 @@ function getRegistros() {
   const mesa = mesaUsuario();
 
   return expedientes
+    .filter(
+      (expediente) => expediente.recibidoMesa !== false,
+    )
     .filter(
       (expediente) =>
         !mesa ||
@@ -2440,6 +2451,49 @@ function seedSecretariaDemo() {
           creadoEn:
             new Date()
               .toISOString(),
+
+          // Ya recibida por Mesa (las pendientes de recibir las
+          // siembra demo.js para probar la tarjeta "por recibir").
+          recibidaMesa:
+            true,
+
+          recibidaMesaEn:
+            new Date()
+              .toISOString(),
+
+          recibidaMesaPor:
+            "Demo",
+
+          mesaRecepcion:
+            mesaDeExpediente({
+              numero:
+                item.numero,
+            }),
+
+          // La primera promoción refleja el estado del expediente
+          // (así hay promociones en firma, en lista, en Actuaría...).
+          estadoAcuerdo:
+            i === 0
+              ? item.estado
+              : "en-proceso",
+
+          estadoPromocion:
+            i === 0 &&
+            firmado
+              ? "acordado"
+              : "por-acordar",
+
+          ...(
+            i === 0 &&
+            firmado
+              ? {
+                  acordadoEn:
+                    fechaOffset(
+                      -(index + 1),
+                    ),
+                }
+              : {}
+          ),
         });
       }
     },

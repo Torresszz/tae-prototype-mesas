@@ -308,6 +308,10 @@
     gap: 14px;
 }
 
+#mesasPage .mesas-estadistica-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+}
+
 #mesasPage .mesas-estadistica-card {
     display: flex;
     flex-direction: column;

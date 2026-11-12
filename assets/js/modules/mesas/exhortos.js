@@ -4,8 +4,9 @@
 //
 // Oficialía registra el exhorto (llave "exhortos") con su número
 // EXH-001/2026. Mesa lo RECIBE, define su fecha de señalamiento
-// y lo envía a Actuaría. Si tiene fecha, aparece en la agenda
-// combinada de Promociones / Calificaciones.
+// y sigue el flujo normal: Enviar a firma -> la Magistrada firma ->
+// En lista -> Actuaría. Si tiene fecha, aparece en la agenda combinada
+// de Promociones / Calificaciones y se avisa a Actuaría 10 días antes.
 //
 // Campos que agrega Mesa al registro:
 //   recibidoMesa, recibidoMesaEn, mesa, estadoMesa, historialMesa,
@@ -17,7 +18,12 @@ import { getData, saveData } from "../../storage.js";
 import { escapeHTML } from "../../utils.js";
 import { showModal, closeForm } from "../../forms/formHelper.js";
 import { getSession, canSign } from "../../auth.js";
+import {
+  eliminarNotificacionesEvento,
+  sincronizarNotificacionesEvento,
+} from "./notificaciones.js";
 import { aplicarFiltrosGlobales } from "./filtros.js";
+import { AGENDAS } from "./catalogos.js";
 import { getExpedientesMesaActual, getNumeroExpediente, mesaDeExpediente, mesaUsuarioActual } from "./mesaUtils.js";
 import {
   aplicarAccion,
@@ -105,12 +111,17 @@ function sincronizarAgenda(exhorto, mesa) {
     (evento) => evento.exhortoId !== exhorto.id,
   );
 
+  const idPrevio = (Array.isArray(agenda) ? agenda : []).find(
+    (evento) => evento.exhortoId === exhorto.id,
+  )?.id;
+
   const s = exhorto.senalamiento;
 
   if (s?.modo === "con-fecha" && s.fecha) {
     const evento = {
       id: s.eventoId || `exh-${exhorto.id}`,
       tipo: "exhorto",
+      agenda: s.agenda === "auxiliar" ? "auxiliar" : "titular",
       expediente: exhorto.numero,
       exhortoId: exhorto.id,
       origen: "exhorto",
@@ -124,9 +135,19 @@ function sincronizarAgenda(exhorto, mesa) {
     s.eventoId = evento.id;
 
     resto.push(evento);
+
+    saveData(KEY_AGENDA, resto);
+
+    // Aviso a Actuaría 10 días antes de la fecha de señalamiento.
+    sincronizarNotificacionesEvento(evento);
+
+    return;
   }
 
   saveData(KEY_AGENDA, resto);
+
+  // Si ya no tiene fecha, se retiran sus avisos.
+  if (idPrevio) eliminarNotificacionesEvento(idPrevio);
 }
 
 // ------------------------------------------------------------
@@ -368,6 +389,10 @@ function abrirSenalamiento(id) {
             <input type="date" id="exhFecha" value="${escapeHTML(s.fecha || "")}"></label>
           <label class="mesas-plantillas-field"><span>Hora (opcional)</span>
             <input type="time" id="exhHora" value="${escapeHTML(s.hora || "")}"></label>
+          <label class="mesas-plantillas-field"><span>Agenda</span>
+            <select id="exhAgenda">
+              ${AGENDAS.map((a) => `<option value="${a.clave}" ${(s.agenda || "titular") === a.clave ? "selected" : ""}>${a.etiqueta}</option>`).join("")}
+            </select></label>
         </div>
         <p class="mesas-form-error" id="exhError" hidden></p>
       </div>
@@ -417,6 +442,7 @@ function abrirSenalamiento(id) {
         modo,
         fecha: modo === "con-fecha" ? fecha : "",
         hora: modo === "con-fecha" ? $("exhHora").value : "",
+        agenda: modo === "con-fecha" ? $("exhAgenda").value : "",
         eventoId: e.senalamiento?.eventoId || "",
       };
     });

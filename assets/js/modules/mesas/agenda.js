@@ -16,6 +16,8 @@ import {
   iconoTipoEventoAgenda,
 } from "./catalogos.js";
 
+import { agendaDeEvento, etiquetaAgenda } from "./catalogos.js";
+
 import {
   generarNotificacionesEvento,
   sincronizarNotificacionesEvento,
@@ -103,6 +105,8 @@ export function montarAgendaEn(
         tipoInicial = "audiencia",
     filtroInicial = "ambas",
     titulo = "Agenda",
+    // "auxiliar" | "titular" | "" (sin separar por agenda: Audiencias)
+    agenda = "",
     tipos = TIPOS_EVENTO_AGENDA.map(
       (tipo) => tipo.clave,
     ),
@@ -124,6 +128,7 @@ export function montarAgendaEn(
       tipoInicial: normalizarTipo(tipoInicial),
       titulo,
       tipos,
+      agenda,
     };
 
     estadosCalendario.set(
@@ -132,6 +137,7 @@ export function montarAgendaEn(
     );
   } else {
         estado.tipos = tipos;
+    estado.agenda = agenda;
     estado.tipoInicial =
       normalizarTipo(tipoInicial);
 
@@ -167,6 +173,11 @@ function renderAgenda(contenedor) {
           estado.tipos.includes(
             evento.tipo,
           ),
+      )
+      .filter(
+        (evento) =>
+          !estado.agenda ||
+          agendaDeEvento(evento) === estado.agenda,
       )
       .filter(
         (evento) =>
@@ -522,6 +533,8 @@ function configurarEventosAgenda(
 
       case "nuevo":
         openEventoForm({
+          agenda:
+            estado.agenda,
           tipos:
             estado.tipos,
           tipoInicial:
@@ -542,6 +555,8 @@ function configurarEventosAgenda(
 
       case "nuevo-dia":
         openEventoForm({
+          agenda:
+            estado.agenda,
           tipos:
             estado.tipos,
           tipoInicial:
@@ -600,6 +615,7 @@ function configurarEventosAgenda(
 
 function openEventoForm({
   evento = null,
+  agenda = "",
   tipos = null,
   tipoInicial = "audiencia",
   fechaInicial = "",
@@ -648,7 +664,15 @@ function openEventoForm({
           </h2>
 
           <p>
-            Agenda de Secretaría de Acuerdos
+            ${
+              agenda || evento?.agenda
+                ? escapeHTML(
+                    etiquetaAgenda(
+                      agenda || evento.agenda,
+                    ),
+                  )
+                : "Agenda de Secretaría de Acuerdos"
+            }
           </p>
 
         </div>
@@ -907,6 +931,7 @@ function openEventoForm({
         guardarEventoDesdeForm(
           evento,
           onSaved,
+          agenda,
         );
       },
     );
@@ -920,6 +945,7 @@ function openEventoForm({
 function guardarEventoDesdeForm(
   eventoAnterior,
   onSaved,
+  agenda = "",
 ) {
   const tipo =
     document
@@ -1010,6 +1036,17 @@ function guardarEventoDesdeForm(
       createId(),
 
     tipo,
+
+    // Agenda Auxiliar / Titular (solo promociones, calificaciones y
+    // exhortos; las audiencias no se separan por agenda).
+    ...(tipo !== "audiencia"
+      ? {
+          agenda:
+            agenda ||
+            eventoAnterior?.agenda ||
+            agendaDeEvento({ tipo }),
+        }
+      : {}),
 
     expediente,
 
@@ -1546,10 +1583,15 @@ function getExpedientesPermitidos() {
       [],
     );
 
+  // Solo los expedientes que Mesas ya recibió.
   const expedientes =
-    Array.isArray(datos)
+    (Array.isArray(datos)
       ? datos
-      : [];
+      : []
+    ).filter(
+      (expediente) =>
+        expediente?.recibidoMesa !== false,
+    );
 
   const mesa =
     getSession()?.mesa ||

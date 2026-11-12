@@ -201,6 +201,13 @@ export function getPromocionesPendientesMesa() {
         }
 
 
+        // Primero debe recibirse el expediente (tarjeta
+        // "Expedientes por recibir").
+        if (expediente.recibidoMesa === false) {
+          return null;
+        }
+
+
         const mesaDestino =
           mesaDeExpediente(
             expediente,

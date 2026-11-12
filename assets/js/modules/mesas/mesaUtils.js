@@ -146,7 +146,21 @@ export function mesaUsuarioActual() {
 
 
 // ============================================================
+// ¿EL EXPEDIENTE YA FUE RECIBIDO POR MESAS?
+// Oficialía crea los expedientes nuevos con recibidoMesa:false
+// ("Pendiente de recibir"); Mesa los recibe desde su tarjeta
+// "Expedientes por recibir". Los registros anteriores a este cambio
+// no traen el campo y se consideran recibidos.
+// ============================================================
+
+export function expedienteRecibidoEnMesa(expediente) {
+  return expediente?.recibidoMesa !== false;
+}
+
+
+// ============================================================
 // EXPEDIENTES VISIBLES PARA EL USUARIO ACTUAL
+// (solo los que Mesas ya recibió)
 // ============================================================
 
 export function getExpedientesMesaActual() {
@@ -157,9 +171,10 @@ export function getExpedientesMesaActual() {
     );
 
   const expedientes =
-    Array.isArray(datos)
+    (Array.isArray(datos)
       ? datos
-      : [];
+      : []
+    ).filter(expedienteRecibidoEnMesa);
 
   const mesa =
     mesaUsuarioActual();
