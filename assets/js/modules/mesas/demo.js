@@ -25,6 +25,7 @@ import { getData, saveData } from "../../storage.js";
 import { todayISO } from "../../utils.js";
 
 import { ARCHIVOS_DEMO } from "./demoArchivos.js";
+import { sembrarDocumentoDemo } from "./documentosFirma.js";
 import {
   eliminarNotificacionesEvento,
   generarNotificacionesEvento,
@@ -93,6 +94,20 @@ export function sembrarDemoFases(numeros = []) {
   sembrarPromocionesPorRecibir(existentes);
 }
 
+// Desde la etapa de firma el registro ya trae documento y concepto "Acuerdo".
+const ESTADOS_CON_DOCUMENTO = ["en-firma", "en-lista", "en-actuaria", "en-archivo"];
+
+function acuerdoDemo(clave, id, nombreBase, estado) {
+  if (!ESTADOS_CON_DOCUMENTO.includes(estado)) return {};
+
+  return {
+    acuerdo: sembrarDocumentoDemo(clave, `demo-doc-${id}`, {
+      nombreBase,
+      concepto: "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
+    }),
+  };
+}
+
 // ============================================================
 // DEMANDAS
 // radicacion: estados permitidos en Demanda (sin revisión interna)
@@ -131,6 +146,12 @@ function sembrarDemandas(numeros) {
       radicacion,
       categoria,
       ...(categoria === "radicado" ? { radicadoEn: dia(offset) } : {}),
+      ...acuerdoDemo(
+        "demanda",
+        `dem-${numero}`,
+        `demanda-${numero.replace("/", "-")}`,
+        radicacion,
+      ),
     };
   });
 
@@ -177,6 +198,12 @@ function sembrarCalificaciones(numeros) {
       resultado,
       notas: "Calificación de demostración.",
       ...(resultado === "acordado" ? { concluidaEn: dia(offset) } : {}),
+      ...acuerdoDemo(
+        "calificacion",
+        `cal-${indice + 1}`,
+        `calificacion-${numero.replace("/", "-")}`,
+        estado,
+      ),
     };
   });
 
@@ -510,6 +537,11 @@ function sembrarExhortos(usuarioDe) {
     exhorto.recibidoMesaEn = ahora;
     exhorto.mesa = mesa;
     exhorto.estadoMesa = estado;
+
+    Object.assign(
+      exhorto,
+      acuerdoDemo("oficios", `exh-${indice + 1}`, `exhorto-${consecutivo}`, estado),
+    );
     exhorto.historialMesa = [
       { fecha: ahora, movimiento: "Recibido en Mesa; pasa a En proceso" },
     ];

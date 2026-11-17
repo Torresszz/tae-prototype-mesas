@@ -26,6 +26,7 @@ import {
   renderBotonesFlujo,
   renderEstadoBadge,
 } from "./flujoEstados.js";
+import { abrirEnvioFirma } from "./documentosFirma.js";
 
 import {
   getSession,
@@ -1094,6 +1095,8 @@ function renderFilasPromociones(
                     attrs: `data-promocion-id="${escapeHTML(
                       item.id,
                     )}"`,
+                    acuerdo:
+                      item.promocion.acuerdo,
                   },
                 )}
 
@@ -1381,6 +1384,61 @@ function ejecutarAccionPromocion(
   if (
     !promocion
   ) {
+    return;
+  }
+
+
+  // Enviar a firma pide documento adjunto y concepto "Acuerdo".
+  if (
+    accion ===
+    "enviar-firma"
+  ) {
+    abrirEnvioFirma({
+      referencia:
+        `Promoción · Expediente ${
+          promocion.expediente ||
+          promocion.numero ||
+          ""
+        }`,
+
+      acuerdo:
+        promocion.acuerdo,
+
+      aplicar:
+        (acuerdo) => {
+          const enviado =
+            aplicarAccion(
+              promocion,
+              accion,
+              {
+                extra: {
+                  acuerdo,
+                },
+
+                campo:
+                  "estadoAcuerdo",
+                campoHistorial:
+                  "historialAcuerdo",
+                usuario:
+                  getSession()?.nombre ||
+                  "",
+              },
+            );
+
+          if (enviado.ok) {
+            saveData(
+              KEY_PROMOCIONES,
+              promociones,
+            );
+          }
+
+          return enviado;
+        },
+
+      alTerminar:
+        renderPromociones,
+    });
+
     return;
   }
 

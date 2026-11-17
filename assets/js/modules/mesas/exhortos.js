@@ -31,6 +31,7 @@ import {
   renderBotonesFlujo,
   renderEstadoBadge,
 } from "./flujoEstados.js";
+import { abrirEnvioFirma } from "./documentosFirma.js";
 
 const KEY_EXHORTOS = "exhortos";
 const KEY_AGENDA = "mesasAgenda";
@@ -286,7 +287,7 @@ function renderFila({ exhorto, mesa }) {
           : `<button type="button" class="mesas-secondary-btn" data-exhortos-action="senalamiento" ${attrs}>
                <i class="fa-regular fa-calendar-plus"></i> Fecha</button>`
       }
-       ${renderBotonesFlujo(estado, { actionAttr: "data-exhortos-action", attrs, tipo: "exhorto" })}`;
+       ${renderBotonesFlujo(estado, { actionAttr: "data-exhortos-action", attrs, tipo: "exhorto", acuerdo: exhorto.acuerdo })}`;
 
   return `
     <tr>
@@ -338,6 +339,36 @@ function recibir(id) {
 
 function ejecutarAccion(id, accion) {
   if (!accion) return;
+
+  // Enviar a firma pide documento adjunto y concepto "Acuerdo".
+  if (accion === "enviar-firma") {
+    const actual = registros().find((r) => r.exhorto.id === id)?.exhorto;
+
+    if (!actual) return;
+
+    abrirEnvioFirma({
+      referencia: `Exhorto ${actual.numero}`,
+      acuerdo: actual.acuerdo,
+      aplicar: (acuerdo) => {
+        let enviado = { ok: false, error: "No se encontró el exhorto." };
+
+        guardarExhorto(id, (exhorto) => {
+          enviado = aplicarAccion(exhorto, accion, {
+            campo: "estadoMesa",
+            campoHistorial: "historialMesa",
+            tipo: "exhorto",
+            extra: { acuerdo },
+            usuario: getSession()?.nombre || "",
+          });
+        });
+
+        return enviado;
+      },
+      alTerminar: renderExhortosMesa,
+    });
+
+    return;
+  }
 
   let error = "";
 
