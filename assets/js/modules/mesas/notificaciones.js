@@ -211,11 +211,163 @@ export function marcarNotificacionLeida(id) {
 
 
 // ============================================================
+// POSPONER AVISO
+//
+// El aviso deja de mostrarse en el panel hasta `hastaISO`
+// (fecha-hora ISO). Al cumplirse ese momento reaparece solo;
+// no se marca como leído.
+// ============================================================
+
+export function posponerNotificacion(id, hastaISO) {
+  if (!id || !hastaISO) {
+    return false;
+  }
+
+  const hasta =
+    new Date(hastaISO);
+
+  if (
+    Number.isNaN(hasta.getTime()) ||
+    hasta.getTime() <= Date.now()
+  ) {
+    return false;
+  }
+
+  const notificaciones =
+    getNotificacionesAgenda();
+
+  if (
+    !notificaciones.some(
+      (notificacion) =>
+        notificacion.id === id,
+    )
+  ) {
+    return false;
+  }
+
+  saveData(
+    KEY_NOTIFICACIONES,
+    notificaciones.map(
+      (notificacion) =>
+        notificacion.id === id
+          ? {
+              ...notificacion,
+              pospuestaHasta:
+                hasta.toISOString(),
+            }
+          : notificacion,
+    ),
+  );
+
+  return true;
+}
+
+
+// Fecha-hora (ISO) resultante de posponer `cantidad` minutos u horas
+// a partir de ahora. Devuelve "" si el dato no es válido.
+export function calcularPosposicion(cantidad, unidad) {
+  const valor =
+    Number(cantidad);
+
+  const milisegundos =
+    unidad === "horas"
+      ? 3600000
+      : unidad === "minutos"
+        ? 60000
+        : 0;
+
+  if (
+    !Number.isFinite(valor) ||
+    valor <= 0 ||
+    !milisegundos
+  ) {
+    return "";
+  }
+
+  const hasta =
+    new Date(
+      Date.now() +
+      valor * milisegundos,
+    );
+
+  return Number.isNaN(hasta.getTime())
+    ? ""
+    : hasta.toISOString();
+}
+
+
+// Inicio (00:00, hora local) del día siguiente.
+export function inicioDiaSiguienteISO() {
+  const manana =
+    new Date();
+
+  manana.setHours(24, 0, 0, 0);
+
+  return manana.toISOString();
+}
+
+
+// Momento (ms) en que reaparecerá el próximo aviso pospuesto,
+// o null si no hay ninguno. Sirve para refrescar el panel a tiempo.
+export function proximaReaparicionAviso() {
+  const ahora =
+    Date.now();
+
+  let proxima = null;
+
+  getNotificacionesAgenda().forEach(
+    (notificacion) => {
+      if (
+        notificacion.leida === true ||
+        !notificacion.pospuestaHasta
+      ) {
+        return;
+      }
+
+      const momento =
+        new Date(
+          notificacion.pospuestaHasta,
+        ).getTime();
+
+      if (
+        Number.isFinite(momento) &&
+        momento > ahora &&
+        (proxima === null ||
+          momento < proxima)
+      ) {
+        proxima = momento;
+      }
+    },
+  );
+
+  return proxima;
+}
+
+
+function estaPospuesta(notificacion) {
+  if (!notificacion?.pospuestaHasta) {
+    return false;
+  }
+
+  const momento =
+    new Date(
+      notificacion.pospuestaHasta,
+    ).getTime();
+
+  return (
+    Number.isFinite(momento) &&
+    momento > Date.now()
+  );
+}
+
+
+// ============================================================
 // AVISOS ACTIVOS PARA EL PANEL DE ALERTAS
 // T-12
 //
 // Condiciones:
 // - no está leído
+// - no está pospuesto (o su plazo ya se cumplió)
 // - fechaAviso <= hoy
 // - el evento todavía no ocurre
 // ============================================================
@@ -243,6 +395,12 @@ export function getAvisosAgendaPendientes() {
     .filter(
       (notificacion) =>
         notificacion.leida !== true,
+    )
+
+    // No muestra los avisos pospuestos mientras no se cumpla su plazo.
+    .filter(
+      (notificacion) =>
+        !estaPospuesta(notificacion),
     )
 
     .filter(

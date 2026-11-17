@@ -44,7 +44,18 @@ import { renderAgendaCombinada } from "./mesas/agendaCombinada.js";
 import {
   aplicarAccionSeguimiento,
   actualizarUbicacionExpediente,
+  puedeAplicar,
 } from "./mesas/flujoEstados.js";
+
+import {
+  abrirEnvioFirma,
+  htmlVistaPreviaDocumento,
+  activarVistasPreviasDocumento,
+  guardarDocumento,
+  validarArchivoDocumento,
+  leerComoDataUrl,
+  sembrarDocumentoDemo,
+} from "./mesas/documentosFirma.js";
 import { renderAudiencia } from "./mesas/audiencia.js";
 import { renderDemanda } from "./mesas/demanda.js";
 import { renderPromociones } from "./mesas/promociones.js";
@@ -62,6 +73,10 @@ import {
 import {
   getAvisosAgendaPendientes,
   marcarNotificacionLeida,
+  posponerNotificacion,
+  calcularPosposicion,
+  inicioDiaSiguienteISO,
+  proximaReaparicionAviso,
 } from "./mesas/notificaciones.js";
 
 import {
@@ -91,6 +106,9 @@ registrarSeccion("estadistica", renderEstadistica);
 
 let currentTexto = "";
 let currentOrdenPromociones = "desc";
+
+// Temporizador que refresca las alertas cuando vence un aviso pospuesto.
+let temporizadorAvisos = null;
 
 let vistaInicialAplicada = false;
 
@@ -402,6 +420,15 @@ function setupEvents() {
           renderMesas();
         }
 
+        if (
+          action === "posponer" &&
+          notificacionId
+        ) {
+          openPosponerAviso(
+            notificacionId,
+          );
+        }
+
         return;
       }
 
@@ -428,14 +455,9 @@ function setupEvents() {
           break;
 
         case "enviar-firma":
-          ejecutarAccionFlujo(numero, "enviar-firma", {
-            movimiento:
-              "Proyecto de acuerdo enviado a firma de la Magistrada",
-            extra: {
-              enviadoFirmaEn:
-                new Date().toISOString(),
-            },
-          });
+          openEnviarAFirma(
+            numero,
+          );
           break;
 
         case "firmar":
@@ -989,17 +1011,33 @@ function renderAgendaAlertItem(
         </span>
 
 
-        <button
-          type="button"
-          class="mesas-alert-read-btn"
-          data-agenda-alert-action="marcar-leida"
-          data-notificacion-id="${escapeHTML(
-            alerta.id,
-          )}"
-        >
-          <i class="fa-solid fa-check"></i>
-          Marcar como leída
-        </button>
+        <div class="mesas-alert-actions">
+
+          <button
+            type="button"
+            class="mesas-alert-read-btn"
+            data-agenda-alert-action="marcar-leida"
+            data-notificacion-id="${escapeHTML(
+              alerta.id,
+            )}"
+          >
+            <i class="fa-solid fa-check"></i>
+            Marcar como leída
+          </button>
+
+          <button
+            type="button"
+            class="mesas-alert-read-btn"
+            data-agenda-alert-action="posponer"
+            data-notificacion-id="${escapeHTML(
+              alerta.id,
+            )}"
+          >
+            <i class="fa-regular fa-clock"></i>
+            Posponer
+          </button>
+
+        </div>
 
       </div>
 
@@ -1122,6 +1160,8 @@ function renderAlerts(
       );
 
 
+  programarReaparicionAvisos();
+
   const total =
     criticos.length +
     porFirmar.length +
@@ -1164,6 +1204,266 @@ function renderAlerts(
     renderAgendaAlertGroup(
       agenda,
     );
+}
+
+// ============================================================
+// POSPONER AVISO DE AGENDA
+// Tiempo abierto (minutos u horas) o hasta el día siguiente.
+// ============================================================
+
+function formatearFechaHora(iso) {
+  return new Date(iso).toLocaleString(
+    "es-MX",
+    {
+      dateStyle: "medium",
+      timeStyle: "short",
+    },
+  );
+}
+
+
+// Vuelve a pintar las alertas justo cuando venza el próximo
+// aviso pospuesto, para que reaparezca sin recargar la página.
+function programarReaparicionAvisos() {
+  clearTimeout(temporizadorAvisos);
+
+  temporizadorAvisos = null;
+
+  const proxima =
+    proximaReaparicionAviso();
+
+  if (!proxima) {
+    return;
+  }
+
+  // setTimeout no admite más de ~24.8 días; si falta más,
+  // despierta antes y vuelve a programarse al renderizar.
+  const espera =
+    Math.min(
+      Math.max(proxima - Date.now(), 0) + 500,
+      2147483647,
+    );
+
+  temporizadorAvisos =
+    setTimeout(
+      () => {
+        if (document.getElementById("mesasPage")) {
+          renderMesas();
+        }
+      },
+      espera,
+    );
+}
+
+
+function openPosponerAviso(
+  notificacionId,
+) {
+  const aviso =
+    getAvisosAgendaPendientes()
+      .find(
+        (item) =>
+          item.id === notificacionId,
+      );
+
+  if (!aviso) {
+    return;
+  }
+
+  showModal(`
+    <div class="mesas-modal-shell mesas-agenda-modal">
+
+      <header class="mesas-modal-header">
+
+        <div class="mesas-modal-step">
+          <i class="fa-regular fa-clock"></i>
+        </div>
+
+        <div class="mesas-modal-header-text">
+
+          <h2>
+            Posponer aviso
+          </h2>
+
+          <p>
+            Expediente
+            ${escapeHTML(aviso.expediente)}
+          </p>
+
+        </div>
+
+      </header>
+
+
+      <div class="mesas-modal-body">
+
+        <div class="mesas-agenda-form-grid">
+
+          <label class="mesas-agenda-field">
+            <span>Posponer por</span>
+
+            <input
+              type="number"
+              id="posponerCantidad"
+              min="1"
+              step="1"
+              value="30"
+            >
+          </label>
+
+          <label class="mesas-agenda-field">
+            <span>Unidad</span>
+
+            <select id="posponerUnidad">
+              <option value="minutos">Minutos</option>
+              <option value="horas">Horas</option>
+            </select>
+          </label>
+
+        </div>
+
+        <p
+          class="mesas-upload-help"
+          id="posponerVistaPrevia"
+        ></p>
+
+        <p
+          class="mesas-form-error"
+          id="posponerError"
+          hidden
+        ></p>
+
+      </div>
+
+
+      <footer class="mesas-modal-footer">
+
+        <button
+          type="button"
+          class="mesas-modal-cancel"
+          id="cancelarPosponer"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="mesas-modal-cancel"
+          id="posponerHastaManana"
+        >
+          <i class="fa-regular fa-sun"></i>
+          Hasta mañana
+        </button>
+
+        <button
+          type="button"
+          class="mesas-modal-confirm"
+          id="confirmarPosponer"
+        >
+          <i class="fa-regular fa-clock"></i>
+          Posponer
+        </button>
+
+      </footer>
+
+    </div>
+  `);
+
+  const cantidad =
+    document.getElementById("posponerCantidad");
+
+  const unidad =
+    document.getElementById("posponerUnidad");
+
+  const vistaPrevia =
+    document.getElementById("posponerVistaPrevia");
+
+  const error =
+    document.getElementById("posponerError");
+
+  const mostrarError = (mensaje) => {
+    error.textContent = mensaje;
+
+    error.hidden = !mensaje;
+  };
+
+  const actualizarVistaPrevia = () => {
+    const hasta =
+      calcularPosposicion(
+        cantidad.value,
+        unidad.value,
+      );
+
+    vistaPrevia.textContent =
+      hasta
+        ? `El aviso volverá a aparecer el ${formatearFechaHora(hasta)}`
+        : "";
+  };
+
+  const aplicar = (hastaISO) => {
+    if (
+      !posponerNotificacion(
+        notificacionId,
+        hastaISO,
+      )
+    ) {
+      mostrarError(
+        "Indica un tiempo válido, mayor a cero.",
+      );
+
+      return;
+    }
+
+    closeForm();
+
+    renderMesas();
+  };
+
+  cantidad.addEventListener(
+    "input",
+    () => {
+      mostrarError("");
+
+      actualizarVistaPrevia();
+    },
+  );
+
+  unidad.addEventListener(
+    "change",
+    actualizarVistaPrevia,
+  );
+
+  document
+    .getElementById("cancelarPosponer")
+    ?.addEventListener("click", closeForm);
+
+  document
+    .getElementById("confirmarPosponer")
+    ?.addEventListener(
+      "click",
+      () =>
+        aplicar(
+          calcularPosposicion(
+            cantidad.value,
+            unidad.value,
+          ),
+        ),
+    );
+
+  document
+    .getElementById("posponerHastaManana")
+    ?.addEventListener(
+      "click",
+      () =>
+        aplicar(
+          inicioDiaSiguienteISO(),
+        ),
+    );
+
+  actualizarVistaPrevia();
+
+  cantidad.focus();
+  cantidad.select();
 }
 
 // ============================================================
@@ -1247,13 +1547,13 @@ function openCrearAcuerdos(
             </strong>
 
             <span>
-              PDF, DOC o DOCX
+              PDF o DOCX
             </span>
 
             <input
               type="file"
               id="acuerdoArchivo"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.docx"
               hidden
             >
 
@@ -1404,14 +1704,17 @@ function openCrearAcuerdos(
     )
     ?.addEventListener(
       "click",
-      () => {
-        const archivo =
+      async () => {
+        const archivoSeleccionado =
           document
             .getElementById(
               "acuerdoArchivo",
             )
-            ?.files?.[0]
-            ?.name ||
+            ?.files?.[0] ||
+          null;
+
+        const archivo =
+          archivoSeleccionado?.name ||
           null;
 
         const texto =
@@ -1440,15 +1743,136 @@ function openCrearAcuerdos(
           return;
         }
 
+        // El archivo se guarda para poder consultarlo después.
+        let documentoId =
+          null;
+
+        if (archivoSeleccionado) {
+          const error =
+            document.getElementById(
+              "acuerdoError",
+            );
+
+          const problema =
+            validarArchivoDocumento(
+              archivoSeleccionado,
+            );
+
+          if (problema) {
+            error.textContent =
+              problema;
+
+            error.hidden =
+              false;
+
+            return;
+          }
+
+          try {
+            const guardado =
+              guardarDocumento({
+                archivo:
+                  archivoSeleccionado,
+
+                dataUrl:
+                  await leerComoDataUrl(
+                    archivoSeleccionado,
+                  ),
+              });
+
+            if (!guardado.ok) {
+              throw new Error(
+                guardado.error,
+              );
+            }
+
+            documentoId =
+              guardado.documento.id;
+          } catch (fallo) {
+            console.error(fallo);
+
+            error.textContent =
+              "No se pudo guardar el archivo (¿almacenamiento del navegador lleno?). Prueba con uno más pequeño.";
+
+            error.hidden =
+              false;
+
+            return;
+          }
+        }
+
         enviarARevisionInterna(
           numero,
           {
             archivo,
+            documentoId,
             texto,
           },
         );
       },
     );
+}
+
+// ============================================================
+// ENVIAR A FIRMA
+// Exige documento (.pdf/.docx) y concepto "Acuerdo": el modal y la
+// validación viven en documentosFirma.js (los comparten todas las tablas).
+// ============================================================
+
+function openEnviarAFirma(
+  numero,
+) {
+  const item =
+    getRegistros()
+      .find(
+        (registro) =>
+          registro.numero ===
+          numero,
+      );
+
+  if (
+    !item ||
+    !puedeAplicar(
+      "enviar-firma",
+      item.seguimiento.estado,
+    )
+  ) {
+    return;
+  }
+
+  abrirEnvioFirma({
+    referencia:
+      `Expediente ${numero}`,
+
+    acuerdo:
+      normalizarAcuerdo(
+        item.seguimiento.acuerdo,
+      ),
+
+    aplicar:
+      (acuerdo) =>
+        aplicarAccionSeguimiento(
+          numero,
+          "enviar-firma",
+          {
+            movimiento:
+              "Proyecto de acuerdo enviado a firma de la Magistrada",
+
+            usuario:
+              getSession()?.nombre || "",
+
+            extra: {
+              acuerdo,
+
+              enviadoFirmaEn:
+                new Date().toISOString(),
+            },
+          },
+        ),
+
+    alTerminar:
+      renderMesas,
+  });
 }
 
 // ============================================================
@@ -1459,6 +1883,7 @@ function enviarARevisionInterna(
   numero,
   {
     archivo,
+    documentoId = null,
     texto,
   },
 ) {
@@ -1487,6 +1912,8 @@ function enviarARevisionInterna(
     texto,
 
     archivo,
+
+    documentoId,
 
     creadoPor:
       getSession()?.nombre ||
@@ -1707,6 +2134,11 @@ function openFirmarAcuerdo(
         </div>
 
 
+        ${htmlVistaPreviaDocumento(
+          acuerdo,
+        )}
+
+
         <p class="mesas-upload-help">
           Al firmar, el expediente regresa a la Secretaría de Acuerdos
           en el estado "En lista".
@@ -1739,6 +2171,13 @@ function openFirmarAcuerdo(
 
     </div>
   `);
+
+
+  activarVistasPreviasDocumento(
+    document.getElementById(
+      "modalContent",
+    ),
+  );
 
 
   document
@@ -1873,6 +2312,12 @@ function describirAcuerdo(
   if (acuerdo.texto) {
     partes.push(
       acuerdo.texto,
+    );
+  }
+
+  if (acuerdo.concepto) {
+    partes.push(
+      `Acuerdo: ${acuerdo.concepto}`,
     );
   }
 
@@ -2052,6 +2497,25 @@ function openDetalleExpediente(
 
 
         ${
+          acuerdo?.documentoId
+            ? `
+              <div class="mesas-modal-info-item">
+
+                <span>
+                  Documento
+                </span>
+
+                ${htmlVistaPreviaDocumento(
+                  acuerdo,
+                )}
+
+              </div>
+            `
+            : ""
+        }
+
+
+        ${
           historial
             ? `
               <ul class="mesas-history">
@@ -2078,6 +2542,12 @@ function openDetalleExpediente(
 
     </div>
   `);
+
+  activarVistasPreviasDocumento(
+    document.getElementById(
+      "modalContent",
+    ),
+  );
 
 
   document
@@ -2359,6 +2829,29 @@ function seedSecretariaDemo() {
         );
 
 
+      // Documento de ejemplo (alterna Word y PDF) para la vista previa.
+      // El concepto "Acuerdo" ya viene escrito desde que está en firma.
+      const archivoDemo =
+        conAcuerdo
+          ? sembrarDocumentoDemo(
+              index % 2
+                ? "consultas"
+                : "promociones",
+              `demo-doc-exp-${item.numero}`,
+              {
+                nombreBase:
+                  `acuerdo-${item.numero.replace("/", "-")}`,
+
+                concepto:
+                  item.estado ===
+                  "en-revision-interna"
+                    ? ""
+                    : "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
+              },
+            )
+          : null;
+
+
       seguimiento[
         item.numero
       ] = {
@@ -2381,7 +2874,16 @@ function seedSecretariaDemo() {
                   "Proyecto de acuerdo de demostración",
 
                 archivo:
+                  archivoDemo?.archivo ||
                   null,
+
+                documentoId:
+                  archivoDemo?.documentoId ||
+                  null,
+
+                concepto:
+                  archivoDemo?.concepto ||
+                  "",
 
                 creadoPor:
                   "Secretaría de Acuerdos",
@@ -2476,6 +2978,32 @@ function seedSecretariaDemo() {
             i === 0
               ? item.estado
               : "en-proceso",
+
+          // La promoción que refleja el estado del expediente trae su documento.
+          ...(
+            i === 0 &&
+            conAcuerdo
+              ? {
+                  acuerdo:
+                    sembrarDocumentoDemo(
+                      index % 2
+                        ? "consultas"
+                        : "promociones",
+                      `demo-doc-promo-${item.numero}`,
+                      {
+                        nombreBase:
+                          `promocion-${item.numero.replace("/", "-")}`,
+
+                        concepto:
+                          item.estado ===
+                          "en-revision-interna"
+                            ? ""
+                            : "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
+                      },
+                    ),
+                }
+              : {}
+          ),
 
           estadoPromocion:
             i === 0 &&

@@ -30,6 +30,7 @@ import {
   renderBotonesFlujo,
   renderEstadoBadge,
 } from "./flujoEstados.js";
+import { abrirEnvioFirma } from "./documentosFirma.js";
 import {
   getSession,
 } from "../../auth.js";
@@ -633,6 +634,7 @@ function renderFilasCalificacion(
                   attrs: `data-calificacion-id="${escapeHTML(
                     item.calificacion.id,
                   )}"`,
+                  acuerdo: item.calificacion.acuerdo,
                 },
               )}
               <button
@@ -848,6 +850,28 @@ function ejecutarAccionCalificacion(id, accion) {
     ? calificaciones.find((registro) => registro.id === id)
     : null;
   if (!item) return;
+
+  // Enviar a firma pide documento adjunto y concepto "Acuerdo".
+  if (accion === "enviar-firma") {
+    abrirEnvioFirma({
+      referencia: `Calificación · Expediente ${item.expediente}`,
+      acuerdo: item.acuerdo,
+      aplicar: (acuerdo) => {
+        const enviado = aplicarAccion(item, accion, {
+          extra: { acuerdo },
+          usuario: getSession()?.nombre || "",
+        });
+
+        if (enviado.ok) saveData(KEY_CALIFICACIONES, calificaciones);
+
+        return enviado;
+      },
+      alTerminar: actualizarListado,
+    });
+
+    return;
+  }
+
   const resultado = aplicarAccion(item, accion, {
     usuario: getSession()?.nombre || "",
   });

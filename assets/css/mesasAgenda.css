@@ -609,6 +609,24 @@
     text-decoration: underline;
 }
 
+/* Los avisos no se encogen dentro de la lista con scroll
+   (si no, sus botones quedan tapados por el aviso siguiente). */
+
+#mesasPage .mesas-alert-item {
+    flex-shrink: 0;
+}
+
+
+/* Marcar como leída + Posponer */
+
+#mesasPage .mesas-alert-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    gap: 0 12px;
+}
+
 
 /* ============================================================
    RESPONSIVE

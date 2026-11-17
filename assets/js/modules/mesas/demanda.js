@@ -21,6 +21,7 @@ import {
   renderBotonesFlujo,
   renderEstadoBadge,
 } from "./flujoEstados.js";
+import { abrirEnvioFirma } from "./documentosFirma.js";
 import {
   getSession,
 } from "../../auth.js";
@@ -622,6 +623,7 @@ function renderFilasDemanda(
                   {
                     actionAttr: "data-demanda-action",
                     attrs: `data-expediente="${escapeHTML(item.numero)}"`,
+                    acuerdo: item.demanda.acuerdo,
                   },
                 )}
 </div>
@@ -719,6 +721,30 @@ function ejecutarAccionDemanda(numero, accion) {
   const demandas = getData(KEY_DEMANDAS, {});
   const registro = demandas[numero];
   if (!registro) return;
+
+  // Enviar a firma pide documento adjunto y concepto "Acuerdo".
+  if (accion === "enviar-firma") {
+    abrirEnvioFirma({
+      referencia: `Demanda · Expediente ${numero}`,
+      acuerdo: registro.acuerdo,
+      aplicar: (acuerdo) => {
+        const enviado = aplicarAccion(registro, accion, {
+          campo: "radicacion",
+          campoHistorial: "historialRadicacion",
+          extra: { acuerdo },
+          usuario: getSession()?.nombre || "",
+        });
+
+        if (enviado.ok) saveData(KEY_DEMANDAS, demandas);
+
+        return enviado;
+      },
+      alTerminar: renderDemanda,
+    });
+
+    return;
+  }
+
   const resultado = aplicarAccion(registro, accion, {
     campo: "radicacion",
     campoHistorial: "historialRadicacion",

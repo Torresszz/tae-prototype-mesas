@@ -515,6 +515,11 @@ function getRegistrosAudiencia() {
           estadoExpediente:
             estadoActual,
 
+          acuerdo:
+            seguimiento?.[
+              numero
+            ]?.acuerdo,
+
           evento,
           expediente,
         };
@@ -737,6 +742,8 @@ function renderFilasAudiencia(
                   attrs: `data-expediente="${escapeHTML(
                     item.numero,
                   )}"`,
+                  acuerdo:
+                    item.acuerdo,
                 },
               )}
               <button

@@ -22,6 +22,10 @@ import { escapeHTML } from "../../utils.js";
 import { canSign } from "../../auth.js";
 import { etiquetaEstado } from "./estados.js";
 import { getNumeroExpediente, mesaDeExpediente } from "./mesaUtils.js";
+import {
+  validarRequisitosFirma,
+  htmlBotonVerDocumento,
+} from "./documentosFirma.js";
 
 const KEY_SEGUIMIENTO = "mesasSeguimiento";
 const KEY_EXPEDIENTES = "expedientes";
@@ -176,6 +180,17 @@ export function aplicarAccion(
     };
   }
 
+  // Todo lo que se envía a firma lleva documento adjunto (.pdf/.docx)
+  // y el concepto "Acuerdo". La regla vive aquí para que ninguna tabla
+  // pueda saltársela.
+  if (accion === "enviar-firma") {
+    const errores = validarRequisitosFirma(extra.acuerdo ?? registro.acuerdo);
+
+    if (errores.length) {
+      return { ok: false, error: errores.join(" ") };
+    }
+  }
+
   const ahora = new Date().toISOString();
 
   registro[campo] = def.a;
@@ -276,9 +291,19 @@ export function renderEstadoBadge(estado) {
 //   attrs:      atributos extra para identificar la fila (ej. data-promocion-id="...")
 export function renderBotonesFlujo(
   estado,
-  { actionAttr, attrs = "", tipo = "", esMagistrada = canSign() } = {},
+  {
+    actionAttr,
+    attrs = "",
+    tipo = "",
+    esMagistrada = canSign(),
+    acuerdo = null,
+  } = {},
 ) {
   const acciones = accionesDisponibles(estado, { esMagistrada, tipo });
+
+  // En la etapa de firma se puede revisar el documento antes de firmar.
+  const verDocumento =
+    estado === "en-firma" ? htmlBotonVerDocumento(acuerdo) : "";
 
   const botones = acciones
     .map(
@@ -310,10 +335,11 @@ export function renderBotonesFlujo(
         <i class="fa-solid fa-hourglass-half"></i>
         Pendiente de firma
       </button>
+      ${verDocumento}
     `;
   }
 
-  return botones;
+  return botones + verDocumento;
 }
 
 // Lee data-flujo del botón pulsado y valida que sea una acción conocida.
