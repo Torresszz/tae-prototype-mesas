@@ -38,6 +38,17 @@ const KEY_EXPEDIENTES = "expedientes";
 //   ubicacion: dónde queda el asunto ("mesa" = Mesa N del expediente)
 // ------------------------------------------------------------
 export const ACCIONES_FLUJO = {
+  // Solo Calificación tiene el estado "Por acordar" (estado inicial).
+  iniciar: {
+    de: ["por-acordar"],
+    a: "en-proceso",
+    rol: "mesa",
+    etiqueta: "Pasar a En proceso",
+    icono: "fa-solid fa-play",
+    primaria: true,
+    movimiento: "Pasa de Por acordar a En proceso",
+    ubicacion: "",
+  },
   "enviar-firma": {
     de: ["en-proceso", "en-revision-interna"],
     a: "en-firma",
@@ -206,6 +217,19 @@ export function aplicarAccion(
   });
 
   Object.assign(registro, extra);
+
+  // Listas de acuerdos (listas.js): lo firmado queda pendiente de
+  // publicarse en la lista del día. Un envío nuevo a firma limpia la
+  // marca anterior para que el acuerdo nuevo vuelva a listarse.
+  if (accion === "firmar") {
+    registro.firmadoEn = ahora;
+    delete registro.listaId;
+    delete registro.listaNumero;
+  } else if (accion === "enviar-firma") {
+    delete registro.firmadoEn;
+    delete registro.listaId;
+    delete registro.listaNumero;
+  }
 
   return { ok: true, def, ahora };
 }

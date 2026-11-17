@@ -7,6 +7,7 @@
 // ============================================================
 
 import { configurarBarraFiltros } from "./filtros.js";
+import { ESTADO_POR_ACORDAR } from "./estados.js";
 
 import { montarPlantillasEn } from "./plantillas.js";
 
@@ -45,7 +46,7 @@ export const SECCIONES = [
     fase: 4,
     resumen: "Calificación de la demanda.",
     plantillas: "calificacion",
-    filtros: {},
+    filtros: { estadosExtra: [ESTADO_POR_ACORDAR] },
   },
     {
     id: "exhortos",
@@ -97,6 +98,18 @@ export const SECCIONES = [
     resumen: "Registro de números de oficio por año y plantillas.",
     plantillas: "oficios",
     filtros: { estado: false },
+  },
+  {
+    id: "listas",
+    etiqueta: "Listas",
+    icono: "fa-list-check",
+    fase: 10,
+    resumen: "Listas de acuerdos por día, con numeración consecutiva global.",
+    filtros: {
+      estado: false,
+      etiquetaExpediente: "No. de expediente o de lista",
+      placeholderExpediente: "Ej. 124/2026 o #12",
+    },
   },
   {
     id: "estadistica",

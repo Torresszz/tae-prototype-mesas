@@ -64,6 +64,7 @@ import { renderConsultas } from "./mesas/consultas.js";
 import { renderIntersindicales } from "./mesas/intersindicales.js";
 import { renderOficiosMesas } from "./mesas/oficios.js";
 import { renderEstadistica } from "./mesas/estadistica.js";
+import { renderListas, iniciarListasAutomaticas } from "./mesas/listas.js";
 import { sembrarDemoFases } from "./mesas/demo.js";
 
 import {
@@ -103,6 +104,7 @@ registrarSeccion("consultas", renderConsultas);
 registrarSeccion("intersindicales", renderIntersindicales);
 registrarSeccion("oficios", renderOficiosMesas);
 registrarSeccion("estadistica", renderEstadistica);
+registrarSeccion("listas", renderListas);
 
 let currentTexto = "";
 let currentOrdenPromociones = "desc";
@@ -134,6 +136,9 @@ export function renderMesas() {
   }
 
   prepararSeguimiento();
+
+  // Lista automática de las 15:00 (lunes a viernes) si no se creó a mano.
+  iniciarListasAutomaticas(renderMesas);
 
   if (!vistaInicialAplicada) {
     vistaInicialAplicada = true;
@@ -2243,6 +2248,10 @@ function firmarAcuerdo(
   estado.firmadoPor =
     getSession()?.nombre ||
     "Magistrada";
+
+  // El acuerdo recién firmado queda pendiente de la lista del día.
+  delete estado.listaId;
+  delete estado.listaNumero;
 
   estado.ultimoMovimiento =
     "Acuerdo firmado por la Magistrada · pasa a lista";

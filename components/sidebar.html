@@ -16,6 +16,17 @@
   <!-- NAVEGACIÓN -->
 
   <nav class="nav">
+    <!-- Solo Administrador (app.js los retira para los demás roles) -->
+    <button type="button" class="nav-item" data-page="admin">
+      <i class="fa-solid fa-gauge-high"></i>
+      <span>Panel</span>
+    </button>
+
+    <button type="button" class="nav-item" data-page="usuarios">
+      <i class="fa-solid fa-users-gear"></i>
+      <span>Usuarios</span>
+    </button>
+
     <button type="button" class="nav-item active" data-page="dashboard">
       <i class="fa-solid fa-house"></i>
       <span>Inicio</span>

@@ -2,6 +2,16 @@
 // CALIFICACIÓN
 // assets/js/modules/mesas/calificacion.js
 // FASE 4 - T-15
+//
+// Una sola columna "Estado": el catálogo de Calificación empieza en
+// "Por acordar" y sigue con el flujo normal (En proceso, En revisión
+// interna, En firma, En lista, En Actuaría). Ya no hay una columna
+// aparte "Calificación" ni botón manual "Marcar acordado".
+//
+// ⚠️ Interpretación: "Por acordar" es el estado inicial; la Mesa lo
+// pasa a "En proceso" con un botón. La calificación se da por
+// concluida (dato interno `resultado: "acordado"` + `concluidaEn`,
+// que usa Estadística) cuando la Magistrada firma.
 // ============================================================
 
 import { getData, saveData } from "../../storage.js";
@@ -15,9 +25,6 @@ import {
   etiquetaEstado,
 } from "./estados.js";
 
-import {
-  etiquetaEstadoAcuerdo,
-} from "./catalogos.js";
 
 import {
   getExpedientesMesaActual,
@@ -43,6 +50,7 @@ import {
 const KEY_CALIFICACIONES = "mesasCalificaciones";
 
 const ESTADOS_CALIFICACION = [
+  "por-acordar",
   "en-proceso",
   "en-revision-interna",
   "en-firma",
@@ -75,15 +83,15 @@ export function renderCalificacion() {
   const porAcordar =
     registros.filter(
       (item) =>
-        item.calificacion.resultado ===
+        item.calificacion.estado ===
         "por-acordar",
     );
 
-  const acordados =
+  const enProceso =
     registros.filter(
       (item) =>
-        item.calificacion.resultado ===
-        "acordado",
+        item.calificacion.estado ===
+        "en-proceso",
     );
 
 
@@ -150,15 +158,15 @@ export function renderCalificacion() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            resultadoActivo === "acordado"
+            resultadoActivo === "en-proceso"
               ? "active"
               : ""
           }"
           data-calificacion-action="resultado"
-          data-resultado="acordado"
+          data-resultado="en-proceso"
         >
-          <span>Acordados</span>
-          <strong>${acordados.length}</strong>
+          <span>En proceso</span>
+          <strong>${enProceso.length}</strong>
         </button>
 
       </div>
@@ -214,7 +222,6 @@ export function renderCalificacion() {
                 <th>Actor</th>
                 <th>Demandado</th>
                 <th>Estado</th>
-                <th>Calificación</th>
                 <th>Notas</th>
                 <th>Acciones</th>
               </tr>
@@ -343,6 +350,24 @@ function prepararCalificaciones() {
         }
 
 
+        // Unificación de columnas: lo que estaba "En proceso / Por
+        // acordar" y aún no se trabajaba pasa a "Por acordar".
+        if (!existente.estadoUnificado) {
+          if (
+            existente.estado === "en-proceso" &&
+            existente.resultado !== "acordado" &&
+            !existente.acuerdo &&
+            !(existente.historial || []).length
+          ) {
+            existente.estado = "por-acordar";
+          }
+
+          existente.estadoUnificado = true;
+
+          changed = true;
+        }
+
+
         if (
           typeof existente.notas !==
           "string"
@@ -364,7 +389,10 @@ function prepararCalificaciones() {
           numero,
 
         estado:
-          "en-proceso",
+          "por-acordar",
+
+        estadoUnificado:
+          true,
 
         resultado:
           "por-acordar",
@@ -525,7 +553,7 @@ function getRegistrosVisibles() {
     registros =
       registros.filter(
         (item) =>
-          item.calificacion.resultado ===
+          item.calificacion.estado ===
           resultadoActivo,
       );
   }
@@ -545,9 +573,6 @@ function renderFilasCalificacion(
   return registros
     .map(
       (item) => {
-        const acordado =
-          item.calificacion.resultado ===
-          "acordado";
 
 
         return `
@@ -589,25 +614,6 @@ function renderFilasCalificacion(
 
             <td>
 
-              <span class="mesas-fase4-category-badge ${
-                acordado
-                  ? "done"
-                  : "pending"
-              }">
-
-                ${escapeHTML(
-                  etiquetaEstadoAcuerdo(
-                    item.calificacion.resultado,
-                  ),
-                )}
-
-              </span>
-
-            </td>
-
-
-            <td>
-
               <input
                 type="text"
                 class="mesas-calificacion-notas"
@@ -637,32 +643,6 @@ function renderFilasCalificacion(
                   acuerdo: item.calificacion.acuerdo,
                 },
               )}
-              <button
-                type="button"
-                class="${
-                  acordado
-                    ? "mesas-secondary-btn"
-                    : "mesas-primary-btn"
-                }"
-                data-calificacion-action="toggle-resultado"
-                data-calificacion-id="${escapeHTML(
-                  item.calificacion.id,
-                )}"
-              >
-
-                <i class="fa-solid ${
-                  acordado
-                    ? "fa-rotate-left"
-                    : "fa-check"
-                }"></i>
-
-                ${
-                  acordado
-                    ? "Reabrir"
-                    : "Marcar acordado"
-                }
-
-              </button>
               </div>
 
             </td>
@@ -795,12 +775,6 @@ function configurarEventosCalificacion(
             accionDeBoton(button),
           );
           break;
-        case "toggle-resultado":
-          toggleResultado(
-            button.dataset
-              .calificacionId,
-          );
-          break;
       }
     };
 
@@ -866,7 +840,7 @@ function ejecutarAccionCalificacion(id, accion) {
 
         return enviado;
       },
-      alTerminar: actualizarListado,
+      alTerminar: renderCalificacion,
     });
 
     return;
@@ -879,67 +853,16 @@ function ejecutarAccionCalificacion(id, accion) {
     window.alert(resultado.error);
     return;
   }
-  saveData(KEY_CALIFICACIONES, calificaciones);
-  actualizarListado();
-}
-
-// ============================================================
-// RESULTADO
-// ============================================================
-
-function toggleResultado(
-  id,
-) {
-  const calificaciones =
-    getData(
-      KEY_CALIFICACIONES,
-      [],
-    );
-
-
-  if (
-    !Array.isArray(
-      calificaciones,
-    )
-  ) {
-    return;
-  }
-
-
-  const item =
-    calificaciones.find(
-      (registro) =>
-        registro.id === id,
-    );
-
-
-  if (!item) {
-    return;
-  }
-
-
-  item.resultado =
-    item.resultado ===
-    "acordado"
-      ? "por-acordar"
-      : "acordado";
-
-  // Fase 7 (Estadística): fecha en que se concluyó la calificación
-  if (item.resultado === "acordado") {
+  // Al firmar la Magistrada, la calificación queda concluida.
+  if (accion === "firmar") {
+    item.resultado = "acordado";
     item.concluidaEn = todayISO();
-  } else {
-    delete item.concluidaEn;
   }
 
-
-  saveData(
-    KEY_CALIFICACIONES,
-    calificaciones,
-  );
-
-
+  saveData(KEY_CALIFICACIONES, calificaciones);
   renderCalificacion();
 }
+
 
 
 // ============================================================

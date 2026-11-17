@@ -15,6 +15,15 @@
 // oficialia@example
 // 123
 //
+// admin@example
+// 123
+//
+// Los usuarios viven en localStorage (llave "usuarios") para que el
+// Administrador pueda cambiar contraseñas y eliminar usuarios. La
+// lista USERS de abajo es solo la semilla inicial. Al migrar, todo
+// esto pasa al servidor (las contraseñas NUNCA deben guardarse en
+// texto plano fuera de la maqueta).
+//
 // ============================================================
 
 
@@ -23,6 +32,7 @@
 // ============================================================
 
 const SESSION_KEY = "tribunalSession";
+const USERS_KEY = "usuarios";
 
 
 // ============================================================
@@ -30,6 +40,19 @@ const SESSION_KEY = "tribunalSession";
 // ============================================================
 
 const USERS = [
+
+    // ========================================================
+    // ADMINISTRADOR
+    // Usuarios, catálogos y su propio panel
+    // ========================================================
+    {
+        email: "admin@example",
+        password: "123",
+        nombre: "Administrador",
+        rol: "admin",
+        area: "Administración del sistema",
+        paginaInicial: "admin"
+    },
 
     // ========================================================
     // SECRETARÍA DE ACUERDOS
@@ -192,7 +215,7 @@ export function login(
     // ========================================================
 
     const user =
-        USERS.find(
+        getUsuarios().find(
             item =>
 
                 item.email
@@ -228,6 +251,8 @@ export function login(
     // CREAR SESIÓN
     // No guardamos la contraseña
     // ========================================================
+
+    registrarAcceso(user.email);
 
     const session = {
 
@@ -384,6 +409,22 @@ export function requireSession() {
 
     }
 
+    // ========================================================
+    // EL USUARIO FUE ELIMINADO POR EL ADMINISTRADOR
+    // ========================================================
+    if (!buscarUsuario(session.email)) {
+
+        sessionStorage.removeItem(
+            SESSION_KEY
+        );
+
+        window.location.replace(
+            "./login.html"
+        );
+
+        return null;
+    }
+
 
     return session;
 
@@ -415,6 +456,25 @@ export function canAccessPage(
         )
         .trim()
         .toLowerCase();
+
+    // ========================================================
+    // PERFIL: cualquier usuario con sesión ve el suyo
+    // ========================================================
+    if (requestedPage === "perfil") {
+        return true;
+    }
+
+    // ========================================================
+    // ADMINISTRADOR: su panel, usuarios y catálogos
+    // Las páginas de administración son solo suyas.
+    // ========================================================
+    if (session.rol === "admin") {
+        return PAGINAS_ADMIN.includes(requestedPage);
+    }
+
+    if (PAGINAS_SOLO_ADMIN.includes(requestedPage)) {
+        return false;
+    }
 
 
     // ========================================================
@@ -495,6 +555,10 @@ export function getHomePage() {
 
         return null;
 
+    }
+
+    if (session.rol === "admin") {
+        return "admin";
     }
 
 
@@ -638,4 +702,155 @@ export function canSign() {
 
 export function canManageTemplates() {
     return getRole() === "mesa";
+}
+
+// ============================================================
+// PÁGINAS DEL ADMINISTRADOR
+// (function, no const: canAccessPage las usa desde arriba)
+// ============================================================
+
+const PAGINAS_SOLO_ADMIN = ["admin", "usuarios"];
+const PAGINAS_ADMIN = [...PAGINAS_SOLO_ADMIN, "catalogos"];
+
+export function isAdminUser() {
+    return getRole() === "admin";
+}
+
+// ============================================================
+// ALMACÉN DE USUARIOS (localStorage)
+// Registro: { email, password, nombre, rol, area, paginaInicial,
+//             mesa?, ultimoAcceso? }
+// ============================================================
+
+function guardarUsuarios(lista) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(lista));
+}
+
+export function getUsuarios() {
+    let lista = null;
+
+    try {
+        lista = JSON.parse(localStorage.getItem(USERS_KEY));
+    } catch (error) {
+        lista = null;
+    }
+
+    if (!Array.isArray(lista)) {
+        lista = USERS.map(user => ({ ...user }));
+        guardarUsuarios(lista);
+    }
+
+    // Siempre debe existir al menos un administrador.
+    if (!lista.some(user => user.rol === "admin")) {
+        lista = [
+            { ...USERS.find(user => user.rol === "admin") },
+            ...lista
+        ];
+        guardarUsuarios(lista);
+    }
+
+    return lista;
+}
+
+function mismoEmail(a, b) {
+    return String(a || "").trim().toLowerCase() ===
+        String(b || "").trim().toLowerCase();
+}
+
+function buscarUsuario(email) {
+    return getUsuarios().find(user => mismoEmail(user.email, email)) || null;
+}
+
+// Datos de los usuarios SIN la contraseña (para tablas y perfil).
+export function getUsuariosPublicos() {
+    return getUsuarios().map(({ password, ...datos }) => datos);
+}
+
+export function getUsuarioActual() {
+    const session = getSession();
+
+    return getUsuariosPublicos().find(
+        user => mismoEmail(user.email, session?.email)
+    ) || null;
+}
+
+function registrarAcceso(email) {
+    const lista = getUsuarios();
+    const user = lista.find(item => mismoEmail(item.email, email));
+
+    if (!user) {
+        return;
+    }
+
+    user.ultimoAcceso = new Date().toISOString();
+    guardarUsuarios(lista);
+}
+
+// ============================================================
+// FUNCIONES DEL ADMINISTRADOR
+// Devuelven { ok: true } o { ok: false, message }.
+// ============================================================
+
+export function cambiarPasswordUsuario(email, nuevaPassword) {
+    if (!isAdminUser()) {
+        return { ok: false, message: "Solo el Administrador puede cambiar contraseñas." };
+    }
+
+    const password = String(nuevaPassword || "");
+
+    if (!password.trim()) {
+        return { ok: false, message: "Escribe la nueva contraseña." };
+    }
+
+    const lista = getUsuarios();
+    const user = lista.find(item => mismoEmail(item.email, email));
+
+    if (!user) {
+        return { ok: false, message: "El usuario ya no existe." };
+    }
+
+    user.password = password;
+    user.passwordActualizadaEn = new Date().toISOString();
+    guardarUsuarios(lista);
+
+    return { ok: true };
+}
+
+export function eliminarUsuario(email) {
+    if (!isAdminUser()) {
+        return { ok: false, message: "Solo el Administrador puede eliminar usuarios." };
+    }
+
+    if (mismoEmail(email, getSession()?.email)) {
+        return { ok: false, message: "No puedes eliminar tu propio usuario." };
+    }
+
+    const lista = getUsuarios();
+    const user = lista.find(item => mismoEmail(item.email, email));
+
+    if (!user) {
+        return { ok: false, message: "El usuario ya no existe." };
+    }
+
+    if (
+        user.rol === "admin" &&
+        lista.filter(item => item.rol === "admin").length <= 1
+    ) {
+        return { ok: false, message: "Debe existir al menos un Administrador." };
+    }
+
+    guardarUsuarios(lista.filter(item => !mismoEmail(item.email, email)));
+
+    return { ok: true };
+}
+
+// Solo para la maqueta: vuelve a los usuarios de demostración.
+export function restablecerUsuariosDemo() {
+    if (!isAdminUser()) {
+        return { ok: false, message: "Solo el Administrador puede restablecer usuarios." };
+    }
+
+    guardarUsuarios(USERS.map(user => ({ ...user })));
+
+    return { ok: true };
 }

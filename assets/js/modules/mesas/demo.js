@@ -97,13 +97,22 @@ export function sembrarDemoFases(numeros = []) {
 // Desde la etapa de firma el registro ya trae documento y concepto "Acuerdo".
 const ESTADOS_CON_DOCUMENTO = ["en-firma", "en-lista", "en-actuaria", "en-archivo"];
 
+// Concepto "Acuerdo" de demostración según el tipo de asunto (es el
+// texto que sale en la columna ACUERDO de las listas).
+const CONCEPTOS_DEMO = {
+  demanda: "Radicación.",
+  calificacion: "Calificación de pruebas.",
+  audiencia: "Se señala fecha para el desahogo de la audiencia trifásica.",
+  promociones: "Se tiene por presentado el escrito y se ordena notificar a las partes.",
+};
+
 function acuerdoDemo(clave, id, nombreBase, estado) {
   if (!ESTADOS_CON_DOCUMENTO.includes(estado)) return {};
 
   return {
     acuerdo: sembrarDocumentoDemo(clave, `demo-doc-${id}`, {
       nombreBase,
-      concepto: "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
+      concepto: CONCEPTOS_DEMO[clave] || CONCEPTOS_DEMO.promociones,
     }),
   };
 }
@@ -160,19 +169,20 @@ function sembrarDemandas(numeros) {
 
 // ============================================================
 // CALIFICACIONES
-// estado: sin "en-archivo". resultado: por-acordar / acordado.
+// estado: "por-acordar" (inicial) + flujo, sin "en-archivo".
+// resultado: dato interno para Estadística (acordado = ya firmada).
 // ============================================================
 
 const CALIFICACIONES = {
-  "123/2026": ["en-proceso", "por-acordar"],
+  "123/2026": ["por-acordar", "por-acordar"],
   "124/2026": ["en-firma", "por-acordar"],
   "125/2026": ["en-lista", "acordado", -8],
   "126/2026": ["en-revision-interna", "por-acordar"],
   "127/2026": ["en-actuaria", "acordado", -30],
-  "128/2026": ["en-proceso", "por-acordar"],
+  "128/2026": ["por-acordar", "por-acordar"],
   "129/2026": ["en-revision-interna", "por-acordar"],
   "130/2026": ["en-lista", "acordado", -2],
-  "131/2026": ["en-proceso", "por-acordar"],
+  "131/2026": ["por-acordar", "por-acordar"],
   "132/2026": ["en-proceso", "por-acordar"],
   "133/2026": ["en-lista", "acordado", -6],
   "045/2021": ["en-actuaria", "acordado", -45],
@@ -195,6 +205,7 @@ function sembrarCalificaciones(numeros) {
       id: `demo-cal-${indice + 1}`,
       expediente: numero,
       estado,
+      estadoUnificado: true,
       resultado,
       notas: "Calificación de demostración.",
       ...(resultado === "acordado" ? { concluidaEn: dia(offset) } : {}),

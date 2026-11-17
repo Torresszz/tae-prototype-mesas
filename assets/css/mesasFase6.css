@@ -421,3 +421,15 @@
         justify-content: flex-start;
     }
 }
+
+/* ============================================================
+   LISTAS DE ACUERDOS
+   ============================================================ */
+.mesas-listas-hoy { margin-bottom: 18px; }
+.mesas-listas-hoy-head { padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
+.mesas-listas-hoy-head > div > strong { display: block; color: #102b45; font-size: 14px; }
+.mesas-listas-hoy-head span { color: #5b6f84; font-size: 13px; }
+.mesas-listas-table td p { margin: 0 0 6px; }
+.mesas-listas-table td p:last-child { margin-bottom: 0; }
+[data-mesas-vista="listas"] .mesas-fase4-header { align-items: flex-start; gap: 16px; }
+[data-mesas-vista="listas"] .mesas-primary-btn[disabled] { opacity: .5; cursor: not-allowed; }

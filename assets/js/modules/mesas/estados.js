@@ -15,8 +15,12 @@ export const ESTADOS = [
 
 export const ESTADO_INICIAL = "en-proceso";
 
+// Estado inicial propio de Calificación (antes era la columna
+// "Calificación: Por acordar"). No forma parte del catálogo general.
+export const ESTADO_POR_ACORDAR = { clave: "por-acordar", etiqueta: "Por acordar" };
+
 export const ESTADO_LABELS = Object.fromEntries(
-  ESTADOS.map((estado) => [estado.clave, estado.etiqueta]),
+  [ESTADO_POR_ACORDAR, ...ESTADOS].map((estado) => [estado.clave, estado.etiqueta]),
 );
 
 export function etiquetaEstado(clave) {
@@ -36,13 +40,13 @@ export const ESTADOS_POR_SECCION = {
     "en-archivo",
   ]),
   promociones: ESTADOS,
-  calificacion: subconjunto([
+  calificacion: [ESTADO_POR_ACORDAR].concat(subconjunto([
     "en-proceso",
     "en-revision-interna",
     "en-firma",
     "en-lista",
     "en-actuaria",
-  ]),
+  ])),
   audiencia: subconjunto(["en-firma", "en-lista", "en-actuaria", "en-archivo"]),
 };
 

@@ -20,6 +20,11 @@ export const MESAS_CONFIG = {
 
   // Límite por archivo de plantilla en el prototipo con localStorage (Fase 2).
   PLANTILLA_MAX_MB: 2,
+
+  // Listas de acuerdos: si la mesa no creó su lista a mano, se genera
+  // sola a esta hora (24 h) en los días indicados (1 = lunes ... 5 = viernes).
+  LISTA_HORA_AUTOMATICA: 15,
+  LISTA_DIAS_AUTOMATICA: [1, 2, 3, 4, 5],
 };
 
 // ¿La cantidad de promociones es crítica? (más de 10)

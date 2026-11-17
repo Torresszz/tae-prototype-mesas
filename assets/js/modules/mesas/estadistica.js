@@ -14,7 +14,8 @@
 //   Demandas admitidas       categoría "radicado"       · fecha: radicadoEn
 //   Promociones admitidas    promociones registradas    · fecha: fecha de la promoción
 //   Audiencias desahogadas   estado "desahogada"        · fecha: fecha de la audiencia
-//   Calificaciones concluidas resultado "acordado"      · fecha: concluidaEn
+//   Calificaciones concluidas firmadas por la Magistrada · fecha: concluidaEn
+//                            (dato interno resultado "acordado")
 //   Acuerdos emitidos        promociones ya firmadas    · fecha: acordadoEn
 //                            (estadoPromocion "acordado", se marca al firmar)
 //
@@ -63,7 +64,7 @@ const TARJETAS = [
     id: "calificaciones",
     titulo: "Calificaciones concluidas",
     icono: "fa-scale-balanced",
-    criterio: "Calificaciones con resultado Acordado.",
+    criterio: "Calificaciones firmadas por la Magistrada.",
     items: itemsCalificaciones,
   },
   {

@@ -24,7 +24,9 @@ import { renderRegistral } from "./modules/registral.js";
 // import { renderHistorico } from "./dashboard/historico.js";
 import { initHistorico } from "./modules/historico.js";
 
-import { renderCatalogos } from "./modules/catalogos.js";
+import { renderCatalogos, initCatalogos } from "./modules/catalogos.js";
+import { renderAdminDashboard, renderUsuarios } from "./modules/admin.js";
+import { renderPerfil } from "./modules/perfil.js";
 
 import { renderMesas } from "./modules/mesas.js";
 import { renderMesasAmparos } from "./modules/mesasAmparos.js";
@@ -57,6 +59,11 @@ const routes = {
     mesas: "pages/mesas.html",
   "mesas-amparos-directos": "pages/mesas-amparos-directos.html",
   "mesas-amparos-indirectos": "pages/mesas-amparos-indirectos.html",
+  // Administrador
+  admin: "pages/admin.html",
+  usuarios: "pages/usuarios.html",
+  // Perfil del usuario (ícono superior derecho)
+  perfil: "pages/perfil.html",
 };
 
 // =====================================================
@@ -248,6 +255,27 @@ function initializePage(page) {
       renderCatalogos();
 
       break;
+    // =============================================
+    // ADMINISTRADOR
+    // =============================================
+    case "admin":
+      renderAdminDashboard();
+      // Los catálogos se cargan de sus JSON la primera vez: al
+      // terminar se actualizan los totales del panel.
+      initCatalogos().then(renderAdminDashboard);
+      break;
+
+    case "usuarios":
+      renderUsuarios();
+      break;
+
+    // =============================================
+    // PERFIL
+    // =============================================
+    case "perfil":
+      renderPerfil();
+      break;
+
     case "mesas-amparos-directos":
     case "mesas-amparos-indirectos":
       renderMesasAmparos();
@@ -272,6 +300,15 @@ function setActiveMenu(page) {
       item.dataset.page === page,
     );
   });
+
+  // Los apartados de Mesas no son rutas: fuera de la página "mesas"
+  // (por ejemplo en el perfil) ninguno queda marcado.
+  if (page !== "mesas") {
+    document.querySelectorAll(".mesas-sidebar-item.active").forEach((item) => {
+      item.classList.remove("active");
+      item.removeAttribute("aria-current");
+    });
+  }
 }
 
 // =====================================================

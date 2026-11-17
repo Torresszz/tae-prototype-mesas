@@ -11,6 +11,7 @@
 | directos@example | Amparos Directos | Solo Amparos Directos |
 | indirectos@example | Amparos Indirectos | Solo Amparos Indirectos |
 | oficialia@example | Oficialía | Todo menos Mesas y Amparos Directos/Indirectos |
+| admin@example | Panel del Administrador |
 
 ## Asignación de mesa (`mesas.js`, `mesaDeExpediente`)
 1. Texto con `OJC` o año <= 2021 -> Mesa 3. 2. Consecutivo par -> Mesa 1. 3. Impar -> Mesa 2.
@@ -85,3 +86,12 @@ Promociones cuyo acuerdo ya fue **firmado por la Magistrada** (`estadoPromocion 
 - **Dos agendas**: "Agenda Auxiliar" (la que estaba en Promociones) y "Agenda Titular" (la que estaba en Calificaciones); ambas reúnen promociones, calificaciones y exhortos. Campo `agenda` por evento; eventos antiguos sin campo: calificación -> auxiliar, resto -> titular. Exhortos eligen agenda en el señalamiento.
 - **Vista previa de plantillas**: muestra la primera página del documento centrada, estilo Google Docs (PDF con pdf.js incluido en `assets/vendor/pdfjs/`, DOCX con lector propio; ya no depende de mammoth.js ni de internet). Limitación: DOCX sin imágenes, encabezados ni pies.
 - Pruebas: fases 6 (34), 7-8 (33), ronda 3 (15), flujo Oficialía (24), vista previa (18), agendas (10) e integral, sin fallos.
+
+
+## Ronda 17 nov 2026: Administrador, Perfil, Listas y Calificación
+- **Administrador** (`admin@example` / `123`): Panel propio, Usuarios (ver, cambiar contraseña, eliminar) y Catálogos. Los usuarios pasan a `localStorage` (llave `usuarios`).
+- **Perfil de usuario**: se abre con el usuario del encabezado (arriba a la derecha), para todos los roles.
+- **Listas de acuerdos** (Mesas 1 a 3): apartado "Listas", botón "Crear lista" (una por día y mesa), consecutivo global, generación automática a las 15:00 de lunes a viernes, PDF en forma de tabla (EXP. / ACTOR / DEMANDADO / ACUERDO, por año).
+- **Calificación**: columnas "Estado" y "Calificación" unificadas en "Estado" (incluye Por acordar y En proceso).
+- Detalle técnico, interpretaciones y pendientes: `CONTEXTO_PARA_AGENTES.md`, sección 7c.
+- Pruebas: ronda 5 (74), fases 6 (34), 7-8 (33), ronda 3 (15), flujo Oficialía (24), vista previa (18), agendas (10) e integral (76), sin fallos.

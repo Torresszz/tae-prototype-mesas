@@ -354,6 +354,88 @@ function removeNotifications() {
 // =====================================================
 
 // Roles que solo operan dentro de su módulo de mesas
+// ============================================================
+// ADMINISTRADOR
+// Solo ve su Panel, Usuarios y Catálogos.
+// ============================================================
+
+const PAGINAS_ADMIN = ["admin", "usuarios", "catalogos"];
+
+function applyAdminAccess() {
+  document
+    .querySelectorAll(".nav-item[data-page]")
+    .forEach(button => {
+      if (!PAGINAS_ADMIN.includes(button.dataset.page)) {
+        button.remove();
+      }
+    });
+
+  document
+    .querySelectorAll(".sidebar-section-title, .nav-section-title")
+    .forEach(element => element.remove());
+
+  removeConfiguration();
+  removeGlobalSearch();
+  removeNotifications();
+
+  setUserInfo(
+    currentSession.nombre || "Administrador",
+    currentSession.area || "Administración del sistema",
+    "AD"
+  );
+
+  setupLogout();
+}
+
+// ============================================================
+// PERFIL DE USUARIO
+// El usuario del encabezado (ícono de la derecha) abre el perfil.
+// ============================================================
+
+function setupPerfil() {
+  window.irAPagina = page => {
+    if (canAccessPage(page)) {
+      navigate(page);
+    }
+  };
+
+  window.irAInicio = () => {
+    navigate(getHomePage() || "dashboard");
+  };
+
+  document.addEventListener("click", event => {
+    if (event.target.closest("[data-abrir-perfil]")) {
+      navigate("perfil");
+    }
+  });
+
+  // Los apartados de Mesas son vistas internas de la página "mesas".
+  // Si el usuario está en otra página (el perfil), primero se vuelve
+  // a cargar Mesas y luego se abre el apartado pedido.
+  document.addEventListener(
+    "click",
+    async event => {
+      const boton = event.target.closest(".mesas-sidebar-item");
+
+      if (!boton || document.getElementById("mesasPage")) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const seccion = boton.dataset.mesasSeccion;
+
+      await navigate("mesas");
+
+      document
+        .querySelector(`.mesas-sidebar-item[data-mesas-seccion="${seccion}"]`)
+        ?.click();
+    },
+    true
+  );
+}
+
 const MESA_SCOPED_ROLES = {
   presidencia: {
     page: "mesas",
@@ -398,6 +480,18 @@ function applyMesaScopedAccess(config) {
 }
 
 function applyAccessControl() {
+
+  // Las páginas de administración son solo del Administrador.
+  if (currentSession?.rol !== "admin") {
+    document
+      .querySelectorAll('.nav-item[data-page="admin"], .nav-item[data-page="usuarios"]')
+      .forEach(button => button.remove());
+  }
+
+  if (currentSession?.rol === "admin") {
+    applyAdminAccess();
+    return;
+  }
   const scoped = currentSession && MESA_SCOPED_ROLES[currentSession.rol];
 
   if (scoped) {
@@ -631,6 +725,11 @@ function setupNavigationGuard() {
 // =====================================================
 
 function initModules() {
+
+  // El Administrador no captura: sus páginas se inicializan en el router.
+  if (currentSession?.rol === "admin") {
+    return;
+  }
   if (MESA_SCOPED_ROLES[currentSession?.rol]) {
     initMesas();
     initMesasAmparos();
@@ -703,6 +802,10 @@ function initModules() {
 // =====================================================
 
 function setupEvents() {
+
+  if (currentSession?.rol === "admin") {
+    return;
+  }
   if (MESA_SCOPED_ROLES[currentSession?.rol]) {
     return;
   }
@@ -885,6 +988,8 @@ async function init() {
     // ==================================================
 
     setupNavigationGuard();
+
+    setupPerfil();
 
 
     // ==================================================

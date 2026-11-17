@@ -174,6 +174,8 @@ export function configurarBarraFiltros({
   expediente = true,
   fechas = true,
   estado = true,
+  // Estados propios de la sección que se agregan al selector (ej. Calificación).
+  estadosExtra = [],
   etiquetaExpediente = "No. de expediente",
   placeholderExpediente = "Ej. 124/2026",
 } = {}) {
@@ -192,6 +194,28 @@ export function configurarBarraFiltros({
   mostrar('[data-filtro="expediente"]', expediente);
   mostrar('[data-filtro="fechas"]', fechas);
   mostrar('[data-filtro="estado"]', estado);
+
+  const selector = $("mesasFiltroEstado");
+
+  if (selector) {
+    const opciones = [...estadosExtra, ...ESTADOS];
+    const firma = opciones.map((e) => e.clave).join("|");
+
+    if (selector.dataset.firma !== firma) {
+      selector.dataset.firma = firma;
+      selector.innerHTML = [
+        `<option value="">Todos los estados</option>`,
+        ...opciones.map((e) => `<option value="${e.clave}">${e.etiqueta}</option>`),
+      ].join("");
+    }
+
+    // Un filtro que no existe en esta sección se limpia.
+    if (filtros.estado && !opciones.some((e) => e.clave === filtros.estado)) {
+      filtros.estado = "";
+    }
+
+    selector.value = filtros.estado;
+  }
 
   const etiqueta = barra.querySelector('[data-filtro="expediente"] > span');
   const entrada = $("mesasFiltroExpediente");
