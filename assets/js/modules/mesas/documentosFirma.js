@@ -509,7 +509,7 @@ export function abrirEnvioFirma({
           <label class="mesas-agenda-field full">
 
             <span>
-              Acuerdo
+              Estracto
               <small>(obligatorio)</small>
             </span>
 
