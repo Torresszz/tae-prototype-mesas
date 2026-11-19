@@ -1,0 +1,827 @@
+/* =========================================================
+   AMPAROS INDIRECTOS - INFORMES
+========================================================= */
+
+.mamp-informes-page {
+  padding-bottom: 45px;
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.mamp-informes-panel {
+  overflow: hidden;
+
+  border: 1px solid #dfe7f0;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 6px 22px
+    rgba(16, 43, 69, 0.05);
+}
+
+
+/* =========================================================
+   RESUMEN
+========================================================= */
+
+.mamp-informes-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 14px;
+
+  padding: 20px;
+
+  border-bottom: 1px solid #e4eaf1;
+
+  background: #f8faff;
+}
+
+
+.mamp-informes-summary-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 16px 18px;
+
+  border: 1px solid #e0e7ef;
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+
+.mamp-informes-summary-icon {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  border-radius: 10px;
+
+  background: #eaf3ff;
+
+  color: #216fd4;
+
+  font-size: 16px;
+}
+
+
+.mamp-informes-summary-item div:last-child {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+
+.mamp-informes-summary-item span {
+  color: #728397;
+
+  font-size: 11px;
+
+  font-weight: 600;
+}
+
+
+.mamp-informes-summary-item strong {
+  color: #12395f;
+
+  font-size: 21px;
+
+  font-weight: 800;
+}
+
+
+/* =========================================================
+   TABS
+========================================================= */
+
+.mamp-informes-tabs {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  border-bottom: 1px solid #dde5ee;
+}
+
+
+.mamp-informes-tab {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 58px;
+
+  border: 0;
+  border-right: 1px solid #e1e7ee;
+
+  background: #ffffff;
+
+  color: #536a80;
+
+  font-family: inherit;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.mamp-informes-tab:last-child {
+  border-right: 0;
+}
+
+
+.mamp-informes-tab:hover {
+  background: #f7faff;
+
+  color: #1768cf;
+}
+
+
+.mamp-informes-tab.active {
+  background: #f5f9ff;
+
+  color: #1768cf;
+}
+
+
+.mamp-informes-tab.active::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 3px;
+
+  background: #2675dc;
+}
+
+
+.mamp-informes-tab strong {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 22px;
+  height: 22px;
+
+  padding: 0 6px;
+
+  border-radius: 999px;
+
+  background: #edf3fb;
+
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   BUSCADOR
+========================================================= */
+
+.mamp-informes-toolbar {
+  padding: 17px 20px;
+
+  border-bottom: 1px solid #e3e9f0;
+
+  background: #fbfcfe;
+}
+
+
+.mamp-informes-search {
+  position: relative;
+
+  max-width: 620px;
+}
+
+
+.mamp-informes-search i {
+  position: absolute;
+
+  left: 14px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #8798aa;
+}
+
+
+.mamp-informes-search input {
+  width: 100%;
+  height: 42px;
+
+  padding:
+    0 14px
+    0 38px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #d5dee8;
+  border-radius: 9px;
+
+  outline: none;
+
+  font-family: inherit;
+}
+
+
+/* =========================================================
+   TABLA
+========================================================= */
+
+.mamp-informes-table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+
+.mamp-informes-table {
+  width: 100%;
+
+  min-width: 1450px;
+
+  border-collapse: collapse;
+}
+
+
+.mamp-informes-table thead th {
+  padding: 13px 14px;
+
+  border-bottom: 1px solid #dfe6ee;
+
+  background: #f7f9fc;
+
+  color: #65798d;
+
+  text-align: left;
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  text-transform: uppercase;
+}
+
+
+.mamp-informes-table tbody td {
+  padding: 14px;
+
+  border-bottom: 1px solid #edf1f5;
+
+  color: #334e68;
+
+  font-size: 11px;
+
+  vertical-align: middle;
+}
+
+
+.mamp-informes-table tbody tr:hover {
+  background: #f9fbfe;
+}
+
+
+/* =========================================================
+   DATOS
+========================================================= */
+
+.mamp-informe-amparo {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
+
+.mamp-informe-amparo i {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: 7px;
+
+  background: #ebf3ff;
+
+  color: #2672d4;
+}
+
+
+.mamp-informe-expediente {
+  color: #133b60;
+}
+
+
+.mamp-informe-oficio {
+  display: inline-flex;
+
+  padding: 5px 8px;
+
+  border-radius: 6px;
+
+  background: #f1f5f9;
+
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   RELACIONES
+========================================================= */
+
+.mamp-informe-status {
+  display: inline-flex;
+
+  align-items: flex-start;
+
+  gap: 8px;
+
+  max-width: 210px;
+
+  padding: 7px 9px;
+
+  border-radius: 8px;
+}
+
+
+.mamp-informe-status div {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+
+.mamp-informe-status strong {
+  font-size: 10px;
+}
+
+
+.mamp-informe-status small {
+  font-size: 9px;
+}
+
+
+.mamp-informe-status.success {
+  background: #ecf8f3;
+
+  color: #13795b;
+}
+
+
+.mamp-informe-status.linked {
+  background: #edf4ff;
+
+  color: #2869b7;
+}
+
+
+.mamp-informe-status.independent {
+  background: #f3f4f6;
+
+  color: #596a7b;
+}
+
+
+.mamp-informe-status.danger {
+  background: #fff0ef;
+
+  color: #bd3d32;
+}
+
+
+/* =========================================================
+   ESTADO DE FIRMA
+========================================================= */
+
+.mamp-firma-status {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 7px 9px;
+
+  border-radius: 999px;
+
+  white-space: nowrap;
+
+  font-size: 9px;
+
+  font-weight: 700;
+}
+
+
+.mamp-firma-status.normal {
+  background: #f1f4f7;
+
+  color: #67798b;
+}
+
+
+.mamp-firma-status.pendiente {
+  background: #fff5df;
+
+  color: #a76800;
+}
+
+
+.mamp-firma-status.firmado {
+  background: #e8f7ef;
+
+  color: #15805d;
+}
+
+
+.mamp-firma-status.fuera {
+  background: #e9f2ff;
+
+  color: #2467b5;
+}
+
+
+/* =========================================================
+   ACCIONES
+========================================================= */
+
+.mamp-informe-actions {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: stretch;
+
+  gap: 6px;
+
+  width: 135px;
+}
+
+
+.mamp-action-btn {
+  min-height: 32px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: 7px;
+
+  padding: 6px 9px;
+
+  border: 1px solid #d7e0e9;
+  border-radius: 7px;
+
+  background: #ffffff;
+
+  color: #425b72;
+
+  font-family: inherit;
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+
+.mamp-action-btn:hover:not(:disabled) {
+  border-color: #91b8ec;
+
+  background: #f4f8ff;
+
+  color: #1768cf;
+}
+
+
+.mamp-action-btn.documents strong {
+  margin-left: auto;
+
+  min-width: 18px;
+  height: 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 999px;
+
+  background: #e8f2ff;
+
+  color: #1768cf;
+}
+
+
+.mamp-action-btn.sign {
+  color: #875a00;
+}
+
+
+.mamp-action-btn.outside {
+  color: #1768cf;
+}
+
+
+.mamp-action-btn:disabled {
+  opacity: 0.42;
+
+  cursor: not-allowed;
+
+  background: #f3f5f7;
+
+  color: #8996a3;
+}
+
+
+/* =========================================================
+   CARGAR DOCUMENTOS
+========================================================= */
+
+.mamp-upload-zone {
+  min-height: 150px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 25px;
+
+  border: 2px dashed #bfd0e3;
+  border-radius: 10px;
+
+  background: #f8fbff;
+
+  color: #63798e;
+
+  text-align: center;
+
+  cursor: pointer;
+}
+
+
+.mamp-upload-zone i {
+  color: #2672d4;
+
+  font-size: 25px;
+}
+
+
+.mamp-upload-zone strong {
+  color: #29445c;
+}
+
+
+.mamp-upload-zone input {
+  margin-top: 8px;
+}
+
+
+.mamp-document-list {
+  margin-top: 20px;
+}
+
+
+.mamp-document-list h3 {
+  margin:
+    0 0
+    10px;
+
+  color: #29445c;
+}
+
+
+.mamp-document-row {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 10px;
+
+  border-bottom: 1px solid #e6ebf1;
+}
+
+
+.mamp-document-row > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+
+.mamp-document-row span {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+
+.mamp-document-row small {
+  color: #8594a3;
+}
+
+
+.mamp-document-download {
+  width: 31px;
+  height: 31px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: #edf4ff;
+
+  color: #2672d4;
+
+  cursor: pointer;
+}
+
+
+.mamp-no-documents {
+  padding: 20px;
+
+  border-radius: 8px;
+
+  background: #f6f8fa;
+
+  color: #7b8c9c;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   CONFIRMACIÓN
+========================================================= */
+
+.mamp-confirm-card {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 12px 14px;
+
+  margin-bottom: 9px;
+
+  border: 1px solid #e0e6ed;
+  border-radius: 8px;
+
+  background: #fafbfd;
+}
+
+
+.mamp-confirm-card span {
+  color: #76899b;
+}
+
+
+.mamp-confirm-card strong {
+  color: #29445c;
+}
+
+
+.mamp-confirm-message {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-top: 15px;
+
+  padding: 13px;
+
+  border-radius: 8px;
+
+  background: #fff8e8;
+
+  color: #815f16;
+}
+
+
+.mamp-confirm-message.success {
+  background: #edf9f3;
+
+  color: #176a4f;
+}
+
+
+.mamp-confirm-message p {
+  margin: 0;
+}
+
+
+/* =========================================================
+   VACÍO
+========================================================= */
+
+.mamp-informes-empty {
+  min-height: 310px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+
+.mamp-informes-empty-icon {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 12px;
+
+  border-radius: 13px;
+
+  background: #edf4ff;
+
+  color: #2672d4;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 850px) {
+
+  .mamp-informes-summary {
+    grid-template-columns: 1fr;
+  }
+
+
+  .mamp-informes-tabs {
+    display: flex;
+
+    overflow-x: auto;
+  }
+
+
+  .mamp-informes-tab {
+    min-width: 190px;
+  }
+
+}

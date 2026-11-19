@@ -20,6 +20,8 @@ import { showModal, closeForm } from "../forms/formHelper.js";
 
 import { getSession } from "../auth.js";
 
+import { renderMesasAmparosIndirectos } from "./mesasAmparosIndirectos.js";
+
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
@@ -113,7 +115,7 @@ export function renderMesasAmparos() {
 
   setupEvents();
 
-    const registros = getRegistros().filter((r) => r.seg.tipo === tipoPagina());
+  const registros = getRegistros().filter((r) => r.seg.tipo === tipoPagina());
 
   renderConteos(registros);
 
@@ -122,6 +124,10 @@ export function renderMesasAmparos() {
   renderTabla(registros);
 
   renderAlertas(registros);
+
+  if (tipoPagina() === "indirecto") {
+    renderMesasAmparosIndirectos();
+  }
 }
 
 // ============================================================
@@ -167,7 +173,9 @@ function crearEstado(amparo, tipo) {
     suspension: null,
     cumplimiento: { laudoNuevo: false, reenviado: false, cumplido: false },
     cuad: {},
-    juzgado: JUZGADOS.includes(amparo.juzgadoOrigen) ? amparo.juzgadoOrigen : "",
+    juzgado: JUZGADOS.includes(amparo.juzgadoOrigen)
+      ? amparo.juzgadoOrigen
+      : "",
     motivo: "",
     firmaRecibido: false,
     actoCierto: null,
@@ -426,7 +434,11 @@ function calcularPlazo(amparo, seg) {
   const restantes = limite - diasDesde(inicio);
 
   if (restantes < 0) {
-    return { restantes, nivel: "danger", texto: `Vencido hace ${-restantes} d` };
+    return {
+      restantes,
+      nivel: "danger",
+      texto: `Vencido hace ${-restantes} d`,
+    };
   }
 
   return {
@@ -506,7 +518,9 @@ function renderAlertas(registros) {
 // ============================================================
 
 function abrirAmparo(id) {
-  const amparo = getData("amparos", []).find((a) => String(a.id) === String(id));
+  const amparo = getData("amparos", []).find(
+    (a) => String(a.id) === String(id),
+  );
 
   const seg = getData(KEY, {})[String(id)];
 
@@ -521,7 +535,9 @@ function abrirAmparo(id) {
   const final = seg.etapa === ETAPA_FINAL[seg.tipo];
 
   const panel = final
-    ? { html: `<p class="mamp-note">Amparo concluido. ${seg.tipo === "directo" ? "El cuadernillo queda en la Mesa de Amparos." : "El juzgado notificó el archivo."}</p>` }
+    ? {
+        html: `<p class="mamp-note">Amparo concluido. ${seg.tipo === "directo" ? "El cuadernillo queda en la Mesa de Amparos." : "El juzgado notificó el archivo."}</p>`,
+      }
     : panelEtapa(amparo, seg);
 
   const plazo = calcularPlazo(amparo, seg);
@@ -675,7 +691,11 @@ function panelEtapa(amparo, seg) {
             seg.terceros,
             "Separados por comas",
           ),
-        accion: { act: "dir-registro", label: "Registrar y turnar a acuerdo", icono: "fa-clipboard-check" },
+        accion: {
+          act: "dir-registro",
+          label: "Registrar y turnar a acuerdo",
+          icono: "fa-clipboard-check",
+        },
       };
 
     case "directo:acuerdo":
@@ -685,13 +705,21 @@ function panelEtapa(amparo, seg) {
                     <label for="mampAcuerdo">Acuerdo de trámite</label>
                     <textarea id="mampAcuerdo" placeholder="Se tiene por recibida la demanda de amparo directo...">${escapeHTML(seg.acuerdoTexto)}</textarea>
                 </div>`,
-        accion: { act: "dir-acuerdo", label: "Dictar acuerdo y turnar a Actuaría", icono: "fa-file-signature" },
+        accion: {
+          act: "dir-acuerdo",
+          label: "Dictar acuerdo y turnar a Actuaría",
+          icono: "fa-file-signature",
+        },
       };
 
     case "directo:notificacion":
       return {
         html: `<p class="mamp-note">En Actuaría: debe notificar al quejoso (${escapeHTML(seg.quejoso || "—")}) y a los terceros interesados${seg.terceros ? ` (${escapeHTML(seg.terceros)})` : ""}.</p>`,
-        accion: { act: "dir-notificacion", label: "Actuaría devolvió las notificaciones", icono: "fa-envelope-circle-check" },
+        accion: {
+          act: "dir-notificacion",
+          label: "Actuaría devolvió las notificaciones",
+          icono: "fa-envelope-circle-check",
+        },
       };
 
     case "directo:informe":
@@ -703,7 +731,11 @@ function panelEtapa(amparo, seg) {
             "Número del oficio (Informe Justificado)",
             seg.informeOficio || amparo.oficio,
           ),
-        accion: { act: "dir-informe", label: "Enviar al Tribunal Colegiado", icono: "fa-paper-plane" },
+        accion: {
+          act: "dir-informe",
+          label: "Enviar al Tribunal Colegiado",
+          icono: "fa-paper-plane",
+        },
       };
 
     case "directo:resolucion":
@@ -719,19 +751,32 @@ function panelEtapa(amparo, seg) {
                     <label for="mampCantidad">Cantidad fijada (MXN)</label>
                     <input type="number" id="mampCantidad" min="0" step="0.01">
                 </div>`,
-        accion: { act: "dir-resolucion", label: "Registrar resolución", icono: "fa-gavel" },
+        accion: {
+          act: "dir-resolucion",
+          label: "Registrar resolución",
+          icono: "fa-gavel",
+        },
       };
 
     case "directo:cumplimiento": {
       const c = seg.cumplimiento;
 
       const paso = !c.laudoNuevo
-        ? { label: "Dejar sin efecto el primer laudo y emitir uno nuevo", icono: "fa-file-pen" }
+        ? {
+            label: "Dejar sin efecto el primer laudo y emitir uno nuevo",
+            icono: "fa-file-pen",
+          }
         : !c.reenviado
           ? { label: "Reenviar al Tribunal Colegiado", icono: "fa-paper-plane" }
           : !c.cumplido
-            ? { label: "Tribunal confirma cumplimiento", icono: "fa-circle-check" }
-            : { label: "Pasar el laudo a Actuaría", icono: "fa-envelope-open-text" };
+            ? {
+                label: "Tribunal confirma cumplimiento",
+                icono: "fa-circle-check",
+              }
+            : {
+                label: "Pasar el laudo a Actuaría",
+                icono: "fa-envelope-open-text",
+              };
 
       const marca = (ok) => (ok ? "✔" : "○");
 
@@ -768,7 +813,12 @@ function panelEtapa(amparo, seg) {
                       )
                       .join("")}
                 </div>`,
-        accion: { act: "dir-archivar", label: "Enviar a Archivo", icono: "fa-box-archive", disabled: !completo },
+        accion: {
+          act: "dir-archivar",
+          label: "Enviar a Archivo",
+          icono: "fa-box-archive",
+          disabled: !completo,
+        },
       };
     }
 
@@ -795,7 +845,11 @@ function panelEtapa(amparo, seg) {
                     El juzgado lo entregó con firma de recibido
                 </label>
                 <p class="mamp-note warn">Se tienen ${DIAS_INFORME} días para informar si el amparo sigue activo.</p>`,
-        accion: { act: "ind-recibido", label: "Registrar y pasar a informe", icono: "fa-clipboard-check" },
+        accion: {
+          act: "ind-recibido",
+          label: "Registrar y pasar a informe",
+          icono: "fa-clipboard-check",
+        },
       };
 
     case "indirecto:informe":
@@ -806,13 +860,21 @@ function panelEtapa(amparo, seg) {
                     <label class="mamp-option"><input type="radio" name="mampCierto" value="si"> Sí es cierto: se avisa a Laudos (${DIAS_LAUDOS} días para el cumplimiento)</label>
                     <label class="mamp-option"><input type="radio" name="mampCierto" value="no"> No es cierto: se arma el cuadernillo</label>
                 </div>`,
-        accion: { act: "ind-informe", label: "Registrar informe", icono: "fa-file-circle-check" },
+        accion: {
+          act: "ind-informe",
+          label: "Registrar informe",
+          icono: "fa-file-circle-check",
+        },
       };
 
     case "indirecto:laudos":
       return {
         html: `<p class="mamp-note warn">Laudos tiene ${DIAS_LAUDOS} días para que llegue el cumplimiento.</p>`,
-        accion: { act: "ind-laudos", label: "Cumplimiento recibido de Laudos", icono: "fa-circle-check" },
+        accion: {
+          act: "ind-laudos",
+          label: "Cumplimiento recibido de Laudos",
+          icono: "fa-circle-check",
+        },
       };
 
     case "indirecto:cuadernillo":
@@ -823,7 +885,8 @@ function panelEtapa(amparo, seg) {
                   seg.requerimientos.length
                     ? `<ul class="mamp-req-list">${seg.requerimientos
                         .map(
-                          (req) => `<li><strong>${escapeHTML(formatFecha(req.fecha))}</strong>${escapeHTML(req.texto)}</li>`,
+                          (req) =>
+                            `<li><strong>${escapeHTML(formatFecha(req.fecha))}</strong>${escapeHTML(req.texto)}</li>`,
                         )
                         .join("")}</ul>`
                     : ""
@@ -835,7 +898,11 @@ function panelEtapa(amparo, seg) {
                 <button type="button" class="mesas-secondary-btn" data-mamp-act="ind-req">
                     <i class="fa-solid fa-plus"></i> Agregar al cuadernillo
                 </button>`,
-        accion: { act: "ind-concluir", label: "Juzgado notificó el archivo: concluir", icono: "fa-flag-checkered" },
+        accion: {
+          act: "ind-concluir",
+          label: "Juzgado notificó el archivo: concluir",
+          icono: "fa-flag-checkered",
+        },
       };
   }
 
@@ -886,7 +953,11 @@ function ejecutar(act, id, modal) {
     }
 
     case "dir-notificacion":
-      return avanzar(id, "informe", () => "Actuaría devolvió las notificaciones");
+      return avanzar(
+        id,
+        "informe",
+        () => "Actuaría devolvió las notificaciones",
+      );
 
     case "dir-informe": {
       if (!val("#mampOficio")) {
@@ -901,7 +972,9 @@ function ejecutar(act, id, modal) {
     }
 
     case "dir-resolucion": {
-      const resultado = modal.querySelector('input[name="mampResultado"]:checked')?.value;
+      const resultado = modal.querySelector(
+        'input[name="mampResultado"]:checked',
+      )?.value;
 
       if (!resultado) {
         return error("Selecciona el resultado de la suspensión.");
@@ -940,7 +1013,10 @@ function ejecutar(act, id, modal) {
       if (!c.laudoNuevo) {
         return actualizarYRefrescar(id, (s) => {
           s.cumplimiento.laudoNuevo = true;
-          log(s, "Primer laudo sin efecto; se emite un nuevo laudo que cumple la sentencia");
+          log(
+            s,
+            "Primer laudo sin efecto; se emite un nuevo laudo que cumple la sentencia",
+          );
         });
       }
 
@@ -958,11 +1034,20 @@ function ejecutar(act, id, modal) {
         });
       }
 
-      return avanzar(id, "cuadernillo", () => "Laudo cumplido pasa a Actuaría; se integra el cuadernillo");
+      return avanzar(
+        id,
+        "cuadernillo",
+        () => "Laudo cumplido pasa a Actuaría; se integra el cuadernillo",
+      );
     }
 
     case "dir-archivar":
-      return avanzar(id, "archivo", () => "Cuadernillo integrado (queda en la mesa); expediente enviado a Archivo");
+      return avanzar(
+        id,
+        "archivo",
+        () =>
+          "Cuadernillo integrado (queda en la mesa); expediente enviado a Archivo",
+      );
 
     // ------------------------------------------------ INDIRECTOS
     case "ind-recibido": {
@@ -984,7 +1069,9 @@ function ejecutar(act, id, modal) {
     }
 
     case "ind-informe": {
-      const cierto = modal.querySelector('input[name="mampCierto"]:checked')?.value;
+      const cierto = modal.querySelector(
+        'input[name="mampCierto"]:checked',
+      )?.value;
 
       if (!cierto) {
         return error("Indica si el acto reclamado es cierto.");
@@ -1000,7 +1087,11 @@ function ejecutar(act, id, modal) {
     }
 
     case "ind-laudos":
-      return avanzar(id, "cuadernillo", () => "Laudos informó el cumplimiento; se integra al cuadernillo");
+      return avanzar(
+        id,
+        "cuadernillo",
+        () => "Laudos informó el cumplimiento; se integra al cuadernillo",
+      );
 
     case "ind-req": {
       if (!val("#mampReq")) {
@@ -1008,13 +1099,23 @@ function ejecutar(act, id, modal) {
       }
 
       return actualizarYRefrescar(id, (s) => {
-        s.requerimientos.push({ fecha: new Date().toISOString(), texto: val("#mampReq") });
-        log(s, `Requerimiento del juzgado agregado al cuadernillo: ${val("#mampReq")}`);
+        s.requerimientos.push({
+          fecha: new Date().toISOString(),
+          texto: val("#mampReq"),
+        });
+        log(
+          s,
+          `Requerimiento del juzgado agregado al cuadernillo: ${val("#mampReq")}`,
+        );
       });
     }
 
     case "ind-concluir":
-      return avanzar(id, "concluido", () => "El juzgado notificó el archivo del amparo: concluido");
+      return avanzar(
+        id,
+        "concluido",
+        () => "El juzgado notificó el archivo del amparo: concluido",
+      );
 
     // ------------------------------------------------ RECLASIFICAR
     case "cambiar-tipo": {
@@ -1022,11 +1123,15 @@ function ejecutar(act, id, modal) {
 
       const nuevo = seg.tipo === "directo" ? "indirecto" : "directo";
 
-      if (!window.confirm(`¿Reclasificar como amparo ${nuevo}? El flujo se reinicia desde su primera etapa.`)) {
+      if (
+        !window.confirm(
+          `¿Reclasificar como amparo ${nuevo}? El flujo se reinicia desde su primera etapa.`,
+        )
+      ) {
         return;
       }
 
-            // Al cambiar de tipo, el amparo pasa a la mesa del otro usuario
+      // Al cambiar de tipo, el amparo pasa a la mesa del otro usuario
       actualizar(id, (s) => {
         s.tipo = nuevo;
         s.etapa = FLUJOS[nuevo][0].id;
@@ -1096,16 +1201,99 @@ function cargarDemo() {
   const hace = (dias) => new Date(Date.now() - dias * 86400000);
 
   const demo = [
-    { n: "D1", tipo: "directo", etapa: "registro", dia: 1, prom: "HAC COQUIMATLÁN", juz: "Tribunal Colegiado en Materia de Trabajo", acto: "Laudo definitivo" },
-    { n: "D2", tipo: "directo", etapa: "notificacion", dia: 6, prom: "MARÍA GÓMEZ RUIZ", juz: "Tribunal Colegiado en Materia de Trabajo", acto: "Laudo absolutorio" },
-    { n: "D3", tipo: "directo", etapa: "resolucion", dia: 20, prom: "CARLOS MARTÍNEZ", juz: "Tribunal Colegiado de Circuito", acto: "Laudo condenatorio" },
-    { n: "D4", tipo: "directo", etapa: "cumplimiento", dia: 35, prom: "ANA TORRES", juz: "Tribunal Colegiado en Materia de Trabajo", acto: "Laudo", suspension: { resultado: "concede_sin_cantidad" } },
-    { n: "D5", tipo: "directo", etapa: "cuadernillo", dia: 50, prom: "LUIS HERNÁNDEZ", juz: "Tribunal Colegiado de Circuito", acto: "Laudo", suspension: { resultado: "niega" } },
-    { n: "I1", tipo: "indirecto", etapa: "recibido", dia: 1, prom: "SOFÍA RAMÍREZ", juz: "Juzgado Primero de Distrito", acto: "Omisión de radicar la demanda" },
-    { n: "I2", tipo: "indirecto", etapa: "informe", dia: 13, prom: "MIGUEL CASTILLO", juz: "Juzgado Segundo de Distrito", acto: "Fecha de audiencia muy lejana" },
-    { n: "I3", tipo: "indirecto", etapa: "informe", dia: 18, prom: "LAURA DÍAZ", juz: "Juzgado Tercero de Distrito", acto: "Omisión de cierre de instrucción" },
-    { n: "I4", tipo: "indirecto", etapa: "laudos", dia: 25, desde: 5, prom: "ROBERTO SÁNCHEZ", juz: "Juzgado Primero de Distrito", acto: "Acuerdo de alegatos" },
-    { n: "I5", tipo: "indirecto", etapa: "cuadernillo", dia: 40, prom: "PATRICIA MORALES", juz: "Juzgado Segundo de Distrito", acto: "Calificación de pruebas" },
+    {
+      n: "D1",
+      tipo: "directo",
+      etapa: "registro",
+      dia: 1,
+      prom: "HAC COQUIMATLÁN",
+      juz: "Tribunal Colegiado en Materia de Trabajo",
+      acto: "Laudo definitivo",
+    },
+    {
+      n: "D2",
+      tipo: "directo",
+      etapa: "notificacion",
+      dia: 6,
+      prom: "MARÍA GÓMEZ RUIZ",
+      juz: "Tribunal Colegiado en Materia de Trabajo",
+      acto: "Laudo absolutorio",
+    },
+    {
+      n: "D3",
+      tipo: "directo",
+      etapa: "resolucion",
+      dia: 20,
+      prom: "CARLOS MARTÍNEZ",
+      juz: "Tribunal Colegiado de Circuito",
+      acto: "Laudo condenatorio",
+    },
+    {
+      n: "D4",
+      tipo: "directo",
+      etapa: "cumplimiento",
+      dia: 35,
+      prom: "ANA TORRES",
+      juz: "Tribunal Colegiado en Materia de Trabajo",
+      acto: "Laudo",
+      suspension: { resultado: "concede_sin_cantidad" },
+    },
+    {
+      n: "D5",
+      tipo: "directo",
+      etapa: "cuadernillo",
+      dia: 50,
+      prom: "LUIS HERNÁNDEZ",
+      juz: "Tribunal Colegiado de Circuito",
+      acto: "Laudo",
+      suspension: { resultado: "niega" },
+    },
+    {
+      n: "I1",
+      tipo: "indirecto",
+      etapa: "recibido",
+      dia: 1,
+      prom: "SOFÍA RAMÍREZ",
+      juz: "Juzgado Primero de Distrito",
+      acto: "Omisión de radicar la demanda",
+    },
+    {
+      n: "I2",
+      tipo: "indirecto",
+      etapa: "informe",
+      dia: 13,
+      prom: "MIGUEL CASTILLO",
+      juz: "Juzgado Segundo de Distrito",
+      acto: "Fecha de audiencia muy lejana",
+    },
+    {
+      n: "I3",
+      tipo: "indirecto",
+      etapa: "informe",
+      dia: 18,
+      prom: "LAURA DÍAZ",
+      juz: "Juzgado Tercero de Distrito",
+      acto: "Omisión de cierre de instrucción",
+    },
+    {
+      n: "I4",
+      tipo: "indirecto",
+      etapa: "laudos",
+      dia: 25,
+      desde: 5,
+      prom: "ROBERTO SÁNCHEZ",
+      juz: "Juzgado Primero de Distrito",
+      acto: "Acuerdo de alegatos",
+    },
+    {
+      n: "I5",
+      tipo: "indirecto",
+      etapa: "cuadernillo",
+      dia: 40,
+      prom: "PATRICIA MORALES",
+      juz: "Juzgado Segundo de Distrito",
+      acto: "Calificación de pruebas",
+    },
   ];
 
   demo.forEach((item, indice) => {
@@ -1122,7 +1310,8 @@ function cargarDemo() {
         oficio: `TAE-SA-${200 + indice}/2026`,
         actoReclamado: item.acto,
         acciones: "",
-        observaciones: item.tipo === "indirecto" ? "Amparo indirecto" : "Amparo directo",
+        observaciones:
+          item.tipo === "indirecto" ? "Amparo indirecto" : "Amparo directo",
         estado: "En trámite",
         creadoEn: hace(item.dia).toISOString(),
       });
@@ -1147,7 +1336,12 @@ function cargarDemo() {
       seg.firmaRecibido = item.etapa !== "recibido";
 
       if (item.etapa === "cuadernillo") {
-        seg.requerimientos = [{ fecha: hace(3).toISOString(), texto: "Remitir copia certificada del expediente" }];
+        seg.requerimientos = [
+          {
+            fecha: hace(3).toISOString(),
+            texto: "Remitir copia certificada del expediente",
+          },
+        ];
       }
     }
 

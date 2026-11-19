@@ -512,8 +512,17 @@ export function canAccessPage(
     }
 
     if (session.rol === "amparos-indirectos") {
-        return requestedPage === "mesas-amparos-indirectos";
-    }
+
+    const paginasPermitidas = [
+        "mesas-amparos-indirectos",
+        "mesas-amparos-indirectos-informes",
+        "mesas-amparos-indirectos-cuadernillo"
+    ];
+
+    return paginasPermitidas.includes(
+        requestedPage
+    );
+}
 
     // ========================================================
     // OFICIALÍA DE PARTES

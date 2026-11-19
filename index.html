@@ -4,26 +4,20 @@
 
 <head>
 
-    <meta charset="UTF-8">
+     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>
-        Sistema de Gestión del Tribunal
-    </title>
+     <title>
+          Sistema de Gestión del Tribunal
+     </title>
 
 
-    <!-- ==========================================
+     <!-- ==========================================
          FONT AWESOME
     =========================================== -->
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
      <link rel="stylesheet" href="./assets/css/styles.css">
      <link rel="stylesheet" href="./assets/css/demandas.css">
      <link rel="stylesheet" href="./assets/css/mesasRecepcionPromociones.css">
@@ -40,8 +34,13 @@
      <link rel="stylesheet" href="./assets/css/mesasFase4.css">
      <link rel="stylesheet" href="./assets/css/mesasAudiencia.css">
      <link rel="stylesheet" href="./assets/css/mesasFase6.css">
-  <link rel="stylesheet" href="./assets/css/mesasAmparos.css">
-  <link rel="stylesheet" href="./assets/css/admin.css">
+     <link rel="stylesheet" href="./assets/css/mesasAmparosIndirectos.css">
+     <link rel="stylesheet" href="./assets/css/mesasAmparos.css">
+     <link rel="stylesheet" href="./assets/css/admin.css">
+     <link
+  rel="stylesheet"
+  href="./assets/css/mesasAmparosIndirectosInformes.css"
+>
 
 </head>
 
@@ -50,41 +49,41 @@
 <body>
 
 
-    <!-- ==========================================
+     <!-- ==========================================
          APLICACIÓN
     =========================================== -->
 
-    <div class="app">
+     <div class="app">
 
 
-        <!-- ======================================
+          <!-- ======================================
              SIDEBAR
              Se carga desde:
              components/sidebar.html
         ======================================= -->
 
-        <div id="sidebar-container"></div>
+          <div id="sidebar-container"></div>
 
 
 
-        <!-- ======================================
+          <!-- ======================================
              CONTENIDO PRINCIPAL
         ======================================= -->
 
-        <main class="main">
+          <main class="main">
 
 
-            <!-- ==================================
+               <!-- ==================================
                  NAVBAR / TOPBAR
                  Se carga desde:
                  components/navbar.html
             =================================== -->
 
-            <div id="navbar-container"></div>
+               <div id="navbar-container"></div>
 
 
 
-            <!-- ==================================
+               <!-- ==================================
                  CONTENIDO DINÁMICO
 
                  Aquí router.js cargará:
@@ -99,35 +98,32 @@
                  Histórico
             =================================== -->
 
-            <div id="content-container"></div>
+               <div id="content-container"></div>
 
 
-        </main>
+          </main>
 
 
-    </div>
+     </div>
 
 
 
-    <!-- ==========================================
+     <!-- ==========================================
          MODAL GLOBAL
 
          Se carga desde:
          components/modal.html
     =========================================== -->
 
-    <div id="modal-container"></div>
+     <div id="modal-container"></div>
 
 
 
-    <!-- ==========================================
+     <!-- ==========================================
          JAVASCRIPT PRINCIPAL
     =========================================== -->
 
-    <script
-        type="module"
-        src="assets/js/app.js"
-    ></script>
+     <script type="module" src="assets/js/app.js"></script>
 
 
 </body>

@@ -1,102 +1,450 @@
 <!-- =========================================================
-     MESA DE AMPAROS (DIRECTOS E INDIRECTOS)
+     AMPAROS INDIRECTOS - INICIO
 ========================================================= -->
-<section class="page mesas-page" id="mampPage" data-tipo="indirecto">
+<section
+    class="page mesas-page"
+    id="mampPage"
+    data-tipo="indirecto"
+>
 
+    <!-- =====================================================
+         ENCABEZADO
+    ====================================================== -->
     <header class="mesas-page-header">
+
         <div>
-            <span class="eyebrow">Mesas y Secretaría de Acuerdos</span>
-            <h1>Amparos Indirectos</h1>
-            <p>Amparos indirectos: plazo de 15 días para informar, Laudos (3 días) y cuadernillo de requerimientos.</p>
+            <span class="eyebrow">
+                Mesa de Amparos Indirectos
+            </span>
+
+            <h1>
+                Amparos Indirectos
+            </h1>
+
+            <p>
+                Recepción, seguimiento de plazos, cumplimiento
+                y envío a cuadernillo.
+            </p>
         </div>
+
     </header>
+
 
     <div class="mesas-secretaria-layout">
 
+        <!-- =================================================
+             COLUMNA PRINCIPAL
+        ================================================== -->
         <main class="mesas-secretaria-main">
 
-            <!-- ESTADO -->
-            <div class="mesas-status-tabs" id="mampTabs">
-                <button type="button" class="mesas-status-tab active" data-estado="todos">
-                    <span>Todos</span>
-                    <strong id="mampCountTodos">0</strong>
-                </button>
-                <button type="button" class="mesas-status-tab" data-estado="activos">
-                    <span>En trámite</span>
-                    <strong id="mampCountActivos">0</strong>
-                </button>
-                <button type="button" class="mesas-status-tab" data-estado="concluidos">
-                    <span>Concluidos</span>
-                    <strong id="mampCountConcluidos">0</strong>
-                </button>
-            </div>
 
-            <!-- BUSCADOR Y FILTRO -->
-            <div class="mesas-secretaria-toolbar">
-                <div class="mesas-search">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input
-                        id="mampSearch"
-                        type="search"
-                        placeholder="Buscar amparo, expediente o promovente..."
-                        autocomplete="off"
-                    >
-                </div>
-                <select id="mampEtapaFilter">
-                    <option value="">Todas las etapas</option>
-                </select>
-            </div>
+            <!-- =============================================
+                 RECEPCIÓN + PLAZOS
+            ============================================== -->
+            <section class="mesas-secretaria-table-card mamp-home-top">
 
-            <!-- TABLA -->
-            <section class="mesas-secretaria-table-card">
-                <div class="mesas-table-wrapper">
-                    <table class="mesas-secretaria-table mamp-table">
-                        <thead>
-                            <tr>
-                                <th>Amparo</th>
-                                <th>Expediente</th>
-                                <th>Promovente</th>
-                                <th>Etapa / en poder de</th>
-                                <th>Plazo</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mampTable"></tbody>
-                    </table>
-                </div>
+                <div class="mamp-home-reception">
 
-                <div class="mesas-empty-state" id="mampEmpty" hidden>
-                    <div class="mesas-empty-icon">
-                        <i class="fa-solid fa-scale-balanced"></i>
+                    <div>
+
+                        <span class="mesas-mini-eyebrow">
+                            Recepción
+                        </span>
+
+                        <h2>
+                            Amparos por recibir
+                        </h2>
+
+                        <p>
+                            Consulta los amparos indirectos enviados
+                            desde Oficialía de Partes.
+                        </p>
+
                     </div>
-                    <strong>No hay amparos en esta vista</strong>
-                    <span>Registra amparos en Oficialía o carga datos de demostración (se crean directos e indirectos).</span>
-                    <button type="button" class="mesas-primary-btn" id="mampLoadDemoBtn">
-                        <i class="fa-solid fa-flask"></i>
-                        Cargar datos de demostración
+
+
+                    <button
+                        type="button"
+                        class="mesas-primary-btn"
+                        id="mampReceiveBtn"
+                    >
+                        <i class="fa-solid fa-inbox"></i>
+                        Recibir
                     </button>
+
                 </div>
+
+
+                <!-- =========================================
+                     PLAZOS
+                ========================================== -->
+                <div class="mamp-deadline-section">
+
+                    <div class="mamp-deadline-title">
+
+                        <span>
+                            Plazos de cumplimiento
+                        </span>
+
+                    </div>
+
+
+                    <div class="mamp-deadline-grid">
+
+                        <button
+                            type="button"
+                            class="mamp-deadline-card"
+                            data-mamp-plazo="24h"
+                        >
+                            <strong>24</strong>
+                            <span>horas</span>
+                            <small id="mampDeadline24h">0</small>
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mamp-deadline-card"
+                            data-mamp-plazo="48h"
+                        >
+                            <strong>48</strong>
+                            <span>horas</span>
+                            <small id="mampDeadline48h">0</small>
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mamp-deadline-card"
+                            data-mamp-plazo="3d"
+                        >
+                            <strong>3</strong>
+                            <span>días</span>
+                            <small id="mampDeadline3d">0</small>
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mamp-deadline-card"
+                            data-mamp-plazo="5d"
+                        >
+                            <strong>5</strong>
+                            <span>días</span>
+                            <small id="mampDeadline5d">0</small>
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mamp-deadline-card"
+                            data-mamp-plazo="10d"
+                        >
+                            <strong>10</strong>
+                            <span>días</span>
+                            <small id="mampDeadline10d">0</small>
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="mamp-deadline-card"
+                            data-mamp-plazo="15d"
+                        >
+                            <strong>15</strong>
+                            <span>días</span>
+                            <small id="mampDeadline15d">0</small>
+                        </button>
+
+                    </div>
+
+                </div>
+
             </section>
+
+
+            <!-- =============================================
+                 AMPAROS RECIBIDOS
+            ============================================== -->
+            <section class="mesas-secretaria-table-card mamp-received-card">
+
+                <div class="mamp-section-header">
+
+                    <div>
+
+                        <span class="mesas-mini-eyebrow">
+                            Seguimiento
+                        </span>
+
+                        <h2>
+                            Amparos recibidos
+                        </h2>
+
+                        <p>
+                            Todo lo que ya fue recibido por la Mesa
+                            de Amparos Indirectos.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =========================================
+                     ESTADO
+                ========================================== -->
+                <div
+                    class="mesas-status-tabs"
+                    id="mampTabs"
+                >
+
+                    <button
+                        type="button"
+                        class="mesas-status-tab active"
+                        data-estado="todos"
+                    >
+                        <span>Todos</span>
+                        <strong id="mampCountTodos">0</strong>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="mesas-status-tab"
+                        data-estado="activos"
+                    >
+                        <span>En trámite</span>
+                        <strong id="mampCountActivos">0</strong>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="mesas-status-tab"
+                        data-estado="concluidos"
+                    >
+                        <span>Concluidos</span>
+                        <strong id="mampCountConcluidos">0</strong>
+                    </button>
+
+                </div>
+
+
+                <!-- =========================================
+                     BÚSQUEDA Y FILTRO
+                ========================================== -->
+                <div class="mesas-secretaria-toolbar">
+
+                    <div class="mesas-search">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input
+                            id="mampSearch"
+                            type="search"
+                            placeholder="Buscar amparo, expediente o promovente..."
+                            autocomplete="off"
+                        >
+
+                    </div>
+
+
+                    <select id="mampEtapaFilter">
+
+                        <option value="">
+                            Todas las situaciones
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- =========================================
+                     TABLA
+                ========================================== -->
+                <div class="mesas-table-wrapper">
+
+                    <table class="mesas-secretaria-table mamp-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Amparo
+                                </th>
+
+                                <th>
+                                    Expediente
+                                </th>
+
+                                <th>
+                                    Promovente
+                                </th>
+
+                                <th>
+                                    Situación
+                                </th>
+
+                                <th>
+                                    Plazo
+                                </th>
+
+                                <th>
+                                    Acciones
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="mampTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =========================================
+                     VACÍO
+                ========================================== -->
+                <div
+                    class="mesas-empty-state"
+                    id="mampEmpty"
+                    hidden
+                >
+
+                    <div class="mesas-empty-icon">
+
+                        <i class="fa-solid fa-scale-balanced"></i>
+
+                    </div>
+
+
+                    <strong>
+                        No hay amparos recibidos
+                    </strong>
+
+
+                    <span>
+                        Los amparos enviados desde Oficialía
+                        aparecerán primero en la sección de recepción.
+                    </span>
+
+
+                    <button
+                        type="button"
+                        class="mesas-primary-btn"
+                        id="mampLoadDemoBtn"
+                    >
+
+                        <i class="fa-solid fa-flask"></i>
+
+                        Cargar datos de demostración
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 CUADERNILLO
+            ============================================== -->
+            <section class="mesas-secretaria-table-card mamp-cuadernillo-shortcut">
+
+                <div>
+
+                    <span class="mesas-mini-eyebrow">
+                        Seguimiento
+                    </span>
+
+                    <h2>
+                        Cuadernillo
+                    </h2>
+
+                    <p>
+                        Consulta los amparos que ya fueron enviados
+                        al cuadernillo y sus requerimientos.
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="mesas-primary-btn"
+                    id="mampGoCuadernillo"
+                >
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    Ir a Cuadernillo
+
+                </button>
+
+            </section>
+
         </main>
 
-        <!-- ALERTAS -->
+
+        <!-- =================================================
+             ALERTAS
+        ================================================== -->
         <aside class="mesas-secretaria-sidebar">
+
             <section class="mesas-alert-card">
+
                 <div class="mesas-alert-card-header">
+
                     <div>
-                        <span class="mesas-mini-eyebrow">Plazos</span>
-                        <h2>Alertas</h2>
+
+                        <span class="mesas-mini-eyebrow">
+                            Plazos
+                        </span>
+
+                        <h2>
+                            Alertas
+                        </h2>
+
                     </div>
-                    <span class="mesas-alert-counter" id="mampAlertCount">0</span>
+
+
+                    <span
+                        class="mesas-alert-counter"
+                        id="mampAlertCount"
+                    >
+                        0
+                    </span>
+
                 </div>
-                <div class="mesas-alert-list" id="mampAlerts">
+
+
+                <div
+                    class="mesas-alert-list"
+                    id="mampAlerts"
+                >
+
                     <div class="mesas-no-alerts">
+
                         <i class="fa-regular fa-bell"></i>
-                        <span>Sin alertas pendientes.</span>
+
+                        <span>
+                            Sin alertas pendientes.
+                        </span>
+
                     </div>
+
                 </div>
+
             </section>
+
         </aside>
 
     </div>
+
 </section>

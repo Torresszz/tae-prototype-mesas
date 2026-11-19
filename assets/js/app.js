@@ -263,8 +263,6 @@ function setUserInfo(
   }
 
 }
-
-
 // =====================================================
 // QUITAR CONFIGURACIÓN
 // =====================================================
@@ -350,174 +348,428 @@ function removeNotifications() {
 
 
 // =====================================================
+// LIMPIAR GRUPOS VACÍOS DEL SIDEBAR
+// =====================================================
+
+function cleanupEmptyNavGroups() {
+
+  document
+    .querySelectorAll(
+      ".nav-group"
+    )
+    .forEach(group => {
+
+      const hasItems =
+        group.querySelector(
+          ".nav-item[data-page]"
+        );
+
+      if (!hasItems) {
+        group.remove();
+      }
+
+    });
+
+}
+
+
+// =====================================================
 // CONTROL VISUAL SEGÚN USUARIO
 // =====================================================
 
-// Roles que solo operan dentro de su módulo de mesas
 // ============================================================
 // ADMINISTRADOR
 // Solo ve su Panel, Usuarios y Catálogos.
 // ============================================================
 
-const PAGINAS_ADMIN = ["admin", "usuarios", "catalogos"];
+const PAGINAS_ADMIN = [
+  "admin",
+  "usuarios",
+  "catalogos"
+];
+
 
 function applyAdminAccess() {
+
   document
-    .querySelectorAll(".nav-item[data-page]")
+    .querySelectorAll(
+      ".nav-item[data-page]"
+    )
     .forEach(button => {
-      if (!PAGINAS_ADMIN.includes(button.dataset.page)) {
+
+      if (
+        !PAGINAS_ADMIN.includes(
+          button.dataset.page
+        )
+      ) {
+
         button.remove();
+
       }
+
     });
 
+
   document
-    .querySelectorAll(".sidebar-section-title, .nav-section-title")
-    .forEach(element => element.remove());
+    .querySelectorAll(
+      ".sidebar-section-title, .nav-section-title"
+    )
+    .forEach(
+      element =>
+        element.remove()
+    );
+
+
+  cleanupEmptyNavGroups();
 
   removeConfiguration();
+
   removeGlobalSearch();
+
   removeNotifications();
 
+
   setUserInfo(
-    currentSession.nombre || "Administrador",
-    currentSession.area || "Administración del sistema",
+    currentSession.nombre ||
+      "Administrador",
+
+    currentSession.area ||
+      "Administración del sistema",
+
     "AD"
   );
 
+
   setupLogout();
+
 }
+
 
 // ============================================================
 // PERFIL DE USUARIO
-// El usuario del encabezado (ícono de la derecha) abre el perfil.
 // ============================================================
 
 function setupPerfil() {
-  window.irAPagina = page => {
-    if (canAccessPage(page)) {
-      navigate(page);
-    }
-  };
 
-  window.irAInicio = () => {
-    navigate(getHomePage() || "dashboard");
-  };
+  window.irAPagina =
+    page => {
 
-  document.addEventListener("click", event => {
-    if (event.target.closest("[data-abrir-perfil]")) {
-      navigate("perfil");
-    }
-  });
+      if (
+        canAccessPage(
+          page
+        )
+      ) {
 
-  // Los apartados de Mesas son vistas internas de la página "mesas".
-  // Si el usuario está en otra página (el perfil), primero se vuelve
-  // a cargar Mesas y luego se abre el apartado pedido.
+        navigate(
+          page
+        );
+
+      }
+
+    };
+
+
+  window.irAInicio =
+    () => {
+
+      navigate(
+        getHomePage() ||
+        "dashboard"
+      );
+
+    };
+
+
   document.addEventListener(
     "click",
-    async event => {
-      const boton = event.target.closest(".mesas-sidebar-item");
+    event => {
 
-      if (!boton || document.getElementById("mesasPage")) {
-        return;
+      if (
+        event.target.closest(
+          "[data-abrir-perfil]"
+        )
+      ) {
+
+        navigate(
+          "perfil"
+        );
+
       }
+
+    }
+  );
+
+
+  document.addEventListener(
+    "click",
+
+    async event => {
+
+      const boton =
+        event.target.closest(
+          ".mesas-sidebar-item"
+        );
+
+
+      if (
+        !boton ||
+        document.getElementById(
+          "mesasPage"
+        )
+      ) {
+
+        return;
+
+      }
+
 
       event.preventDefault();
+
       event.stopImmediatePropagation();
 
-      const seccion = boton.dataset.mesasSeccion;
 
-      await navigate("mesas");
+      const seccion =
+        boton.dataset
+          .mesasSeccion;
+
+
+      await navigate(
+        "mesas"
+      );
+
 
       document
-        .querySelector(`.mesas-sidebar-item[data-mesas-seccion="${seccion}"]`)
+        .querySelector(
+          `.mesas-sidebar-item[data-mesas-seccion="${seccion}"]`
+        )
         ?.click();
+
     },
+
     true
   );
+
 }
+
+
+// ============================================================
+// ROLES CON ACCESO LIMITADO
+// ============================================================
 
 const MESA_SCOPED_ROLES = {
+
   presidencia: {
-    page: "mesas",
-    nombre: "Magistrada",
-    area: "Presidencia",
-    iniciales: "MP"
+
+    page:
+      "mesas",
+
+    nombre:
+      "Magistrada",
+
+    area:
+      "Presidencia",
+
+    iniciales:
+      "MP"
+
   },
+
+
   "amparos-directos": {
-    page: "mesas-amparos-directos",
-    nombre: "Amparos Directos",
-    area: "Mesa de Amparos Directos",
-    iniciales: "AD"
+
+    page:
+      "mesas-amparos-directos",
+
+    nombre:
+      "Amparos Directos",
+
+    area:
+      "Mesa de Amparos Directos",
+
+    iniciales:
+      "AD"
+
   },
+
+
   "amparos-indirectos": {
-    page: "mesas-amparos-indirectos",
-    nombre: "Amparos Indirectos",
-    area: "Mesa de Amparos Indirectos",
-    iniciales: "AI"
+
+    page:
+      "mesas-amparos-indirectos",
+
+
+    pages: [
+
+      "mesas-amparos-indirectos",
+
+      "mesas-amparos-indirectos-informes",
+
+      "mesas-amparos-indirectos-cuadernillo"
+
+    ],
+
+
+    nombre:
+      "Amparos Indirectos",
+
+    area:
+      "Mesa de Amparos Indirectos",
+
+    iniciales:
+      "AI"
+
   }
+
 };
 
-function applyMesaScopedAccess(config) {
+
+// ============================================================
+// ACCESO LIMITADO DE MESA
+// ============================================================
+
+function applyMesaScopedAccess(
+  config
+) {
+
+  const paginasPermitidas =
+    config.pages ||
+    [
+      config.page
+    ];
+
+
   document
-    .querySelectorAll(".nav-item[data-page]")
+    .querySelectorAll(
+      ".nav-item[data-page]"
+    )
     .forEach(button => {
-      if (button.dataset.page !== config.page) {
+
+      if (
+        !paginasPermitidas.includes(
+          button.dataset.page
+        )
+      ) {
+
         button.remove();
+
       }
+
     });
 
+
   document
-    .querySelectorAll(".sidebar-section-title, .nav-section-title")
-    .forEach(element => element.remove());
+    .querySelectorAll(
+      ".sidebar-section-title, .nav-section-title"
+    )
+    .forEach(
+      element =>
+        element.remove()
+    );
+
+
+  cleanupEmptyNavGroups();
 
   removeConfiguration();
+
   removeGlobalSearch();
+
   removeNotifications();
 
-  setUserInfo(config.nombre, config.area, config.iniciales);
+
+  setUserInfo(
+    config.nombre,
+    config.area,
+    config.iniciales
+  );
+
 
   setupLogout();
+
 }
+// ============================================================
+// CONTROL DE ACCESO
+// ============================================================
 
 function applyAccessControl() {
 
-  // Las páginas de administración son solo del Administrador.
-  if (currentSession?.rol !== "admin") {
+  // Administración solo para admin
+  if (
+    currentSession?.rol !==
+    "admin"
+  ) {
+
     document
-      .querySelectorAll('.nav-item[data-page="admin"], .nav-item[data-page="usuarios"]')
-      .forEach(button => button.remove());
+      .querySelectorAll(
+        '.nav-item[data-page="admin"], .nav-item[data-page="usuarios"]'
+      )
+      .forEach(
+        button =>
+          button.remove()
+      );
+
   }
 
-  if (currentSession?.rol === "admin") {
+
+  if (
+    currentSession?.rol ===
+    "admin"
+  ) {
+
     applyAdminAccess();
+
     return;
+
   }
-  const scoped = currentSession && MESA_SCOPED_ROLES[currentSession.rol];
+
+
+  const scoped =
+    currentSession &&
+    MESA_SCOPED_ROLES[
+      currentSession.rol
+    ];
+
 
   if (scoped) {
-    applyMesaScopedAccess(scoped);
+
+    applyMesaScopedAccess(
+      scoped
+    );
+
     return;
+
   }
 
-  // Oficialía no ve Mesa de amparos
-  if (currentSession?.rol === "oficialia") {
+
+  // ==================================================
+  // OFICIALÍA NO VE MESAS DE AMPAROS
+  // ==================================================
+
+  if (
+    currentSession?.rol ===
+    "oficialia"
+  ) {
+
     document
-      .querySelectorAll('.nav-item[data-page^="mesas-amparos"]')
-      .forEach(button => button.remove());
+      .querySelectorAll(
+        '.nav-item[data-page^="mesas-amparos"]'
+      )
+      .forEach(
+        button =>
+          button.remove()
+      );
+
   }
 
 
   if (!currentSession) {
+
     return;
+
   }
 
 
   // ==================================================
   // USUARIO DE MESA
-  //
-  // SOLO VE:
-  // - Mesas
-  // - Cerrar sesión
   // ==================================================
 
   if (
@@ -547,17 +799,17 @@ function applyAccessControl() {
       });
 
 
-    // Quitar posibles encabezados/separadores
     document
       .querySelectorAll(
         ".sidebar-section-title, .nav-section-title"
       )
-      .forEach(element => {
+      .forEach(
+        element =>
+          element.remove()
+      );
 
-        element.remove();
 
-      });
-
+    cleanupEmptyNavGroups();
 
     removeConfiguration();
 
@@ -567,9 +819,18 @@ function applyAccessControl() {
 
 
     setUserInfo(
-      currentSession.nombre || "Mesa",
-      currentSession.area || "Secretaría de Acuerdos",
-      currentSession.mesa ? "M" + currentSession.mesa : "M"
+
+      currentSession.nombre ||
+        "Mesa",
+
+      currentSession.area ||
+        "Secretaría de Acuerdos",
+
+      currentSession.mesa
+        ? "M" +
+          currentSession.mesa
+        : "M"
+
     );
 
   }
@@ -577,9 +838,6 @@ function applyAccessControl() {
 
   // ==================================================
   // USUARIO OFICIALÍA
-  //
-  // VE TODO LO NORMAL
-  // EXCEPTO MESAS
   // ==================================================
 
   if (
@@ -591,11 +849,13 @@ function applyAccessControl() {
       .querySelectorAll(
         '.nav-item[data-page="mesas"]'
       )
-      .forEach(button => {
+      .forEach(
+        button =>
+          button.remove()
+      );
 
-        button.remove();
 
-      });
+    cleanupEmptyNavGroups();
 
 
     setUserInfo(
@@ -606,10 +866,6 @@ function applyAccessControl() {
 
   }
 
-
-  // ==================================================
-  // CERRAR SESIÓN
-  // ==================================================
 
   setupLogout();
 
@@ -665,6 +921,7 @@ function setupNavigationGuard() {
 
   document.addEventListener(
     "click",
+
     event => {
 
       const button =
@@ -674,7 +931,9 @@ function setupNavigationGuard() {
 
 
       if (!button) {
+
         return;
+
       }
 
 
@@ -682,7 +941,6 @@ function setupNavigationGuard() {
         button.dataset.page;
 
 
-      // Si tiene permiso, continúa normalmente
       if (
         canAccessPage(
           page
@@ -694,13 +952,11 @@ function setupNavigationGuard() {
       }
 
 
-      // Evitar navegación
       event.preventDefault();
 
       event.stopImmediatePropagation();
 
 
-      // Mandarlo a su página permitida
       const homePage =
         getHomePage();
 
@@ -714,6 +970,7 @@ function setupNavigationGuard() {
       }
 
     },
+
     true
   );
 
@@ -726,20 +983,35 @@ function setupNavigationGuard() {
 
 function initModules() {
 
-  // El Administrador no captura: sus páginas se inicializan en el router.
-  if (currentSession?.rol === "admin") {
+  // Administrador
+  if (
+    currentSession?.rol ===
+    "admin"
+  ) {
+
     return;
+
   }
-  if (MESA_SCOPED_ROLES[currentSession?.rol]) {
+
+
+  // Usuarios limitados a Mesas / Amparos
+  if (
+    MESA_SCOPED_ROLES[
+      currentSession?.rol
+    ]
+  ) {
+
     initMesas();
+
     initMesasAmparos();
+
     return;
+
   }
 
 
   // ==================================================
   // MESA
-  // Solo necesita módulo Mesas
   // ==================================================
 
   if (
@@ -755,8 +1027,7 @@ function initModules() {
 
 
   // ==================================================
-  // OFICIALÍA
-  // Módulos normales
+  // OFICIALÍA Y USUARIOS NORMALES
   // ==================================================
 
   initDashboard();
@@ -795,19 +1066,30 @@ function initModules() {
   initRegistralForm();
 
 }
-
-
 // =====================================================
 // EVENTOS GENERALES
 // =====================================================
 
 function setupEvents() {
 
-  if (currentSession?.rol === "admin") {
+  if (
+    currentSession?.rol ===
+    "admin"
+  ) {
+
     return;
+
   }
-  if (MESA_SCOPED_ROLES[currentSession?.rol]) {
+
+
+  if (
+    MESA_SCOPED_ROLES[
+      currentSession?.rol
+    ]
+  ) {
+
     return;
+
   }
 
 
@@ -827,6 +1109,7 @@ function setupEvents() {
 
   document.addEventListener(
     "click",
+
     event => {
 
       const button =
@@ -836,7 +1119,9 @@ function setupEvents() {
 
 
       if (!button) {
+
         return;
+
       }
 
 

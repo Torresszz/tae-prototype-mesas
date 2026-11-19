@@ -30,6 +30,13 @@ import { renderPerfil } from "./modules/perfil.js";
 
 import { renderMesas } from "./modules/mesas.js";
 import { renderMesasAmparos } from "./modules/mesasAmparos.js";
+import {
+  renderMesasAmparosIndirectos,
+} from "./modules/mesasAmparosIndirectos.js";
+
+import {
+  renderInicioAmparosIndirectos
+} from "./modules/mesasAmparosIndirectosInicio.js";
 
 // =====================================================
 // RUTAS
@@ -58,7 +65,14 @@ const routes = {
 
     mesas: "pages/mesas.html",
   "mesas-amparos-directos": "pages/mesas-amparos-directos.html",
-  "mesas-amparos-indirectos": "pages/mesas-amparos-indirectos.html",
+
+"mesas-amparos-indirectos": "pages/mesas-amparos-indirectos.html",
+
+"mesas-amparos-indirectos-informes":
+  "pages/mesas-amparos-indirectos-informes.html",
+
+"mesas-amparos-indirectos-cuadernillo":
+  "pages/mesas-amparos-indirectos-cuadernillo.html",
   // Administrador
   admin: "pages/admin.html",
   usuarios: "pages/usuarios.html",
@@ -277,9 +291,23 @@ function initializePage(page) {
       break;
 
     case "mesas-amparos-directos":
-    case "mesas-amparos-indirectos":
-      renderMesasAmparos();
-      break;
+  renderMesasAmparos();
+  break;
+
+
+case "mesas-amparos-indirectos":
+  renderMesasAmparos();
+  renderInicioAmparosIndirectos();
+  break;
+
+
+case "mesas-amparos-indirectos-informes":
+  renderMesasAmparosIndirectos();
+  break;
+
+
+case "mesas-amparos-indirectos-cuadernillo":
+  break;
 
     case "mesas":
       renderMesas();
