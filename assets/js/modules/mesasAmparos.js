@@ -22,11 +22,16 @@ import { getSession } from "../auth.js";
 
 import { renderMesasAmparosIndirectos } from "./mesasAmparosIndirectos.js";
 
+import { formatoNumeroOficio } from "./mesas/oficios.js";
+
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
 
 const KEY = "mesasAmparosSeguimiento";
+
+// Repositorio de oficios de Mesas (mismo consecutivo TAE-SA que usa la sección Oficios)
+const KEY_OFICIOS = "registroOficios";
 
 const DIAS_INFORME = 15; // amparo indirecto: días para informar
 const DIAS_LAUDOS = 3; // amparo indirecto: días de Laudos para el cumplimiento
@@ -84,8 +89,43 @@ const DOCS_CUADERNILLO = [
   },
 ];
 
+// D-03 / D-11: categoría y ubicación (solo Amparos Directos)
+const CATEGORIAS = ["Radicación", "Laudo", "Otro"];
+
+// D-05: anexos que acompañan al oficio de Informe Justificado
+const ANEXOS_INFORME = [
+  { id: "expediente", texto: "Expediente" },
+  { id: "demanda", texto: "Demanda de amparo original" },
+  { id: "notificaciones", texto: "Notificaciones al quejoso y terceros interesados" },
+];
+
+// D-05: plantilla del oficio (⚠️ texto provisional; confirmar redacción con el tribunal)
+const PLANTILLA_INFORME = [
+  "TRIBUNAL DE ARBITRAJE Y ESCALAFÓN",
+  "Secretaría de Acuerdos · Mesa de Amparos",
+  "",
+  "Oficio: {{numero}}",
+  "Asunto: Informe Justificado",
+  "Fecha: {{fecha}}",
+  "",
+  "{{tribunal}}",
+  "P R E S E N T E",
+  "",
+  "Dentro del juicio de amparo directo {{amparo}}, promovido por {{quejosos}}{{terceros}}, derivado del expediente laboral {{expediente}}, se rinde el presente INFORME JUSTIFICADO, que se remite a ese Tribunal Colegiado para los efectos legales correspondientes.",
+  "",
+  "Se anexan: {{anexos}}.",
+  "",
+  "Sin otro particular, quedo de usted.",
+  "",
+  "A T E N T A M E N T E",
+  "Secretaría de Acuerdos",
+].join("\n");
+
 // Estado de la vista
 let estadoFiltro = "todos";
+let categoriaFiltro = "";
+let ubicacionFiltro = "";
+let cuadAbierto = false;
 
 // Cada página (directos / indirectos) declara su tipo en #mampPage[data-tipo]
 function tipoPagina() {
@@ -116,6 +156,9 @@ export function renderMesasAmparos() {
   setupEvents();
 
   const registros = getRegistros().filter((r) => r.seg.tipo === tipoPagina());
+
+  // D-01: bandeja "por recibir" (solo Amparos Directos)
+  renderPorRecibir();
 
   renderConteos(registros);
 
@@ -148,7 +191,15 @@ function prepararSeguimiento() {
       return;
     }
 
-    seguimiento[id] = crearEstado(amparo, detectarTipo(amparo));
+    const tipo = detectarTipo(amparo);
+
+    // D-01: un amparo directo nuevo queda "por recibir" y no tiene seguimiento
+    // hasta que la Mesa pulsa Recibir (así Oficialía aún puede editarlo).
+    if (tipo === "directo") {
+      return;
+    }
+
+    seguimiento[id] = crearEstado(amparo, tipo);
 
     changed = true;
   });
@@ -166,8 +217,24 @@ function crearEstado(amparo, tipo) {
     etapa: FLUJOS[tipo][0].id,
     desde: ahora,
     ubicacion: "",
+    // D-02: partes como lista estructurada (quejoso / terceros se conservan
+    // como texto para búsquedas y compatibilidad)
+    partes: {
+      quejosos: amparo.promovente
+        ? [{ nombre: amparo.promovente, domicilio: "" }]
+        : [],
+      terceros: [],
+    },
     quejoso: amparo.promovente || "",
     terceros: "",
+    // D-03
+    categoria: "",
+    // D-04
+    actuaria: null,
+    // D-05
+    informe: null,
+    // D-06 (símbolico): cuadernillo propio del amparo
+    cuadernillo: { oficiosTC: [], generado: false },
     acuerdoTexto: "",
     informeOficio: "",
     suspension: null,
@@ -226,6 +293,30 @@ function setupEvents() {
 
   const etapa = document.getElementById("mampEtapaFilter");
 
+  const categoria = document.getElementById("mampCategoriaFilter");
+
+  const ubicacion = document.getElementById("mampUbicacionFilter");
+
+  if (categoria) {
+    categoria.value = categoriaFiltro;
+
+    categoria.onchange = (event) => {
+      categoriaFiltro = event.target.value;
+
+      renderMesasAmparos();
+    };
+  }
+
+  if (ubicacion) {
+    ubicacion.value = ubicacionFiltro;
+
+    ubicacion.onchange = (event) => {
+      ubicacionFiltro = event.target.value;
+
+      renderMesasAmparos();
+    };
+  }
+
   if (search) {
     search.value = busqueda;
 
@@ -266,6 +357,10 @@ function setupEvents() {
 
       if (boton?.dataset.mampAction === "abrir") {
         abrirAmparo(boton.dataset.id);
+      }
+
+      if (boton?.dataset.mampAction === "por-recibir") {
+        abrirPorRecibir();
       }
     };
   }
@@ -352,9 +447,24 @@ function renderTabla(registros) {
     );
   }
 
+  if (categoriaFiltro) {
+    visibles = visibles.filter((r) => (r.seg.categoria || "") === categoriaFiltro);
+  }
+
+  if (ubicacionFiltro) {
+    visibles = visibles.filter((r) => ubicacionDe(r.seg) === ubicacionFiltro);
+  }
+
   if (busqueda) {
     visibles = visibles.filter((r) =>
-      [r.amparo.id, r.amparo.expediente, r.amparo.promovente, r.amparo.juzgado]
+      [
+        r.amparo.id,
+        r.amparo.expediente,
+        r.amparo.promovente,
+        r.amparo.juzgado,
+        r.seg.quejoso,
+        r.seg.terceros,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(busqueda),
@@ -379,7 +489,13 @@ function renderFila({ amparo, seg, etapa, plazo }) {
                 <span class="mesas-expediente-number">${escapeHTML(amparo.id)}</span>
             </td>
             <td>${escapeHTML(amparo.expediente || "—")}</td>
-            <td>${escapeHTML(amparo.promovente || "—")}</td>
+            <td>${escapeHTML(quejosoTabla(amparo, seg))}</td>
+            ${
+              tipoPagina() === "directo"
+                ? `<td>${renderCategoria(seg)}</td>
+            <td>${renderUbicacion(seg)}</td>`
+                : ""
+            }
             <td>
                 <span class="mesas-stage-badge ${claseEtapa}">${escapeHTML(etapa.nombre)}</span>
                 ${final ? "" : `<span class="mamp-dep">${escapeHTML(etapa.dep)}</span>`}
@@ -536,9 +652,22 @@ function abrirAmparo(id) {
 
   const panel = final
     ? {
-        html: `<p class="mamp-note">Amparo concluido. ${seg.tipo === "directo" ? "El cuadernillo queda en la Mesa de Amparos." : "El juzgado notificó el archivo."}</p>`,
+        html:
+          `<p class="mamp-note">Amparo concluido. ${seg.tipo === "directo" ? "El cuadernillo queda en la Mesa de Amparos y el expediente en Archivo." : "El juzgado notificó el archivo."}</p>` +
+          (seg.tipo === "directo" ? listaCopias(seg, true) : ""),
       }
     : panelEtapa(amparo, seg);
+
+  // D-04: mientras el expediente está en Actuaría solo se avanza al recibirlo
+  if (
+    seg.tipo === "directo" &&
+    !final &&
+    panel.accion &&
+    enActuaria(seg) &&
+    seg.etapa !== "notificacion"
+  ) {
+    panel.accion = { ...panel.accion, disabled: true };
+  }
 
   const plazo = calcularPlazo(amparo, seg);
 
@@ -576,6 +705,7 @@ function abrirAmparo(id) {
                         <span>Promovente</span>
                         <strong>${escapeHTML(amparo.promovente || "—")}</strong>
                     </div>
+                    ${infoDirectos(seg)}
                     <div class="mesas-modal-info-item">
                         <span>Juzgado / oficio</span>
                         <strong>${escapeHTML([amparo.juzgado, amparo.oficio].filter(Boolean).join(" · ") || "—")}</strong>
@@ -600,6 +730,12 @@ function abrirAmparo(id) {
                 </ol>
 
                 ${panel.html}
+
+                ${seg.tipo === "directo" && !final ? cajaActuaria(seg) : ""}
+
+                ${seg.tipo === "directo" ? cajaCuadernillo(seg) : ""}
+
+                <p class="mamp-note warn" id="mampAviso" hidden></p>
 
                 <p class="mesas-form-error" id="mampError" hidden></p>
 
@@ -628,9 +764,20 @@ function abrirAmparo(id) {
     const boton = event.target.closest("[data-mamp-act]");
 
     if (boton && !boton.disabled) {
-      ejecutar(boton.dataset.mampAct, id, modal);
+      ejecutar(boton.dataset.mampAct, id, modal, boton);
     }
   });
+
+  // <details> no propaga "toggle": se escucha en captura
+  modal.addEventListener(
+    "toggle",
+    (event) => {
+      if (event.target.matches?.("[data-mamp-cuad-box]")) {
+        cuadAbierto = event.target.open;
+      }
+    },
+    true,
+  );
 
   modal.addEventListener("change", (event) => {
     const input = event.target;
@@ -642,6 +789,30 @@ function abrirAmparo(id) {
       });
 
       abrirAmparo(id);
+
+      return;
+    }
+
+    // D-05: anexos del oficio de Informe Justificado
+    if (input.matches("[data-anexo]")) {
+      actualizar(id, (s) => {
+        if (s.informe) {
+          s.informe.anexos[input.dataset.anexo] = input.checked;
+        }
+      });
+
+      abrirAmparo(id);
+
+      return;
+    }
+
+    // D-03: la categoría se puede cambiar en cualquier etapa
+    if (input.id === "mampCategoria") {
+      actualizarYRefrescar(id, (s) => {
+        s.categoria = input.value;
+
+        log(s, `Categoría: ${input.value || "sin categoría"}`);
+      });
 
       return;
     }
@@ -675,7 +846,9 @@ function panelEtapa(amparo, seg) {
 
   switch (clave) {
     // ------------------------------------------------ DIRECTOS
-    case "directo:registro":
+    case "directo:registro": {
+      const partes = partesDe(seg);
+
       return {
         html:
           campoTexto(
@@ -684,12 +857,13 @@ function panelEtapa(amparo, seg) {
             seg.ubicacion,
             "Ej. Mesa 2, Actuaría, Archivo...",
           ) +
-          campoTexto("mampQuejoso", "Quejoso", seg.quejoso) +
-          campoTexto(
-            "mampTerceros",
+          selectCategoria("mampCategoriaRegistro", seg.categoria) +
+          editorPartes("quejosos", "Quejoso(s)", partes.quejosos, true) +
+          editorPartes(
+            "terceros",
             "Terceros interesados",
-            seg.terceros,
-            "Separados por comas",
+            partes.terceros,
+            false,
           ),
         accion: {
           act: "dir-registro",
@@ -697,6 +871,7 @@ function panelEtapa(amparo, seg) {
           icono: "fa-clipboard-check",
         },
       };
+    }
 
     case "directo:acuerdo":
       return {
@@ -712,31 +887,73 @@ function panelEtapa(amparo, seg) {
         },
       };
 
-    case "directo:notificacion":
+    case "directo:notificacion": {
+      const p = partesDe(seg);
+
       return {
-        html: `<p class="mamp-note">En Actuaría: debe notificar al quejoso (${escapeHTML(seg.quejoso || "—")}) y a los terceros interesados${seg.terceros ? ` (${escapeHTML(seg.terceros)})` : ""}.</p>`,
+        html: `<p class="mamp-note">En Actuaría: debe notificar al quejoso (${escapeHTML(nombres(p.quejosos) || "—")}) y a los terceros interesados${p.terceros.length ? ` (${escapeHTML(nombres(p.terceros))})` : ""}. Al regresar se genera el oficio de Informe Justificado.</p>`,
         accion: {
           act: "dir-notificacion",
           label: "Actuaría devolvió las notificaciones",
           icono: "fa-envelope-circle-check",
         },
       };
+    }
 
-    case "directo:informe":
+    case "directo:informe": {
+      const inf = seg.informe;
+
+      if (!inf && !seg.informeOficio) {
+        return {
+          html: `<p class="mamp-note">Aún no se genera el oficio de <strong>Informe Justificado</strong> (se genera al regresar de Actuaría).</p>`,
+          accion: {
+            act: "dir-generar-informe",
+            label: "Generar oficio de Informe Justificado",
+            icono: "fa-file-lines",
+          },
+        };
+      }
+
+      if (!inf) {
+        // Seguimiento anterior: solo traía el número de oficio
+        return {
+          html: `<p class="mamp-note">Oficio <strong>${escapeHTML(seg.informeOficio)}</strong> (Informe Justificado) dirigido al Tribunal Colegiado de Circuito.</p>`,
+          accion: {
+            act: "dir-informe",
+            label: "Enviar al Tribunal Colegiado",
+            icono: "fa-paper-plane",
+          },
+        };
+      }
+
+      const completo = ANEXOS_INFORME.every((a) => inf.anexos?.[a.id]);
+
       return {
-        html:
-          `<p class="mamp-note">Se emite el oficio <strong>Informe Justificado</strong> dirigido al Tribunal Colegiado de Circuito y se envía el expediente, la demanda de amparo original y las notificaciones.</p>` +
-          campoTexto(
-            "mampOficio",
-            "Número del oficio (Informe Justificado)",
-            seg.informeOficio || amparo.oficio,
-          ),
+        html: `
+                <p class="mamp-note">Oficio <strong>${escapeHTML(inf.numero)}</strong> · Informe Justificado dirigido a <strong>${escapeHTML(inf.dirigidoA)}</strong>. Adjunta el expediente, la demanda original y las notificaciones.</p>
+                <pre class="mamp-oficio">${escapeHTML(inf.texto)}</pre>
+                <div class="mamp-options">
+                    ${ANEXOS_INFORME.map(
+                      (a) => `
+                            <label class="mamp-option">
+                                <input type="checkbox" data-anexo="${a.id}" ${inf.anexos?.[a.id] ? "checked" : ""}>
+                                Adjuntar: ${escapeHTML(a.texto)}
+                            </label>`,
+                    ).join("")}
+                </div>
+                <div class="mamp-inline-actions">
+                    <button type="button" class="mesas-secondary-btn" data-mamp-act="informe-descargar">
+                        <i class="fa-solid fa-download"></i> Descargar oficio
+                    </button>
+                </div>`,
         accion: {
           act: "dir-informe",
           label: "Enviar al Tribunal Colegiado",
           icono: "fa-paper-plane",
+          disabled: !completo,
         },
       };
+    }
 
     case "directo:resolucion":
       return {
@@ -782,7 +999,8 @@ function panelEtapa(amparo, seg) {
 
       return {
         html: `
-                <p class="mamp-note">Suspensión concedida${seg.suspension?.cantidad ? ` por $${escapeHTML(String(seg.suspension.cantidad))}` : ""}. El primer laudo se ignora y se emite uno nuevo que cumpla la sentencia.</p>
+                <p class="mamp-note">${rutaConcedido(seg)} El primer laudo se ignora y se emite uno nuevo que cumpla la sentencia.</p>
+                <p class="mamp-note warn">PENDIENTE (pendiente 3): las diferencias de trámite entre las dos rutas de amparo concedido aún no están definidas; por ahora ambas siguen los mismos pasos.</p>
                 <ul class="mamp-req-list">
                     <li>${marca(c.laudoNuevo)} Primer laudo sin efecto y nuevo laudo emitido</li>
                     <li>${marca(c.reenviado)} Reenviado al Tribunal Colegiado</li>
@@ -793,29 +1011,24 @@ function panelEtapa(amparo, seg) {
     }
 
     case "directo:cuadernillo": {
-      const docs = DOCS_CUADERNILLO.filter(
-        (doc) => !doc.soloSiNegada || seg.suspension?.resultado === "niega",
-      );
+      const negada = seg.suspension?.resultado === "niega";
+
+      const docs = docsCuadernillo(seg);
 
       const completo = docs.every((doc) => seg.cuad[doc.id]);
 
       return {
         html: `
-                <p class="mamp-note">El cuadernillo se queda en la Mesa de Amparos. Marca los documentos integrados.</p>
-                <div class="mamp-options">
-                    ${docs
-                      .map(
-                        (doc) => `
-                            <label class="mamp-option">
-                                <input type="checkbox" data-cuad="${doc.id}" ${seg.cuad[doc.id] ? "checked" : ""}>
-                                ${escapeHTML(doc.texto)}
-                            </label>`,
-                      )
-                      .join("")}
-                </div>`,
+                ${
+                  negada
+                    ? `<p class="mamp-note warn">Suspensión negada: se integra el oficio y acuerdo de recepción del expediente y se manda a Archivo.</p>`
+                    : ""
+                }
+                <p class="mamp-note">Lista de copias para el cuadernillo. El cuadernillo se queda en la Mesa de Amparos; marca los documentos integrados.</p>
+                ${listaCopias(seg, false)}`,
         accion: {
           act: "dir-archivar",
-          label: "Enviar a Archivo",
+          label: negada ? "Mandar a Archivo" : "Enviar a Archivo",
           icono: "fa-box-archive",
           disabled: !completo,
         },
@@ -913,7 +1126,7 @@ function panelEtapa(amparo, seg) {
 // ACCIONES
 // ============================================================
 
-function ejecutar(act, id, modal) {
+function ejecutar(act, id, modal, boton) {
   const val = (selector) => modal.querySelector(selector)?.value.trim() || "";
 
   const error = (mensaje) => {
@@ -924,21 +1137,137 @@ function ejecutar(act, id, modal) {
     caja.hidden = false;
   };
 
+  const aviso = (mensaje) => {
+    const caja = modal.querySelector("#mampAviso");
+
+    if (caja) {
+      caja.textContent = mensaje;
+
+      caja.hidden = false;
+    }
+  };
+
   switch (act) {
     // ------------------------------------------------ DIRECTOS
+    // D-02: lista de partes (alta / baja de filas sin volver a dibujar el modal)
+    case "parte-add": {
+      const filas = boton?.closest("[data-partes]")?.querySelector(".mamp-partes-rows");
+
+      if (filas) {
+        filas.insertAdjacentHTML("beforeend", filaParte());
+
+        filas.lastElementChild?.querySelector("input")?.focus();
+      }
+
+      return;
+    }
+
+    case "parte-del":
+      boton?.closest(".mamp-parte-row")?.remove();
+
+      return;
+
     case "dir-registro": {
-      if (!val("#mampUbicacion") || !val("#mampQuejoso")) {
-        return error("Indica dónde está el expediente y quién es el quejoso.");
+      const quejosos = leerPartes(modal, "quejosos");
+
+      const terceros = leerPartes(modal, "terceros");
+
+      const categoria = val("#mampCategoriaRegistro");
+
+      if (!val("#mampUbicacion") || !quejosos.length) {
+        return error(
+          "Indica dónde está el expediente y al menos un quejoso.",
+        );
+      }
+
+      if (!categoria) {
+        return error("Selecciona la categoría (Radicación, Laudo u Otro).");
       }
 
       return avanzar(id, "acuerdo", (s) => {
         s.ubicacion = val("#mampUbicacion");
-        s.quejoso = val("#mampQuejoso");
-        s.terceros = val("#mampTerceros");
+        s.partes = { quejosos, terceros };
+        s.quejoso = nombres(quejosos);
+        s.terceros = nombres(terceros);
+        s.categoria = categoria;
 
-        return `Registro completo. Expediente ubicado en: ${s.ubicacion}`;
+        return `Registro completo (${categoria}). Expediente ubicado en: ${s.ubicacion}. Quejosos: ${quejosos.length}; terceros interesados: ${terceros.length}`;
       });
     }
+
+    // D-04: enviar a Actuaría desde cualquier etapa
+    case "actuaria-enviar": {
+      const motivo = val("#mampActuariaMotivo");
+
+      if (!motivo) {
+        return error("Indica el motivo del envío a Actuaría.");
+      }
+
+      return actualizarYRefrescar(id, (s) => {
+        enviarAActuaria(s, motivo);
+      });
+    }
+
+    case "actuaria-regresar":
+      return regresarYRefrescar(id);
+
+    // D-05
+    case "dir-generar-informe":
+      return actualizarYRefrescar(id, (s) => {
+        generarInforme(s, getAmparo(id));
+      });
+
+    case "informe-descargar":
+      return descargarInforme(id);
+
+    // D-06 (símbolico)
+    case "cuad-oficio-add": {
+      if (!val("#mampCuadNumero") || !val("#mampCuadFecha")) {
+        cuadAbierto = true;
+
+        return error("Indica el número y la fecha del oficio recibido.");
+      }
+
+      cuadAbierto = true;
+
+      return actualizarYRefrescar(id, (s) => {
+        const cuad = cuadernilloDe(s);
+
+        cuad.oficiosTC.push({
+          id: idCorto(),
+          numero: val("#mampCuadNumero"),
+          fecha: val("#mampCuadFecha"),
+          asunto: val("#mampCuadAsunto"),
+          registradoEn: new Date().toISOString(),
+        });
+
+        log(
+          s,
+          `Oficio del Tribunal Colegiado agregado al cuadernillo: ${val("#mampCuadNumero")}`,
+        );
+      });
+    }
+
+    case "cuad-oficio-del": {
+      const oid = boton?.dataset.oid;
+
+      cuadAbierto = true;
+
+      return actualizarYRefrescar(id, (s) => {
+        const cuad = cuadernilloDe(s);
+
+        cuad.oficiosTC = cuad.oficiosTC.filter((o) => o.id !== oid);
+
+        log(s, "Oficio del Tribunal Colegiado retirado del cuadernillo");
+      });
+    }
+
+    case "cuad-generar":
+      // PENDIENTE: la generación del cuadernillo (contenido y formato) no está
+      // definida; por ahora es solo simbólica y no produce ningún archivo.
+      return aviso(
+        "La generación del cuadernillo está pendiente de definir. Por ahora solo se conserva el listado de oficios recibidos.",
+      );
 
     case "dir-acuerdo": {
       if (!val("#mampAcuerdo")) {
@@ -948,26 +1277,35 @@ function ejecutar(act, id, modal) {
       return avanzar(id, "notificacion", (s) => {
         s.acuerdoTexto = val("#mampAcuerdo");
 
+        enviarAActuaria(s, "Notificar al quejoso y terceros interesados", false);
+
         return "Acuerdo dictado; turnado a Actuaría para notificar a quejoso y terceros interesados";
       });
     }
 
     case "dir-notificacion":
-      return avanzar(
-        id,
-        "informe",
-        () => "Actuaría devolvió las notificaciones",
-      );
+      return regresarYRefrescar(id);
 
     case "dir-informe": {
-      if (!val("#mampOficio")) {
-        return error("Indica el número del oficio del Informe Justificado.");
+      const seg = getData(KEY, {})[String(id)];
+
+      if (seg.informe && !ANEXOS_INFORME.every((a) => seg.informe.anexos?.[a.id])) {
+        return error(
+          "Adjunta el expediente, la demanda original y las notificaciones.",
+        );
+      }
+
+      if (!seg.informe && !seg.informeOficio) {
+        return error("Genera primero el oficio de Informe Justificado.");
       }
 
       return avanzar(id, "resolucion", (s) => {
-        s.informeOficio = val("#mampOficio");
+        if (s.informe) {
+          s.informe.enviado = true;
+          s.informe.enviadoEn = new Date().toISOString();
+        }
 
-        return `Informe Justificado emitido (oficio ${s.informeOficio}); se envía al Tribunal Colegiado de Circuito con el expediente, la demanda original y las notificaciones`;
+        return `Informe Justificado (oficio ${s.informeOficio}) enviado al ${s.informe?.dirigidoA || "Tribunal Colegiado de Circuito"} con el expediente, la demanda original y las notificaciones`;
       });
     }
 
@@ -996,12 +1334,12 @@ function ejecutar(act, id, modal) {
         };
 
         if (resultado === "niega") {
-          return "Suspensión negada: se recibe el amparo negado; se hace oficio y acuerdo de recepción del expediente y se integra al cuadernillo";
+          return "Suspensión negada: se recibe el amparo negado; se hace oficio y acuerdo de recepción del expediente, se integra el cuadernillo y se manda a Archivo";
         }
 
         return resultado === "concede_cantidad"
-          ? `Suspensión concedida fijando cantidad ($${cantidad}); el primer laudo se deja sin efecto`
-          : "Suspensión concedida sin fijar cantidad; el primer laudo se deja sin efecto";
+          ? `Suspensión concedida (ruta con cantidad fijada: $${cantidad}); el primer laudo se deja sin efecto`
+          : "Suspensión concedida (ruta sin cantidad fijada); el primer laudo se deja sin efecto";
       });
     }
 
@@ -1042,12 +1380,13 @@ function ejecutar(act, id, modal) {
     }
 
     case "dir-archivar":
-      return avanzar(
-        id,
-        "archivo",
-        () =>
-          "Cuadernillo integrado (queda en la mesa); expediente enviado a Archivo",
-      );
+      return avanzar(id, "archivo", (s) => {
+        s.archivadoEn = new Date().toISOString();
+
+        return s.suspension?.resultado === "niega"
+          ? "Suspensión negada: cuadernillo integrado (queda en la mesa); expediente mandado a Archivo"
+          : "Cuadernillo integrado (queda en la mesa); expediente enviado a Archivo";
+      });
 
     // ------------------------------------------------ INDIRECTOS
     case "ind-recibido": {
@@ -1190,6 +1529,667 @@ function avanzar(id, etapaNueva, fn) {
 }
 
 // ============================================================
+// AMPAROS DIRECTOS: partes, categoría, ubicación (D-02, D-03, D-11)
+// ============================================================
+
+function idCorto() {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function getAmparo(id) {
+  return getData("amparos", []).find((a) => String(a.id) === String(id));
+}
+
+// D-02: lista estructurada; si el seguimiento es anterior se migra el texto
+// separado por comas.
+function partesDe(seg) {
+  const p = seg.partes;
+
+  if (p && Array.isArray(p.quejosos) && Array.isArray(p.terceros)) {
+    return p;
+  }
+
+  const lista = (texto) =>
+    String(texto || "")
+      .split(",")
+      .map((nombre) => nombre.trim())
+      .filter(Boolean)
+      .map((nombre) => ({ nombre, domicilio: "" }));
+
+  return { quejosos: lista(seg.quejoso), terceros: lista(seg.terceros) };
+}
+
+function nombres(lista) {
+  return lista.map((p) => p.nombre).join(", ");
+}
+
+function quejosoTabla(amparo, seg) {
+  if (seg.tipo !== "directo") {
+    return amparo.promovente || "—";
+  }
+
+  const quejosos = partesDe(seg).quejosos;
+
+  if (!quejosos.length) {
+    return amparo.promovente || "—";
+  }
+
+  return quejosos.length > 1
+    ? `${quejosos[0].nombre} +${quejosos.length - 1}`
+    : quejosos[0].nombre;
+}
+
+function filaParte(parte = {}) {
+  return `
+        <div class="mamp-parte-row">
+            <input type="text" data-parte="nombre" placeholder="Nombre" value="${escapeHTML(parte.nombre || "")}">
+            <input type="text" data-parte="domicilio" placeholder="Domicilio para notificar (opcional)" value="${escapeHTML(parte.domicilio || "")}">
+            <button type="button" class="mamp-parte-del" data-mamp-act="parte-del" title="Quitar" aria-label="Quitar">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>`;
+}
+
+function editorPartes(lista, etiqueta, partes, minimoUno) {
+  const filas = partes.length || !minimoUno ? partes : [{}];
+
+  return `
+        <div class="mamp-field mamp-partes" data-partes="${lista}">
+            <label>${etiqueta}</label>
+            <div class="mamp-partes-rows">${filas.map(filaParte).join("")}</div>
+            <button type="button" class="mesas-secondary-btn mamp-parte-add" data-mamp-act="parte-add">
+                <i class="fa-solid fa-plus"></i> Agregar
+            </button>
+        </div>`;
+}
+
+function leerPartes(modal, lista) {
+  return [
+    ...modal.querySelectorAll(`[data-partes="${lista}"] .mamp-parte-row`),
+  ]
+    .map((fila) => ({
+      nombre:
+        fila.querySelector('[data-parte="nombre"]')?.value.trim() || "",
+      domicilio:
+        fila.querySelector('[data-parte="domicilio"]')?.value.trim() || "",
+    }))
+    .filter((parte) => parte.nombre);
+}
+
+function opcionesCategoria(valor) {
+  return (
+    `<option value="">Selecciona...</option>` +
+    CATEGORIAS.map(
+      (c) => `<option ${valor === c ? "selected" : ""}>${c}</option>`,
+    ).join("")
+  );
+}
+
+function selectCategoria(id, valor) {
+  return `
+        <div class="mamp-field">
+            <label for="${id}">Categoría</label>
+            <select id="${id}">${opcionesCategoria(valor)}</select>
+        </div>`;
+}
+
+function claseCategoria(categoria) {
+  return (
+    { Radicación: "mamp-cat-rad", Laudo: "mamp-cat-laudo", Otro: "mamp-cat-otro" }[
+      categoria
+    ] || "mamp-cat-sin"
+  );
+}
+
+function renderCategoria(seg) {
+  return `<span class="mesas-stage-badge ${claseCategoria(seg.categoria)}">${escapeHTML(seg.categoria || "Sin categoría")}</span>`;
+}
+
+// D-11: ubicación actual del expediente
+function enActuaria(seg) {
+  return Boolean(
+    seg.actuaria?.activo ||
+      (seg.tipo === "directo" && seg.etapa === "notificacion"),
+  );
+}
+
+function ubicacionDe(seg) {
+  if (seg.etapa === ETAPA_FINAL[seg.tipo]) {
+    return "Archivo";
+  }
+
+  if (enActuaria(seg)) {
+    return "Actuaría";
+  }
+
+  return getEtapa(seg.tipo, seg.etapa).dep;
+}
+
+function renderUbicacion(seg) {
+  const ubicacion = ubicacionDe(seg);
+
+  return `<span class="mesas-stage-badge ${ubicacion === "Actuaría" ? "mamp-warn" : ""}">${escapeHTML(ubicacion)}</span>`;
+}
+
+function infoDirectos(seg) {
+  if (seg.tipo !== "directo") {
+    return "";
+  }
+
+  const p = partesDe(seg);
+
+  return `
+        <div class="mesas-modal-info-item">
+            <span>Quejoso(s)</span>
+            <strong>${escapeHTML(nombres(p.quejosos) || "—")}</strong>
+        </div>
+        <div class="mesas-modal-info-item">
+            <span>Terceros interesados</span>
+            <strong>${escapeHTML(nombres(p.terceros) || "—")}</strong>
+        </div>
+        <div class="mesas-modal-info-item">
+            <span>Categoría</span>
+            <select id="mampCategoria" class="mamp-info-select">${opcionesCategoria(seg.categoria)}</select>
+        </div>
+        <div class="mesas-modal-info-item">
+            <span>Ubicación</span>
+            <strong>${escapeHTML(ubicacionDe(seg))}</strong>
+        </div>`;
+}
+
+// ============================================================
+// D-04: ACTUARÍA DESDE CUALQUIER ETAPA
+// ============================================================
+
+function cajaActuaria(seg) {
+  if (enActuaria(seg)) {
+    // En la etapa Notificación el botón principal ya hace el regreso
+    if (seg.etapa === "notificacion") {
+      return "";
+    }
+
+    return `
+        <div class="mamp-actuaria-box">
+            <p class="mamp-note warn">
+                En Actuaría desde ${escapeHTML(formatFecha(seg.actuaria?.desde))}${seg.actuaria?.motivo ? ` · ${escapeHTML(seg.actuaria.motivo)}` : ""}.
+                Al regresar se genera el oficio de Informe Justificado.
+            </p>
+            <button type="button" class="mesas-secondary-btn" data-mamp-act="actuaria-regresar">
+                <i class="fa-solid fa-rotate-left"></i> Regresó de Actuaría
+            </button>
+        </div>`;
+  }
+
+  return `
+        <div class="mamp-actuaria-box">
+            <div class="mamp-field">
+                <label for="mampActuariaMotivo">Enviar a Actuaría (desde cualquier etapa)</label>
+                <input type="text" id="mampActuariaMotivo" placeholder="Motivo: documento o notificación a practicar">
+            </div>
+            <button type="button" class="mesas-secondary-btn" data-mamp-act="actuaria-enviar">
+                <i class="fa-solid fa-paper-plane"></i> Enviar a Actuaría
+            </button>
+        </div>`;
+}
+
+function enviarAActuaria(s, motivo, conHistorial = true) {
+  s.actuaria = {
+    activo: true,
+    desde: new Date().toISOString(),
+    motivo,
+    etapaOrigen: s.etapa,
+  };
+
+  if (conHistorial) {
+    log(
+      s,
+      `Enviado a Actuaría desde la etapa ${getEtapa(s.tipo, s.etapa).nombre}: ${motivo}`,
+    );
+  }
+}
+
+// Regreso de Actuaría: genera el Informe Justificado (si no existe). Si venía
+// de una etapa anterior al informe, el amparo pasa a Informe Justificado.
+// ⚠️ Interpretación: se conserva la etapa si ya estaba en el informe o después.
+function aplicarRegresoActuaria(id) {
+  actualizar(id, (s) => {
+    const origen = s.actuaria?.etapaOrigen || s.etapa;
+
+    s.actuaria = null;
+
+    log(s, "Regresó de Actuaría");
+
+    if (!s.informe) {
+      generarInforme(s, getAmparo(id));
+    }
+
+    if (["registro", "acuerdo", "notificacion"].includes(origen)) {
+      s.etapa = "informe";
+
+      s.desde = new Date().toISOString();
+
+      log(s, "Pasa a Informe Justificado");
+    }
+  });
+}
+
+function regresarYRefrescar(id) {
+  aplicarRegresoActuaria(id);
+
+  renderMesasAmparos();
+
+  abrirAmparo(id);
+}
+
+// ============================================================
+// D-05: OFICIO DE INFORME JUSTIFICADO
+// ============================================================
+
+function tribunalDe(amparo = {}) {
+  const candidato = [amparo.juzgadoOrigen, amparo.juzgado].find(
+    (texto) => texto && /colegiado|TCC|tribunal/i.test(texto),
+  );
+
+  return candidato || "Tribunal Colegiado de Circuito";
+}
+
+// Siguiente consecutivo TAE-SA del año (mismo repositorio que la sección Oficios)
+function generarInforme(seg, amparo) {
+  if (!amparo) {
+    return;
+  }
+
+  const hoy = new Date();
+
+  const fecha = fechaISO(hoy);
+
+  const anio = Number(fecha.slice(0, 4));
+
+  const guardados = getData(KEY_OFICIOS, []);
+
+  const lista = Array.isArray(guardados) ? guardados : [];
+
+  const consecutivo =
+    Math.max(
+      0,
+      ...lista
+        .filter((oficio) => Number(oficio.anio) === anio)
+        .map((oficio) => Number(oficio.consecutivo) || 0),
+    ) + 1;
+
+  const numero = formatoNumeroOficio({ consecutivo, anio });
+
+  const tribunal = tribunalDe(amparo);
+
+  const partes = partesDe(seg);
+
+  const numAmparo = /\d/.test(amparo.juzgado || "") ? amparo.juzgado : amparo.id;
+
+  const texto = PLANTILLA_INFORME.replace("{{numero}}", numero)
+    .replace(
+      "{{fecha}}",
+      hoy.toLocaleDateString("es-MX", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    )
+    .replace("{{tribunal}}", tribunal.toUpperCase())
+    .replace("{{amparo}}", numAmparo)
+    .replace("{{quejosos}}", nombres(partes.quejosos) || "el quejoso")
+    .replace(
+      "{{terceros}}",
+      partes.terceros.length
+        ? `, siendo terceros interesados ${nombres(partes.terceros)}`
+        : "",
+    )
+    .replace("{{expediente}}", amparo.expediente || "—")
+    .replace(
+      "{{anexos}}",
+      `el expediente laboral ${amparo.expediente || ""}, la demanda de amparo original y las notificaciones practicadas al quejoso y terceros interesados`,
+    );
+
+  saveData(KEY_OFICIOS, [
+    ...lista,
+    {
+      id: idCorto(),
+      anio,
+      consecutivo,
+      fecha,
+      dirigidoA: tribunal,
+      asunto: `Informe Justificado · amparo directo ${numAmparo}`,
+      expediente: amparo.expediente || "",
+      elaboradoPor: getSession()?.nombre || getSession()?.email || "—",
+      origen: "amparo-directo",
+      amparoId: amparo.id,
+    },
+  ]);
+
+  seg.informe = {
+    numero,
+    consecutivo,
+    anio,
+    fecha,
+    dirigidoA: tribunal,
+    texto,
+    anexos: { expediente: false, demanda: false, notificaciones: false },
+    enviado: false,
+  };
+
+  seg.informeOficio = numero;
+
+  log(
+    seg,
+    `Oficio de Informe Justificado generado (${numero}) dirigido a ${tribunal}`,
+  );
+}
+
+function descargarInforme(id) {
+  const seg = getData(KEY, {})[String(id)];
+
+  if (!seg?.informe) {
+    return;
+  }
+
+  const html = `<html><head><meta charset="utf-8"></head><body><pre style="font-family:Arial,sans-serif;font-size:12pt;white-space:pre-wrap">${escapeHTML(seg.informe.texto)}</pre></body></html>`;
+
+  const enlace = document.createElement("a");
+
+  enlace.href = URL.createObjectURL(
+    new Blob([html], { type: "application/msword" }),
+  );
+
+  enlace.download = `${seg.informe.numero.replace("/", "-")}.doc`;
+
+  document.body.appendChild(enlace);
+
+  enlace.click();
+
+  enlace.remove();
+
+  setTimeout(() => URL.revokeObjectURL(enlace.href), 1000);
+}
+
+// ============================================================
+// D-06 (símbolico): CUADERNILLO PROPIO DEL AMPARO
+// D-08 / D-09 / D-10: copias, suspensión y archivo
+// ============================================================
+
+function cuadernilloDe(seg) {
+  if (!seg.cuadernillo || !Array.isArray(seg.cuadernillo.oficiosTC)) {
+    seg.cuadernillo = { oficiosTC: [], generado: false };
+  }
+
+  return seg.cuadernillo;
+}
+
+function cajaCuadernillo(seg) {
+  const oficios = seg.cuadernillo?.oficiosTC || [];
+
+  return `
+        <details class="mamp-cuad-box" data-mamp-cuad-box ${cuadAbierto || oficios.length ? "open" : ""}>
+            <summary>
+                <i class="fa-solid fa-folder-open"></i>
+                Cuadernillo del amparo · ${oficios.length} ${oficios.length === 1 ? "oficio recibido" : "oficios recibidos"} del Tribunal Colegiado
+            </summary>
+            ${
+              oficios.length
+                ? `<ul class="mamp-req-list">${oficios
+                    .map(
+                      (o) => `
+                        <li>
+                            <strong>${escapeHTML(formatFecha(o.fecha))} · ${escapeHTML(o.numero)}</strong>
+                            ${escapeHTML(o.asunto || "Sin asunto")}
+                            <button type="button" class="mamp-parte-del" data-mamp-act="cuad-oficio-del" data-oid="${escapeHTML(o.id)}" title="Quitar" aria-label="Quitar">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </li>`,
+                    )
+                    .join("")}</ul>`
+                : `<p class="mamp-note">Aún no hay oficios del Tribunal Colegiado en el cuadernillo.</p>`
+            }
+            <div class="mamp-cuad-form">
+                <input type="text" id="mampCuadNumero" placeholder="Número de oficio">
+                <input type="date" id="mampCuadFecha">
+                <input type="text" id="mampCuadAsunto" placeholder="Asunto (opcional)">
+                <button type="button" class="mesas-secondary-btn" data-mamp-act="cuad-oficio-add">
+                    <i class="fa-solid fa-plus"></i> Agregar oficio recibido
+                </button>
+            </div>
+            <button type="button" class="mesas-secondary-btn" data-mamp-act="cuad-generar">
+                <i class="fa-solid fa-file-zipper"></i> Generar cuadernillo
+            </button>
+        </details>`;
+}
+
+function docsCuadernillo(seg) {
+  return DOCS_CUADERNILLO.filter(
+    (doc) => !doc.soloSiNegada || seg.suspension?.resultado === "niega",
+  );
+}
+
+// D-10: lista de copias del cuadernillo (editable en la etapa; solo lectura al cerrar)
+function listaCopias(seg, soloLectura) {
+  return `
+        <div class="mamp-options">
+            ${docsCuadernillo(seg)
+              .map(
+                (doc) => `
+                    <label class="mamp-option">
+                        <input type="checkbox" data-cuad="${doc.id}" ${seg.cuad[doc.id] ? "checked" : ""} ${soloLectura ? "disabled" : ""}>
+                        ${escapeHTML(doc.texto)}
+                    </label>`,
+              )
+              .join("")}
+        </div>`;
+}
+
+// D-09: las dos rutas de amparo concedido
+function rutaConcedido(seg) {
+  return seg.suspension?.resultado === "concede_cantidad"
+    ? `Suspensión concedida · ruta 1: fija una cantidad ($${escapeHTML(String(seg.suspension.cantidad ?? ""))}).`
+    : "Suspensión concedida · ruta 2: sin fijar cantidad (p. ej. reinstalación del trabajador).";
+}
+
+// ============================================================
+// D-01: BANDEJA "POR RECIBIR" (patrón de recepcionExpedientes.js)
+// ============================================================
+
+// Documentos de Oficialía de Partes (amparo directo sin seguimiento) y
+// documentos ubicados en Actuaría que regresan a la Mesa.
+function pendientesPorRecibir() {
+  const amparos = getData("amparos", []);
+
+  const seguimiento = getData(KEY, {});
+
+  const deOficialia = amparos
+    .filter(
+      (amparo) =>
+        amparo.id &&
+        !seguimiento[String(amparo.id)] &&
+        detectarTipo(amparo) === "directo",
+    )
+    .map((amparo) => ({ origen: "Oficialía de Partes", amparo }));
+
+  const deActuaria = amparos
+    .filter((amparo) => {
+      const seg = seguimiento[String(amparo.id)];
+
+      return seg?.tipo === "directo" && enActuaria(seg);
+    })
+    .map((amparo) => ({
+      origen: "Actuaría",
+      amparo,
+      seg: seguimiento[String(amparo.id)],
+    }));
+
+  return [...deOficialia, ...deActuaria];
+}
+
+function renderPorRecibir() {
+  const host = document.getElementById("mampPorRecibir");
+
+  if (!host || tipoPagina() !== "directo") {
+    return;
+  }
+
+  const pendientes = pendientesPorRecibir();
+
+  host.innerHTML = `
+        <section class="mesas-recepcion-card">
+            <div class="mesas-recepcion-card-header">
+                <div>
+                    <span class="mesas-mini-eyebrow">Oficialía de Partes y Actuaría</span>
+                    <h2>Amparos por recibir</h2>
+                </div>
+                <span class="mesas-recepcion-counter">${pendientes.length}</span>
+            </div>
+            <div class="mesas-recepcion-card-body">
+                <p>${
+                  pendientes.length
+                    ? `${pendientes.length} ${pendientes.length === 1 ? "documento pendiente" : "documentos pendientes"} de recibir.`
+                    : "No hay documentos pendientes de recibir."
+                }</p>
+                <button type="button" class="mesas-secondary-btn mesas-recepcion-open-btn" data-mamp-action="por-recibir" ${pendientes.length ? "" : "disabled"}>
+                    <i class="fa-solid fa-inbox"></i> Ver documentos
+                </button>
+            </div>
+        </section>`;
+}
+
+function sugerirCategoria(amparo) {
+  const texto = `${amparo.actoReclamado || ""} ${amparo.acciones || ""}`;
+
+  if (/laudo/i.test(texto)) {
+    return "Laudo";
+  }
+
+  return /radica/i.test(texto) ? "Radicación" : "Otro";
+}
+
+function abrirPorRecibir() {
+  const pendientes = pendientesPorRecibir();
+
+  showModal(`
+        <div class="mesas-modal-shell mesas-recepcion-modal">
+            <header class="mesas-modal-header">
+                <div class="mesas-modal-step"><i class="fa-solid fa-inbox"></i></div>
+                <div class="mesas-modal-header-text">
+                    <h2>Amparos por recibir</h2>
+                    <p>Documentos de Oficialía de Partes y expedientes que regresan de Actuaría.</p>
+                </div>
+            </header>
+            <div class="mesas-modal-body">
+                ${
+                  pendientes.length
+                    ? `<div class="mesas-recepcion-list">${pendientes
+                        .map((item) => {
+                          const a = item.amparo;
+
+                          const deActuaria = item.origen === "Actuaría";
+
+                          return `
+                        <article class="mesas-recepcion-item">
+                            <div class="mesas-recepcion-item-main">
+                                <div class="mesas-recepcion-item-top">
+                                    <strong>Amparo ${escapeHTML(a.id)} · Exp. ${escapeHTML(a.expediente || "—")}</strong>
+                                    <span class="mesas-recepcion-mesa-badge">${escapeHTML(item.origen)}</span>
+                                </div>
+                                <div class="mesas-recepcion-item-grid">
+                                    <div><span>Promovente</span><strong>${escapeHTML(a.promovente || "—")}</strong></div>
+                                    <div><span>Acto reclamado</span><strong>${escapeHTML(a.actoReclamado || "—")}</strong></div>
+                                    ${
+                                      deActuaria
+                                        ? `<div><span>En Actuaría desde</span><strong>${escapeHTML(formatFecha(item.seg.actuaria?.desde || item.seg.desde))}</strong></div>
+                                           <div><span>Motivo</span><strong>${escapeHTML(item.seg.actuaria?.motivo || "Notificaciones")}</strong></div>`
+                                        : `<div><span>Fecha</span><strong>${escapeHTML(formatFecha(a.dia))}</strong></div>
+                                           <div><span>Categoría</span>
+                                               <select data-recibir-cat="${escapeHTML(a.id)}">${CATEGORIAS.map((c) => `<option ${c === sugerirCategoria(a) ? "selected" : ""}>${c}</option>`).join("")}</select>
+                                           </div>`
+                                    }
+                                </div>
+                            </div>
+                            <button type="button" class="mesas-primary-btn" data-recibir-amparo="${escapeHTML(a.id)}" data-origen="${deActuaria ? "actuaria" : "oficialia"}">
+                                <i class="fa-solid fa-inbox"></i> Recibir
+                            </button>
+                        </article>`;
+                        })
+                        .join("")}</div>`
+                    : `<p>No hay documentos pendientes de recibir.</p>`
+                }
+            </div>
+            <footer class="mesas-modal-footer">
+                <button type="button" class="mesas-modal-cancel" id="mampCerrarRecepcion">Cerrar</button>
+            </footer>
+        </div>`);
+
+  document
+    .getElementById("mampCerrarRecepcion")
+    ?.addEventListener("click", closeForm);
+
+  document.querySelectorAll("[data-recibir-amparo]").forEach((boton) => {
+    boton.addEventListener("click", () => {
+      const id = boton.dataset.recibirAmparo;
+
+      if (boton.dataset.origen === "actuaria") {
+        aplicarRegresoActuaria(id);
+      } else {
+        const categoria =
+          document.querySelector(`[data-recibir-cat="${CSS.escape(id)}"]`)
+            ?.value || "Otro";
+
+        recibirDeOficialia(id, categoria);
+      }
+
+      renderMesasAmparos();
+
+      // Deja abierto el modal para recibir los restantes
+      if (pendientesPorRecibir().length) {
+        abrirPorRecibir();
+      } else {
+        closeForm();
+      }
+    });
+  });
+}
+
+function recibirDeOficialia(id, categoria) {
+  const amparo = getAmparo(id);
+
+  const todo = getData(KEY, {});
+
+  if (!amparo || todo[String(id)]) {
+    return;
+  }
+
+  const ahora = new Date().toISOString();
+
+  const quien = getSession()?.nombre || getSession()?.email || "Mesa de Amparos";
+
+  const seg = crearEstado(amparo, "directo");
+
+  seg.categoria = categoria;
+
+  seg.recibidoMesa = true;
+
+  seg.recibidoEn = ahora;
+
+  seg.recibidoPor = quien;
+
+  seg.historial = [
+    {
+      fecha: ahora,
+      movimiento: `Recibido de Oficialía de Partes en la Mesa de Amparos (${categoria})`,
+      por: quien,
+    },
+  ];
+
+  todo[String(id)] = seg;
+
+  saveData(KEY, todo);
+}
+
+// ============================================================
 // DEMO
 // ============================================================
 
@@ -1294,6 +2294,27 @@ function cargarDemo() {
       juz: "Juzgado Segundo de Distrito",
       acto: "Calificación de pruebas",
     },
+    // Amparos directos extra: uno por recibir de Oficialía y uno en Actuaría
+    {
+      n: "D6",
+      tipo: "directo",
+      pendiente: true,
+      dia: 0,
+      prom: "JOSÉ LUIS ORTEGA",
+      juz: "Tribunal Colegiado en Materia de Trabajo",
+      acto: "Laudo condenatorio",
+    },
+    {
+      n: "D7",
+      tipo: "directo",
+      etapa: "informe",
+      actuaria: true,
+      dia: 12,
+      prom: "ELENA VARGAS",
+      juz: "Tribunal Colegiado de Circuito",
+      acto: "Falta de radicación de la demanda",
+      cat: "Radicación",
+    },
   ];
 
   demo.forEach((item, indice) => {
@@ -1317,6 +2338,11 @@ function cargarDemo() {
       });
     }
 
+    // D-01: un amparo directo por recibir no tiene seguimiento todavía
+    if (item.pendiente || seguimiento[id]) {
+      return;
+    }
+
     const seg = crearEstado({ promovente: item.prom }, item.tipo);
 
     seg.etapa = item.etapa;
@@ -1326,6 +2352,49 @@ function cargarDemo() {
     if (item.tipo === "directo") {
       seg.ubicacion = item.etapa === "registro" ? "" : "Mesa 2";
       seg.suspension = item.suspension || null;
+
+      // D-02 / D-03: partes estructuradas y categoría
+      seg.categoria = item.cat || (indice % 2 ? "Laudo" : "Otro");
+      seg.partes = {
+        quejosos: [{ nombre: item.prom, domicilio: "" }],
+        terceros:
+          indice % 2 === 0
+            ? [{ nombre: "CONSTRUCTORA DEL NORTE S.A. DE C.V.", domicilio: "" }]
+            : [],
+      };
+      seg.quejoso = nombres(seg.partes.quejosos);
+      seg.terceros = nombres(seg.partes.terceros);
+
+      // D-04: expediente ubicado en Actuaría
+      if (item.actuaria) {
+        seg.actuaria = {
+          activo: true,
+          desde: hace(2).toISOString(),
+          motivo: "Notificar acuerdo a terceros interesados",
+          etapaOrigen: item.etapa,
+        };
+      }
+
+      // D-05: etapas posteriores al informe ya traen su oficio enviado
+      if (["resolucion", "cumplimiento", "cuadernillo"].includes(item.etapa)) {
+        generarInforme(seg, amparos.find((a) => a.id === id));
+
+        if (seg.informe) {
+          seg.informe.anexos = { expediente: true, demanda: true, notificaciones: true };
+          seg.informe.enviado = true;
+        }
+      }
+
+      // D-06: oficio del Tribunal Colegiado en el cuadernillo
+      if (item.n === "D5") {
+        seg.cuadernillo.oficiosTC.push({
+          id: `demo-${item.n}-1`,
+          numero: "TC-2026/88",
+          fecha: fechaISO(hace(4)),
+          asunto: "Requerimiento de copias certificadas",
+          registradoEn: hace(4).toISOString(),
+        });
+      }
 
       if (item.etapa === "cumplimiento") {
         seg.cumplimiento.laudoNuevo = true;
