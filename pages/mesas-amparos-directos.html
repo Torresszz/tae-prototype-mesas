@@ -15,6 +15,8 @@
 
         <main class="mesas-secretaria-main">
 
+            <div id="mampPorRecibir"></div>
+
             <!-- ESTADO -->
             <div class="mesas-status-tabs" id="mampTabs">
                 <button type="button" class="mesas-status-tab active" data-estado="todos">
@@ -42,8 +44,21 @@
                         autocomplete="off"
                     >
                 </div>
-                <select id="mampEtapaFilter">
-                    <option value="">Todas las etapas</option>
+                <select id="mampEtapaFilter"><option value="">Todas las etapas</option></select>
+                <select id="mampCategoriaFilter">
+                    <option value="">Todas las categorías</option>
+                    <option value="Radicación">Radicación</option>
+                    <option value="Laudo">Laudo</option>
+                    <option value="Otro">Otro</option>
+                </select>
+                <select id="mampUbicacionFilter">
+                    <option value="">Todas las ubicaciones</option>
+                    <option value="Mesa de Amparos">Mesa de Amparos</option>
+                    <option value="Actuaría">Actuaría</option>
+                    <option value="Tribunal Colegiado">Tribunal Colegiado</option>
+                    <option value="Laudos">Laudos</option>
+                    <option value="Archivo">Archivo</option>
+                    <option value="Oficialía de Partes">Oficialía de Partes</option>
                 </select>
             </div>
 
@@ -55,8 +70,10 @@
                             <tr>
                                 <th>Amparo</th>
                                 <th>Expediente</th>
-                                <th>Promovente</th>
-                                <th>Etapa / en poder de</th>
+                                <th>Quejoso</th>
+                                <th>Categoría</th>
+                                <th>Ubicación</th>
+                                <th>Etapa</th>
                                 <th>Plazo</th>
                                 <th>Acciones</th>
                             </tr>

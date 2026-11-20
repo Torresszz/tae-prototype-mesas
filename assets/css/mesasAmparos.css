@@ -127,3 +127,80 @@
     border-color: #8eb4e5;
     box-shadow: 0 0 0 3px rgba(43, 114, 214, 0.08);
 }
+
+
+/* Amparos directos: bandeja, filtros y columnas adicionales */
+#mampCategoriaFilter, #mampUbicacionFilter {
+    width: 100%; min-width: 145px; height: 40px; padding: 0 10px;
+    border: 1px solid #d5dfe8; border-radius: 7px; background: #fff;
+    color: #29445c; font: inherit; font-size: 10px;
+}
+.mamp-inbox {
+    margin: 0 0 18px; padding: 16px 18px; border: 1px solid #dce6ef;
+    border-radius: 12px; background: #fff;
+}
+.mamp-inbox-head { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.mamp-inbox-head h2 { margin:4px 0; color:#183650; font-size:15px; }
+.mamp-inbox-head p { margin:0; color:#718397; font-size:10px; }
+.mamp-inbox-head > strong {
+    display:grid; place-items:center; min-width:32px; height:32px;
+    border-radius:50%; background:#edf4fc; color:#1768cf; font-size:13px;
+}
+.mamp-inbox-item {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-top:10px; padding:10px 12px; border:1px solid #e7edf3; border-radius:8px;
+}
+.mamp-inbox-item > div { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.mamp-inbox-item strong { color:#29445c; font-size:10px; }
+.mamp-inbox-item span { color:#7b8fa2; font-size:9px; }
+.mamp-inline-actions { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.mesas-secretaria-table.mamp-table th:nth-child(1) { width:11%; }
+.mesas-secretaria-table.mamp-table th:nth-child(2) { width:10%; }
+.mesas-secretaria-table.mamp-table th:nth-child(3) { width:16%; }
+.mesas-secretaria-table.mamp-table th:nth-child(4) { width:12%; }
+.mesas-secretaria-table.mamp-table th:nth-child(5) { width:13%; }
+.mesas-secretaria-table.mamp-table th:nth-child(6) { width:16%; }
+.mesas-secretaria-table.mamp-table th:nth-child(7) { width:9%; }
+.mesas-secretaria-table.mamp-table th:nth-child(8) { width:13%; }
+
+/* Amparos directos: categoría, partes, Actuaría, oficio y cuadernillo */
+.mesas-stage-badge.mamp-cat-rad { background: #e8f1ff; color: #1768cf; }
+.mesas-stage-badge.mamp-cat-laudo { background: #f1eaff; color: #7045bd; }
+.mesas-stage-badge.mamp-cat-otro { background: #eef2f6; color: #4c6177; }
+.mesas-stage-badge.mamp-cat-sin { background: #fff4e0; color: #8a4b08; }
+
+.mamp-info-select, .mamp-cuad-form input {
+    height: 30px; padding: 0 8px; border: 1px solid #d5dfe8; border-radius: 6px;
+    background: #fff; color: #29445c; font: inherit; font-size: 10px; max-width: 100%;
+}
+.mamp-partes-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.mamp-parte-row { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 6px; align-items: center; }
+.mamp-parte-row input { height: 34px; padding: 0 9px; border: 1px solid #d5dfe8; border-radius: 7px; font: inherit; font-size: 10px; }
+.mamp-parte-del {
+    width: 26px; height: 26px; border: 0; border-radius: 50%; background: #fdecea;
+    color: #b42318; cursor: pointer; flex-shrink: 0;
+}
+.mamp-req-list li { position: relative; padding-right: 38px; }
+.mamp-req-list li .mamp-parte-del { position: absolute; top: 6px; right: 8px; }
+
+.mamp-actuaria-box { margin: 0 0 12px; padding: 10px 12px; border: 1px dashed #b9cde3; border-radius: 8px; }
+.mamp-oficio {
+    max-height: 210px; overflow: auto; margin: 0 0 11px; padding: 12px; white-space: pre-wrap;
+    border: 1px solid #dce6ef; border-radius: 8px; background: #fafcfe; color: #29445c;
+    font: 10px/1.5 Georgia, "Times New Roman", serif;
+}
+.mamp-cuad-box { margin: 0 0 12px; padding: 10px 12px; border: 1px solid #dce6ef; border-radius: 8px; }
+.mamp-cuad-box summary { cursor: pointer; color: #183650; font-size: 10px; font-weight: 600; }
+.mamp-cuad-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+.mamp-cuad-form button { grid-column: 1 / -1; }
+
+/* Amparos directos: maquetación de bandeja, filtros y tabla de 8 columnas */
+#mampPorRecibir:not(:empty) { margin-bottom: 14px; }
+#mampPage[data-tipo="directo"] .mesas-secretaria-toolbar {
+    grid-template-columns: minmax(0, 1fr) repeat(3, minmax(110px, 140px));
+}
+#mampPage[data-tipo="directo"] .mesas-secretaria-toolbar .mesas-search { grid-column: 1; }
+#mampPage[data-tipo="directo"] #mampEtapaFilter { grid-column: 2; }
+#mampPage[data-tipo="directo"] #mampCategoriaFilter { grid-column: 3; }
+#mampPage[data-tipo="directo"] #mampUbicacionFilter { grid-column: 4; }
+#mampPage[data-tipo="directo"] .mesas-secretaria-table.mamp-table { min-width: 940px; }
