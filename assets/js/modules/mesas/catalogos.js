@@ -53,6 +53,50 @@ export function etiquetaCategoriaPlantilla(clave) {
   );
 }
 
+// Categorías de plantillas de la Mesa de Amparos Directos
+// (almacén propio: llave "mesasAmparosPlantillas").
+export const PLANTILLA_CATEGORIAS_AMPAROS = [
+  {
+    clave: "informe-justificado",
+    etiqueta: "Informe Justificado",
+    icono: "fa-file-lines",
+  },
+  {
+    clave: "radicaciones",
+    etiqueta: "Radicaciones",
+    icono: "fa-file-signature",
+  },
+  {
+    clave: "certificacion",
+    etiqueta: "Certificación",
+    icono: "fa-stamp",
+  },
+  {
+    clave: "oficios",
+    etiqueta: "Oficios",
+    icono: "fa-envelope-open-text",
+  },
+  {
+    clave: "ampara-y-protege",
+    etiqueta: "Ampara y protege",
+    icono: "fa-shield-halved",
+  },
+  {
+    clave: "no-ampara-ni-protege",
+    etiqueta: "No ampara ni protege",
+    icono: "fa-ban",
+  },
+];
+
+export function etiquetaCategoriaPlantillaAmparos(clave) {
+  return (
+    PLANTILLA_CATEGORIAS_AMPAROS.find((categoria) => categoria.clave === clave)
+      ?.etiqueta ||
+    clave ||
+    "—"
+  );
+}
+
 
 // ============================================================
 // AGENDA

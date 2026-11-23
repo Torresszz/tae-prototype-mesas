@@ -99,6 +99,32 @@ export function validarRequisitosFirma(acuerdo) {
   return errores;
 }
 
+// Requisitos para enviar a firma un AMPARO DIRECTO: documento adjunto,
+// estado procesal (texto manual) y cantidad de fojas (entero >= 0).
+export function validarRequisitosFirmaAmparo(datos) {
+  const d = datos && typeof datos === "object" ? datos : {};
+
+  const errores = [];
+
+  if (!String(d.archivo || "").trim() || !String(d.documentoId || "").trim()) {
+    errores.push("Adjunta el archivo del documento (.pdf o .docx).");
+  } else if (!extensionDocumentoValida(d.archivo)) {
+    errores.push("El archivo adjunto debe ser .pdf o .docx.");
+  }
+
+  if (!String(d.estadoProcesal || "").trim()) {
+    errores.push("Escribe el estado procesal.");
+  }
+
+  const fojas = String(d.fojas ?? "").trim();
+
+  if (!/^\d+$/.test(fojas)) {
+    errores.push("Indica la cantidad de fojas del documento (número entero).");
+  }
+
+  return errores;
+}
+
 // ============================================================
 // ALMACÉN DE ARCHIVOS
 // Registro: { id, nombre, tipoArchivo, tamano, dataUrl, subidoPor, fecha }
@@ -423,6 +449,9 @@ if (!window.__mesasDocumentosFirmaListo) {
 //   acuerdo     acuerdo actual del registro (puede venir vacío)
 //   aplicar     (acuerdo) => { ok, error }  ejecuta la acción del flujo
 //   alTerminar  se llama tras enviar con éxito (para volver a pintar)
+//   modo        "acuerdo" (por defecto): documento + concepto "Acuerdo".
+//               "amparo": documento + estado procesal + fojas
+//               (Amparos Directos; el resultado trae estadoProcesal y fojas).
 //
 // El botón de envío permanece bloqueado hasta que haya documento
 // (.pdf/.docx) y concepto "Acuerdo". El archivo se guarda al enviar.
@@ -433,7 +462,10 @@ export function abrirEnvioFirma({
   acuerdo = null,
   aplicar,
   alTerminar,
+  modo = "acuerdo",
 }) {
+  const esAmparo = modo === "amparo";
+
   const acuerdoActual =
     acuerdo && typeof acuerdo === "object" ? acuerdo : {};
 
@@ -506,6 +538,48 @@ export function abrirEnvioFirma({
           </div>
 
 
+          ${
+            esAmparo
+              ? `
+          <label class="mesas-agenda-field full">
+
+            <span>
+              Estado procesal
+              <small>(obligatorio · se escribe a mano)</small>
+            </span>
+
+            <textarea
+              id="firmaEstadoProcesal"
+              rows="3"
+              placeholder="Ej. RADICACIÓN A.D. 02OCT2026 PARTE ACTORA"
+            >${escapeHTML(acuerdoActual.estadoProcesal || "")}</textarea>
+
+            <small>
+              Aparece tal cual en la columna "Estado procesal" de la lista.
+            </small>
+
+          </label>
+
+          <label class="mesas-agenda-field">
+
+            <span>
+              Fojas del documento
+              <small>(obligatorio)</small>
+            </span>
+
+            <input
+              type="number"
+              id="firmaFojas"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="Ej. 245"
+              value="${escapeHTML(String(acuerdoActual.fojas ?? ""))}"
+            >
+
+          </label>
+          `
+              : `
           <label class="mesas-agenda-field full">
 
             <span>
@@ -524,6 +598,8 @@ export function abrirEnvioFirma({
             </small>
 
           </label>
+          `
+          }
 
         </div>
 
@@ -559,7 +635,12 @@ export function abrirEnvioFirma({
 
   const inputArchivo = document.getElementById("firmaArchivo");
 
-  const concepto = document.getElementById("firmaConcepto");
+  // Campo de texto principal: "Estracto" (acuerdo) o "Estado procesal" (amparo).
+  const concepto = document.getElementById(
+    esAmparo ? "firmaEstadoProcesal" : "firmaConcepto",
+  );
+
+  const campoFojas = document.getElementById("firmaFojas");
 
   const nombreArchivo = document.getElementById("firmaArchivoNombre");
 
@@ -588,8 +669,16 @@ export function abrirEnvioFirma({
 
     documentoId: pendiente ? "nuevo" : documentoPrevio?.id || "",
 
-    concepto: concepto.value.trim(),
+    ...(esAmparo
+      ? {
+          estadoProcesal: concepto.value.trim(),
+          fojas: String(campoFojas?.value ?? "").trim(),
+        }
+      : { concepto: concepto.value.trim() }),
   });
+
+  const errores = (datos) =>
+    esAmparo ? validarRequisitosFirmaAmparo(datos) : validarRequisitosFirma(datos);
 
   const refrescar = () => {
     const nombre = nombreActual();
@@ -604,8 +693,7 @@ export function abrirEnvioFirma({
 
     botonArchivo.textContent = nombre ? "Cambiar archivo" : "Adjuntar archivo";
 
-    confirmar.disabled =
-      leyendo || validarRequisitosFirma(armarAcuerdo()).length > 0;
+    confirmar.disabled = leyendo || errores(armarAcuerdo()).length > 0;
   };
 
   inputArchivo.addEventListener("change", async (evento) => {
@@ -649,6 +737,12 @@ export function abrirEnvioFirma({
     refrescar();
   });
 
+  campoFojas?.addEventListener("input", () => {
+    mostrarError("");
+
+    refrescar();
+  });
+
   document.getElementById("cancelarEnvioFirma")?.addEventListener(
     "click",
     closeForm,
@@ -657,10 +751,10 @@ export function abrirEnvioFirma({
   confirmar.addEventListener("click", () => {
     const datos = armarAcuerdo();
 
-    const errores = validarRequisitosFirma(datos);
+    const faltantes = errores(datos);
 
-    if (errores.length) {
-      mostrarError(errores.join(" "));
+    if (faltantes.length) {
+      mostrarError(faltantes.join(" "));
 
       return;
     }

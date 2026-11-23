@@ -1,0 +1,268 @@
+/* ============================================================
+   AMPAROS DIRECTOS: apartados, cuadernillo, firma y listas
+   assets/css/mesasAmparosDirectos.css
+   Reutiliza las clases base de mesas.css y mesasAmparos.css;
+   aquí solo lo propio (mampd-*).
+   ============================================================ */
+
+/* [hidden] debe ganar a display:grid de .mesas-secretaria-layout */
+[data-mamp-vista][hidden] {
+    display: none !important;
+}
+
+/* ---------- Avance del cuadernillo ---------- */
+.mampd-progreso {
+    margin: 0 0 12px;
+}
+
+.mampd-progreso-texto {
+    margin-bottom: 5px;
+    color: #102b45;
+    font-size: 10px;
+}
+
+.mampd-progreso-barra {
+    height: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e8f1ff;
+}
+
+.mampd-progreso-barra > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: #2b72d6;
+}
+
+.mampd-mini-progreso {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 110px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #102b45;
+}
+
+.mampd-mini-progreso .mampd-progreso-barra {
+    flex: 1;
+}
+
+/* ---------- Resumen del cuadernillo dentro del modal del amparo ---------- */
+.mampd-cuad-resumen {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #dce6ef;
+    border-radius: 8px;
+    background: #f7faff;
+}
+
+.mampd-cuad-resumen > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: #102b45;
+    font-size: 10px;
+}
+
+.mampd-cuad-resumen span {
+    color: #5b7088;
+}
+
+/* ---------- Modal del cuadernillo ---------- */
+.mampd-cuad-docs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+}
+
+.mampd-cuad-doc {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    border: 1px solid #dce3ea;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.mampd-cuad-doc.ok {
+    border-color: #bfe3c9;
+    background: #f6fcf8;
+}
+
+.mampd-cuad-doc-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.mampd-cuad-doc-main strong {
+    display: block;
+    color: #102b45;
+    font-size: 10.5px;
+}
+
+.mampd-cuad-doc-main small {
+    display: block;
+    margin-top: 2px;
+    color: #7b8fa2;
+    font-size: 9px;
+    overflow-wrap: anywhere;
+}
+
+.mampd-cuad-check {
+    flex: 0 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #dce3ea;
+    border-radius: 50%;
+    background: #f5f7fa;
+    color: #9aaabb;
+    font-size: 9px;
+}
+
+.mampd-cuad-check.ok {
+    border-color: #14833b;
+    background: #14833b;
+    color: #ffffff;
+}
+
+.mampd-cuad-doc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mampd-upload-btn {
+    cursor: pointer;
+}
+
+.mampd-obs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+    padding: 12px;
+    border: 1px dashed #b9cde3;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+.mampd-obs label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: #102b45;
+    font-size: 10px;
+}
+
+.mampd-obs label small {
+    color: #7b8fa2;
+    font-size: 9px;
+}
+
+.mampd-obs textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 70px;
+    padding: 8px 10px;
+    border: 1px solid #dce3ea;
+    border-radius: 7px;
+    font: inherit;
+    font-size: 10.5px;
+    resize: vertical;
+}
+
+.mampd-obs-acciones {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mampd-obs-ok {
+    color: #14833b;
+    font-size: 9.5px;
+}
+
+/* ---------- Firma de Presidencia dentro del modal del amparo ---------- */
+.mampd-firma-box {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #dce6ef;
+    border-radius: 8px;
+}
+
+.mampd-firma-box > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+    color: #102b45;
+    font-size: 10px;
+}
+
+.mampd-firma-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mampd-firma-list li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 8px 10px;
+    border: 1px solid #eef2f6;
+    border-radius: 7px;
+    background: #fbfcfe;
+}
+
+.mampd-firma-list li > div {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.mampd-firma-list strong {
+    display: block;
+    color: #102b45;
+    font-size: 10px;
+}
+
+.mampd-firma-list small {
+    display: block;
+    color: #7b8fa2;
+    font-size: 9px;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+    .mampd-cuad-resumen {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mampd-cuad-doc-actions {
+        width: 100%;
+    }
+}

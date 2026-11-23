@@ -22,31 +22,6 @@ const KEY = "mesasPlantillas";
 export const EXTENSIONES_PERMITIDAS = ["docx", "pdf"];
 
 // ------------------------------------------------------------
-// LECTURA
-// ------------------------------------------------------------
-
-// Más recientes primero. Todas las mesas comparten las plantillas.
-export function listar({ categoria = "" } = {}) {
-  const lista = getData(KEY, []);
-
-  return (Array.isArray(lista) ? lista : [])
-    .filter((item) => !categoria || item.categoria === categoria)
-    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
-}
-
-export function obtener(id) {
-  return getData(KEY, []).find((item) => item.id === id) || null;
-}
-
-// Aproximado: caracteres guardados por las plantillas.
-export function espacioUsadoBytes() {
-  return getData(KEY, []).reduce(
-    (total, item) => total + String(item.dataUrl || "").length,
-    0,
-  );
-}
-
-// ------------------------------------------------------------
 // VALIDACIÓN DEL ARCHIVO
 // ------------------------------------------------------------
 
@@ -88,85 +63,130 @@ export function leerComoDataUrl(archivo) {
 }
 
 // ------------------------------------------------------------
-// ESCRITURA
+// FÁBRICA DEL ALMACÉN
+// Cada ámbito (Mesas de Secretaría de Acuerdos, Amparos Directos...)
+// guarda sus plantillas en su propia llave de localStorage.
 // ------------------------------------------------------------
+export function crearAlmacenPlantillas(KEY) {
+  // ------------------------------------------------------------
+  // LECTURA
+  // ------------------------------------------------------------
 
-// Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
-export function guardar({ nombre, categoria, archivo, dataUrl, subidoPor }) {
-  const plantilla = {
-    id: createId(),
-    nombre: String(nombre || "").trim(),
-    categoria,
-    tipoArchivo: extensionDe(archivo.name),
-    nombreArchivo: archivo.name,
-    tamano: archivo.size,
-    dataUrl,
-    subidoPor: subidoPor || "—",
-    fecha: todayISO(),
-  };
+  // Más recientes primero. Todas las mesas comparten las plantillas.
+  function listar({ categoria = "" } = {}) {
+    const lista = getData(KEY, []);
 
-  try {
-    saveData(KEY, [...getData(KEY, []), plantilla]);
-
-    return { ok: true, plantilla };
-  } catch (error) {
-    console.error("No se pudo guardar la plantilla:", error);
-
-    const cuota =
-      error?.name === "QuotaExceededError" ||
-      error?.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
-      error?.code === 22 ||
-      error?.code === 1014;
-
-    return { ok: false, error: cuota ? "cuota" : "otro" };
+    return (Array.isArray(lista) ? lista : [])
+      .filter((item) => !categoria || item.categoria === categoria)
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
   }
-}
 
-// Edita nombre y categoría; si llega `archivo` + `dataUrl`, reemplaza el archivo.
-// Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
-export function actualizar(id, { nombre, categoria, archivo, dataUrl }) {
-  const lista = getData(KEY, []);
-  const actual = lista.find((item) => item.id === id);
+  function obtener(id) {
+    return getData(KEY, []).find((item) => item.id === id) || null;
+  }
 
-  if (!actual) return { ok: false, error: "otro" };
-
-  const plantilla = {
-    ...actual,
-    nombre: String(nombre || "").trim(),
-    categoria,
-    ...(archivo && dataUrl
-      ? {
-          tipoArchivo: extensionDe(archivo.name),
-          nombreArchivo: archivo.name,
-          tamano: archivo.size,
-          dataUrl,
-          fecha: todayISO(),
-        }
-      : {}),
-  };
-
-  try {
-    saveData(
-      KEY,
-      lista.map((item) => (item.id === id ? plantilla : item)),
+  // Aproximado: caracteres guardados por las plantillas.
+  function espacioUsadoBytes() {
+    return getData(KEY, []).reduce(
+      (total, item) => total + String(item.dataUrl || "").length,
+      0,
     );
-    return { ok: true, plantilla };
-  } catch (error) {
-    console.error("No se pudo actualizar la plantilla:", error);
-    return { ok: false, error: "cuota" };
-  }
-}
-
-export function borrar(id) {
-  const lista = getData(KEY, []);
-
-  const restantes = lista.filter((item) => item.id !== id);
-
-  if (restantes.length === lista.length) {
-    return false;
   }
 
-  saveData(KEY, restantes);
+  // ------------------------------------------------------------
+  // ESCRITURA
+  // ------------------------------------------------------------
 
-  return true;
+  // Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
+  function guardar({ nombre, categoria, archivo, dataUrl, subidoPor }) {
+    const plantilla = {
+      id: createId(),
+      nombre: String(nombre || "").trim(),
+      categoria,
+      tipoArchivo: extensionDe(archivo.name),
+      nombreArchivo: archivo.name,
+      tamano: archivo.size,
+      dataUrl,
+      subidoPor: subidoPor || "—",
+      fecha: todayISO(),
+    };
+
+    try {
+      saveData(KEY, [...getData(KEY, []), plantilla]);
+
+      return { ok: true, plantilla };
+    } catch (error) {
+      console.error("No se pudo guardar la plantilla:", error);
+
+      const cuota =
+        error?.name === "QuotaExceededError" ||
+        error?.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+        error?.code === 22 ||
+        error?.code === 1014;
+
+      return { ok: false, error: cuota ? "cuota" : "otro" };
+    }
+  }
+
+  // Edita nombre y categoría; si llega `archivo` + `dataUrl`, reemplaza el archivo.
+  // Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
+  function actualizar(id, { nombre, categoria, archivo, dataUrl }) {
+    const lista = getData(KEY, []);
+    const actual = lista.find((item) => item.id === id);
+
+    if (!actual) return { ok: false, error: "otro" };
+
+    const plantilla = {
+      ...actual,
+      nombre: String(nombre || "").trim(),
+      categoria,
+      ...(archivo && dataUrl
+        ? {
+            tipoArchivo: extensionDe(archivo.name),
+            nombreArchivo: archivo.name,
+            tamano: archivo.size,
+            dataUrl,
+            fecha: todayISO(),
+          }
+        : {}),
+    };
+
+    try {
+      saveData(
+        KEY,
+        lista.map((item) => (item.id === id ? plantilla : item)),
+      );
+      return { ok: true, plantilla };
+    } catch (error) {
+      console.error("No se pudo actualizar la plantilla:", error);
+      return { ok: false, error: "cuota" };
+    }
+  }
+
+  function borrar(id) {
+    const lista = getData(KEY, []);
+
+    const restantes = lista.filter((item) => item.id !== id);
+
+    if (restantes.length === lista.length) {
+      return false;
+    }
+
+    saveData(KEY, restantes);
+
+    return true;
+  }
+
+  return { listar, obtener, espacioUsadoBytes, guardar, actualizar, borrar };
 }
+
+// Almacén de las Mesas (Secretaría de Acuerdos): mismas funciones de siempre.
+export const {
+  listar,
+  obtener,
+  espacioUsadoBytes,
+  guardar,
+  actualizar,
+  borrar,
+} = crearAlmacenPlantillas(KEY);
+

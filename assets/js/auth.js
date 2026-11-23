@@ -714,6 +714,15 @@ export function canManageTemplates() {
 }
 
 // ============================================================
+// ¿PUEDE SUBIR Y BORRAR PLANTILLAS DE AMPAROS DIRECTOS?
+// Solo el usuario de Amparos Directos (almacén propio de plantillas).
+// ============================================================
+
+export function canManageTemplatesAmparosDirectos() {
+    return getRole() === "amparos-directos";
+}
+
+// ============================================================
 // PÁGINAS DEL ADMINISTRADOR
 // (function, no const: canAccessPage las usa desde arriba)
 // ============================================================

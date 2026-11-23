@@ -337,6 +337,14 @@ function setActiveMenu(page) {
       item.removeAttribute("aria-current");
     });
   }
+
+  // Igual con los apartados de Amparos Directos
+  if (page !== "mesas-amparos-directos") {
+    document.querySelectorAll(".mampd-sidebar-item.active").forEach((item) => {
+      item.classList.remove("active");
+      item.removeAttribute("aria-current");
+    });
+  }
 }
 
 // =====================================================

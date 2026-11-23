@@ -38,6 +38,7 @@ import {
 
 import { renderPlantillas } from "./mesas/plantillas.js";
 import { renderRecepcionExpedientes } from "./mesas/recepcionExpedientes.js";
+import { renderAmparosPorFirmar } from "./amparosDirectos/firma.js";
 import { renderExhortosMesa } from "./mesas/exhortos.js";
 import { renderAgendaCombinada } from "./mesas/agendaCombinada.js";
 
@@ -163,6 +164,9 @@ export function renderMesas() {
   renderRecepcionExpedientes();
 
   renderRecepcionPromociones();
+
+  // Amparos directos enviados a firma (solo la Magistrada los ve)
+  renderAmparosPorFirmar();
 
   renderSeccionActiva();
 }

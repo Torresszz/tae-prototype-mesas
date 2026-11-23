@@ -4,7 +4,7 @@
    Cargar DESPUÉS de mesas.css y mesasSecciones.css.
    ============================================================ */
 
-#mesasPage .mesas-plantillas {
+:is(#mesasPage, #mampPage) .mesas-plantillas {
     overflow: hidden;
     box-sizing: border-box;
     border: 1px solid #dce3ea;
@@ -12,12 +12,12 @@
     background: #ffffff;
 }
 
-#mesasPage .mesas-plantillas--seccion {
+:is(#mesasPage, #mampPage) .mesas-plantillas--seccion {
     margin-top: 14px;
 }
 
 /* ---------- Encabezado ---------- */
-#mesasPage .mesas-plantillas-header {
+:is(#mesasPage, #mampPage) .mesas-plantillas-header {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
@@ -27,7 +27,7 @@
     border-bottom: 1px solid #e7edf2;
 }
 
-#mesasPage .mesas-plantillas-header h2 {
+:is(#mesasPage, #mampPage) .mesas-plantillas-header h2 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -36,12 +36,12 @@
     font-size: 13px;
 }
 
-#mesasPage .mesas-plantillas-header h2 i {
+:is(#mesasPage, #mampPage) .mesas-plantillas-header h2 i {
     color: #1768cf;
     font-size: 12px;
 }
 
-#mesasPage .mesas-plantillas-header p {
+:is(#mesasPage, #mampPage) .mesas-plantillas-header p {
     max-width: 520px;
     margin: 0;
     color: #60758a;
@@ -49,14 +49,14 @@
     line-height: 14px;
 }
 
-#mesasPage .mesas-plantillas-header-actions {
+:is(#mesasPage, #mampPage) .mesas-plantillas-header-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 10px;
 }
 
-#mesasPage .mesas-plantillas-filter {
+:is(#mesasPage, #mampPage) .mesas-plantillas-filter {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -65,7 +65,7 @@
     font-weight: 600;
 }
 
-#mesasPage .mesas-plantillas-filter select {
+:is(#mesasPage, #mampPage) .mesas-plantillas-filter select {
     min-height: 34px;
     min-width: 190px;
     padding: 6px 10px;
@@ -79,11 +79,11 @@
 }
 
 /* ---------- Tabla ---------- */
-#mesasPage .mesas-plantillas-table {
+:is(#mesasPage, #mampPage) .mesas-plantillas-table {
     min-width: 860px;
 }
 
-#mesasPage .mesas-plantillas-table td {
+:is(#mesasPage, #mampPage) .mesas-plantillas-table td {
     padding: 10px;
     border-bottom: 1px solid #eef2f6;
     color: #29445c;
@@ -91,29 +91,29 @@
     vertical-align: middle;
 }
 
-#mesasPage .mesas-plantilla-nombre {
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre {
     display: flex;
     align-items: center;
     gap: 10px;
     min-width: 0;
 }
 
-#mesasPage .mesas-plantilla-nombre i {
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre i {
     flex: 0 0 auto;
     font-size: 20px;
 }
 
-#mesasPage .mesas-plantilla-nombre i.pdf  { color: #c2410c; }
-#mesasPage .mesas-plantilla-nombre i.docx { color: #1768cf; }
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre i.pdf  { color: #c2410c; }
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre i.docx { color: #1768cf; }
 
-#mesasPage .mesas-plantilla-nombre div {
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre div {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
 }
 
-#mesasPage .mesas-plantilla-nombre strong {
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre strong {
     overflow: hidden;
     color: #102b45;
     font-size: 10.5px;
@@ -121,7 +121,7 @@
     white-space: nowrap;
 }
 
-#mesasPage .mesas-plantilla-nombre span {
+:is(#mesasPage, #mampPage) .mesas-plantilla-nombre span {
     overflow: hidden;
     color: #7b8fa2;
     font-size: 8.5px;
@@ -129,7 +129,7 @@
     white-space: nowrap;
 }
 
-#mesasPage .mesas-plantilla-categoria {
+:is(#mesasPage, #mampPage) .mesas-plantilla-categoria {
     display: inline-flex;
     align-items: center;
     min-height: 22px;
@@ -142,16 +142,16 @@
     white-space: nowrap;
 }
 
-#mesasPage .mesas-secondary-btn.danger {
+:is(#mesasPage, #mampPage) .mesas-secondary-btn.danger {
     border-color: #f1b8b3;
     color: #b42318;
 }
 
-#mesasPage .mesas-secondary-btn.danger:hover {
+:is(#mesasPage, #mampPage) .mesas-secondary-btn.danger:hover {
     background: #fdf3f2;
 }
 
-#mesasPage .mesas-plantillas-uso {
+:is(#mesasPage, #mampPage) .mesas-plantillas-uso {
     margin: 0;
     padding: 9px 16px;
     border-top: 1px solid #e7edf2;
