@@ -22,7 +22,7 @@
 }
 
 /* ---------- Barra global de búsqueda ---------- */
-#mesasPage .mesas-global-bar {
+:is(#mesasPage, #mampPage) .mesas-global-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
@@ -35,12 +35,12 @@
     background: #ffffff;
 }
 
-#mesasPage .mesas-global-bar[hidden],
-#mesasPage .mesas-global-bar [hidden] {
+:is(#mesasPage, #mampPage) .mesas-global-bar[hidden],
+:is(#mesasPage, #mampPage) .mesas-global-bar [hidden] {
     display: none;
 }
 
-#mesasPage .mesas-global-field {
+:is(#mesasPage, #mampPage) .mesas-global-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -50,12 +50,12 @@
     font-weight: 600;
 }
 
-#mesasPage .mesas-global-field--search {
+:is(#mesasPage, #mampPage) .mesas-global-field--search {
     flex: 1 1 240px;
 }
 
-#mesasPage .mesas-global-field input,
-#mesasPage .mesas-global-field select {
+:is(#mesasPage, #mampPage) .mesas-global-field input,
+:is(#mesasPage, #mampPage) .mesas-global-field select {
     min-height: 36px;
     padding: 6px 10px;
     box-sizing: border-box;
@@ -67,11 +67,11 @@
     font-size: 11px;
 }
 
-#mesasPage .mesas-global-input {
+:is(#mesasPage, #mampPage) .mesas-global-input {
     position: relative;
 }
 
-#mesasPage .mesas-global-input i {
+:is(#mesasPage, #mampPage) .mesas-global-input i {
     position: absolute;
     top: 50%;
     left: 10px;
@@ -81,12 +81,12 @@
     pointer-events: none;
 }
 
-#mesasPage .mesas-global-input input {
+:is(#mesasPage, #mampPage) .mesas-global-input input {
     width: 100%;
     padding-left: 30px;
 }
 
-#mesasPage .mesas-global-clear {
+:is(#mesasPage, #mampPage) .mesas-global-clear {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -102,17 +102,17 @@
     cursor: pointer;
 }
 
-#mesasPage .mesas-global-clear:hover {
+:is(#mesasPage, #mampPage) .mesas-global-clear:hover {
     background: #f4f8ff;
     color: #1768cf;
 }
 
 /* ---------- Vistas ---------- */
-#mesasPage .mesas-vista[hidden] {
+:is(#mesasPage, #mampPage) .mesas-vista[hidden] {
     display: none;
 }
 
-#mesasPage .mesas-vista-placeholder {
+:is(#mesasPage, #mampPage) .mesas-vista-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -125,24 +125,24 @@
     text-align: center;
 }
 
-#mesasPage .mesas-vista-placeholder i {
+:is(#mesasPage, #mampPage) .mesas-vista-placeholder i {
     color: #9db2c8;
     font-size: 28px;
 }
 
-#mesasPage .mesas-vista-placeholder h2 {
+:is(#mesasPage, #mampPage) .mesas-vista-placeholder h2 {
     margin: 0;
     color: #1e3a5f;
     font-size: 16px;
 }
 
-#mesasPage .mesas-vista-placeholder p {
+:is(#mesasPage, #mampPage) .mesas-vista-placeholder p {
     max-width: 420px;
     margin: 0;
     font-size: 11px;
 }
 
-#mesasPage .mesas-vista-placeholder span {
+:is(#mesasPage, #mampPage) .mesas-vista-placeholder span {
     padding: 3px 10px;
     border-radius: 999px;
     background: #edf4ff;
@@ -152,59 +152,59 @@
 }
 
 /* ---------- Panel de Alertas: solo en el apartado Mesas ---------- */
-#mesasPage .mesas-secretaria-sidebar[hidden] {
+:is(#mesasPage, #mampPage) .mesas-secretaria-sidebar[hidden] {
     display: none;
 }
 
-#mesasPage .mesas-secretaria-layout.sin-alertas {
+:is(#mesasPage, #mampPage) .mesas-secretaria-layout.sin-alertas {
     grid-template-columns: minmax(0, 1fr);
 }
 
 /* ---------- Pestañas de estado: 7 pestañas ---------- */
-#mesasPage .mesas-status-tabs {
+:is(#mesasPage, #mampPage) .mesas-status-tabs {
     overflow-x: auto;
 }
 
-#mesasPage .mesas-status-tab {
+:is(#mesasPage, #mampPage) .mesas-status-tab {
     flex: 1 1 auto;
     gap: 5px;
     padding: 0 8px;
 }
 
 /* ---------- Barra de filtros propia de la vista Mesas ---------- */
-#mesasPage .mesas-secretaria-toolbar {
+:is(#mesasPage, #mampPage) .mesas-secretaria-toolbar {
     grid-template-columns: minmax(260px, 1fr) 220px;
 }
 
-#mesasPage .mesas-secretaria-toolbar .mesas-search,
-#mesasPage .mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(n) {
+:is(#mesasPage, #mampPage) .mesas-secretaria-toolbar .mesas-search,
+:is(#mesasPage, #mampPage) .mesas-secretaria-toolbar .mesas-filter-field:nth-of-type(n) {
     grid-column: auto;
 }
 
 @media (max-width: 760px) {
-    #mesasPage .mesas-secretaria-toolbar {
+    :is(#mesasPage, #mampPage) .mesas-secretaria-toolbar {
         grid-template-columns: minmax(0, 1fr);
     }
 }
 
 /* ---------- Tabla de 9 columnas ---------- */
-#mesasPage .mesas-secretaria-table {
+:is(#mesasPage, #mampPage) .mesas-secretaria-table {
     min-width: 1250px;
     table-layout: fixed;
 }
 
-#mesasPage .mesas-secretaria-table th:nth-child(1) { width: 120px; }
-#mesasPage .mesas-secretaria-table th:nth-child(2) { width: 95px; }
-#mesasPage .mesas-secretaria-table th:nth-child(3) { width: 105px; }
-#mesasPage .mesas-secretaria-table th:nth-child(4) { width: 160px; }
-#mesasPage .mesas-secretaria-table th:nth-child(5) { width: 150px; }
-#mesasPage .mesas-secretaria-table th:nth-child(6) { width: 160px; }
-#mesasPage .mesas-secretaria-table th:nth-child(7) { width: 125px; }
-#mesasPage .mesas-secretaria-table th:nth-child(8) { width: 130px; }
-#mesasPage .mesas-secretaria-table th:nth-child(9) { width: 200px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(1) { width: 120px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(2) { width: 95px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(3) { width: 105px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(4) { width: 160px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(5) { width: 150px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(6) { width: 160px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(7) { width: 125px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(8) { width: 130px; }
+:is(#mesasPage, #mampPage) .mesas-secretaria-table th:nth-child(9) { width: 200px; }
 
 /* ---------- Badges de estado ---------- */
-#mesasPage .mesas-estado-badge {
+:is(#mesasPage, #mampPage) .mesas-estado-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -217,20 +217,20 @@
     white-space: nowrap;
 }
 
-#mesasPage .mesas-estado-badge.en-proceso         { background: #e0f2fe; color: #0369a1; }
-#mesasPage .mesas-estado-badge.en-revision-interna { background: #ede9fe; color: #6d28d9; }
-#mesasPage .mesas-estado-badge.en-firma           { background: #ffedd5; color: #c2410c; }
-#mesasPage .mesas-estado-badge.en-lista           { background: #dcfce7; color: #15803d; }
-#mesasPage .mesas-estado-badge.en-actuaria        { background: #ccfbf1; color: #0f766e; }
-#mesasPage .mesas-estado-badge.en-archivo         { background: #e2e8f0; color: #475569; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.en-proceso         { background: #e0f2fe; color: #0369a1; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.en-revision-interna { background: #ede9fe; color: #6d28d9; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.en-firma           { background: #ffedd5; color: #c2410c; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.en-lista           { background: #dcfce7; color: #15803d; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.en-actuaria        { background: #ccfbf1; color: #0f766e; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.en-archivo         { background: #e2e8f0; color: #475569; }
 
 /* ---------- Alertas agrupadas ---------- */
-#mesasPage .mesas-alert-list {
+:is(#mesasPage, #mampPage) .mesas-alert-list {
     max-height: 560px;
     overflow-y: auto;
 }
 
-#mesasPage .mesas-alert-group-title {
+:is(#mesasPage, #mampPage) .mesas-alert-group-title {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -245,11 +245,11 @@
     text-transform: uppercase;
 }
 
-#mesasPage .mesas-alert-group-title span {
+:is(#mesasPage, #mampPage) .mesas-alert-group-title span {
     min-width: 20px;
     padding: 1px 6px;
     border-radius: 999px;
     background: #e3ebf5;
     text-align: center;
 }
-#mesasPage .mesas-estado-badge.por-acordar        { background: #fef3c7; color: #b45309; }
+:is(#mesasPage, #mampPage) .mesas-estado-badge.por-acordar        { background: #fef3c7; color: #b45309; }

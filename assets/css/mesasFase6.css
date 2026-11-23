@@ -8,7 +8,7 @@
    - Estadística
    Reutiliza las clases base de mesas.css y mesasFase4.css
    (encabezado, contadores, tarjeta de tabla, botones, modal).
-   Los estilos de formulario NO van acotados a #mesasPage porque
+   Los estilos de formulario NO van acotados a :is(#mesasPage, #mampPage) porque
    el modal vive fuera de la página.
    ============================================================ */
 
@@ -17,13 +17,13 @@
    CONTENEDOR
    ============================================================ */
 
-#mesasPage .mesas-fase6-section {
+:is(#mesasPage, #mampPage) .mesas-fase6-section {
     width: 100%;
     min-width: 0;
 }
 
 
-#mesasPage .mesas-fase6-actions {
+:is(#mesasPage, #mampPage) .mesas-fase6-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -36,17 +36,17 @@
    TABLA
    ============================================================ */
 
-#mesasPage .mesas-fase6-table {
+:is(#mesasPage, #mampPage) .mesas-fase6-table {
     width: 100%;
     min-width: 760px;
     border-collapse: collapse;
 }
 
-#mesasPage .mesas-fase6-table thead {
+:is(#mesasPage, #mampPage) .mesas-fase6-table thead {
     background: #f7f9fb;
 }
 
-#mesasPage .mesas-fase6-table th {
+:is(#mesasPage, #mampPage) .mesas-fase6-table th {
     height: 42px;
     padding: 0 10px;
     box-sizing: border-box;
@@ -60,7 +60,7 @@
     white-space: nowrap;
 }
 
-#mesasPage .mesas-fase6-table td {
+:is(#mesasPage, #mampPage) .mesas-fase6-table td {
     min-height: 52px;
     padding: 11px 10px;
     box-sizing: border-box;
@@ -72,11 +72,11 @@
     overflow-wrap: anywhere;
 }
 
-#mesasPage .mesas-fase6-table tbody tr:hover {
+:is(#mesasPage, #mampPage) .mesas-fase6-table tbody tr:hover {
     background: #fafcff;
 }
 
-#mesasPage .mesas-fase6-table tbody tr:last-child td {
+:is(#mesasPage, #mampPage) .mesas-fase6-table tbody tr:last-child td {
     border-bottom: 0;
 }
 
@@ -129,13 +129,13 @@
    TARJETA GENÉRICA (Intersindicales)
    ============================================================ */
 
-#mesasPage .mesas-fase6-card {
+:is(#mesasPage, #mampPage) .mesas-fase6-card {
     border: 1px solid #dce3ea;
     border-radius: 9px;
     background: #ffffff;
 }
 
-#mesasPage .mesas-fase6-card-header {
+:is(#mesasPage, #mampPage) .mesas-fase6-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -144,7 +144,7 @@
     border-bottom: 1px solid #e6ecf1;
 }
 
-#mesasPage .mesas-fase6-card-header h3 {
+:is(#mesasPage, #mampPage) .mesas-fase6-card-header h3 {
     margin: 0;
     color: #102b45;
     font-size: 13px;
@@ -155,7 +155,7 @@
    BARRA DE HERRAMIENTAS Y CHIPS (Oficios)
    ============================================================ */
 
-#mesasPage .mesas-fase6-toolbar {
+:is(#mesasPage, #mampPage) .mesas-fase6-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
@@ -163,7 +163,7 @@
     margin-bottom: 12px;
 }
 
-#mesasPage .mesas-fase6-toolbar .mesas-fase6-field {
+:is(#mesasPage, #mampPage) .mesas-fase6-toolbar .mesas-fase6-field {
     min-width: 150px;
 }
 
@@ -302,17 +302,17 @@
    ESTADÍSTICA
    ============================================================ */
 
-#mesasPage .mesas-estadistica-grid {
+:is(#mesasPage, #mampPage) .mesas-estadistica-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
 }
 
-#mesasPage .mesas-estadistica-card:last-child:nth-child(odd) {
+:is(#mesasPage, #mampPage) .mesas-estadistica-card:last-child:nth-child(odd) {
     grid-column: 1 / -1;
 }
 
-#mesasPage .mesas-estadistica-card {
+:is(#mesasPage, #mampPage) .mesas-estadistica-card {
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -323,26 +323,26 @@
     background: #ffffff;
 }
 
-#mesasPage .mesas-estadistica-head {
+:is(#mesasPage, #mampPage) .mesas-estadistica-head {
     display: flex;
     align-items: flex-start;
     gap: 11px;
 }
 
-#mesasPage .mesas-estadistica-head h3 {
+:is(#mesasPage, #mampPage) .mesas-estadistica-head h3 {
     margin: 0 0 3px;
     color: #102b45;
     font-size: 13px;
 }
 
-#mesasPage .mesas-estadistica-head p {
+:is(#mesasPage, #mampPage) .mesas-estadistica-head p {
     margin: 0;
     color: #71869a;
     font-size: 9.5px;
     line-height: 14px;
 }
 
-#mesasPage .mesas-estadistica-icon {
+:is(#mesasPage, #mampPage) .mesas-estadistica-icon {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
@@ -355,14 +355,14 @@
     font-size: 14px;
 }
 
-#mesasPage .mesas-estadistica-rango {
+:is(#mesasPage, #mampPage) .mesas-estadistica-rango {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
     align-items: end;
     gap: 10px;
 }
 
-#mesasPage .mesas-estadistica-resultado {
+:is(#mesasPage, #mampPage) .mesas-estadistica-resultado {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -370,19 +370,19 @@
     border-top: 1px solid #e6ecf1;
 }
 
-#mesasPage .mesas-estadistica-numero {
+:is(#mesasPage, #mampPage) .mesas-estadistica-numero {
     color: #102b45;
     font-size: 34px;
     line-height: 38px;
     font-weight: 800;
 }
 
-#mesasPage .mesas-estadistica-periodo {
+:is(#mesasPage, #mampPage) .mesas-estadistica-periodo {
     color: #71869a;
     font-size: 9.5px;
 }
 
-#mesasPage .mesas-estadistica-mesas {
+:is(#mesasPage, #mampPage) .mesas-estadistica-mesas {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -391,7 +391,7 @@
     list-style: none;
 }
 
-#mesasPage .mesas-estadistica-mesas li {
+:is(#mesasPage, #mampPage) .mesas-estadistica-mesas li {
     display: flex;
     align-items: center;
     gap: 7px;
@@ -403,7 +403,7 @@
     font-weight: 600;
 }
 
-#mesasPage .mesas-estadistica-mesas strong {
+:is(#mesasPage, #mampPage) .mesas-estadistica-mesas strong {
     color: #1768cf;
 }
 
@@ -413,11 +413,11 @@
    ============================================================ */
 
 @media (max-width: 980px) {
-    #mesasPage .mesas-estadistica-grid {
+    :is(#mesasPage, #mampPage) .mesas-estadistica-grid {
         grid-template-columns: 1fr;
     }
 
-    #mesasPage .mesas-fase6-actions {
+    :is(#mesasPage, #mampPage) .mesas-fase6-actions {
         justify-content: flex-start;
     }
 }

@@ -46,10 +46,10 @@ function codigos(texto) {
   });
 }
 
-function anchoTexto(texto) {
+function anchoTexto(texto, tam = TAMANO) {
   return (
     codigos(texto).reduce((suma, c) => suma + (ANCHOS[c - 32] || 556), 0) *
-    (TAMANO / 1000)
+    (tam / 1000)
   );
 }
 
@@ -69,7 +69,7 @@ function cadenaPdf(texto) {
 }
 
 // Parte un texto en renglones que caben en anchoMax.
-function partir(texto, anchoMax) {
+function partir(texto, anchoMax, tam = TAMANO) {
   const renglones = [];
 
   String(texto ?? "")
@@ -85,10 +85,13 @@ function partir(texto, anchoMax) {
 
       palabras.forEach((palabra) => {
         // Palabra más ancha que la celda: se corta por caracteres.
-        while (anchoTexto(palabra) > anchoMax) {
+        while (anchoTexto(palabra, tam) > anchoMax) {
           let corte = palabra.length - 1;
 
-          while (corte > 1 && anchoTexto(palabra.slice(0, corte)) > anchoMax) {
+          while (
+            corte > 1 &&
+            anchoTexto(palabra.slice(0, corte), tam) > anchoMax
+          ) {
             corte -= 1;
           }
 
@@ -103,7 +106,7 @@ function partir(texto, anchoMax) {
 
         const candidato = actual ? actual + " " + palabra : palabra;
 
-        if (anchoTexto(candidato) <= anchoMax) {
+        if (anchoTexto(candidato, tam) <= anchoMax) {
           actual = candidato;
         } else {
           renglones.push(actual);
@@ -140,6 +143,58 @@ export function nombreArchivoLista(lista) {
   const mesCorto = (MESES[Number(mes) - 1] || "").slice(0, 3);
 
   return `M${lista.mesa}_LISTA_DE_ACDOS_No_${lista.numero}_${dia}_${mesCorto}_${anio}.pdf`;
+}
+
+// ------------------------------------------------------------
+// ARCHIVO PDF
+// Recibe las páginas (lista de operaciones de dibujo cada una) y el
+// tamaño de hoja; devuelve el Blob. Lo comparten las listas de las
+// mesas y las de amparos directos.
+// ------------------------------------------------------------
+function ensamblarPdf(paginas, pagina) {
+  // ---------------------------------------------------------
+  // ARCHIVO
+  // ---------------------------------------------------------
+  const objetos = [];
+  const agregar = (cuerpo) => objetos.push(cuerpo);
+
+  const ids = paginas.map((_, i) => ({ pagina: 4 + i * 2, contenido: 5 + i * 2 }));
+
+  agregar("<< /Type /Catalog /Pages 2 0 R >>");
+  agregar(`<< /Type /Pages /Kids [${ids.map((id) => id.pagina + " 0 R").join(" ")}] /Count ${paginas.length} >>`);
+  agregar("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+
+  paginas.forEach((operaciones, i) => {
+    const flujo = operaciones.join("\n");
+
+    agregar(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pagina.ancho} ${pagina.alto}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${ids[i].contenido} 0 R >>`,
+    );
+    agregar(`<< /Length ${flujo.length} >>\nstream\n${flujo}\nendstream`);
+  });
+
+  let pdf = "%PDF-1.4\n";
+  const posiciones = [];
+
+  objetos.forEach((cuerpo, i) => {
+    posiciones.push(pdf.length);
+    pdf += `${i + 1} 0 obj\n${cuerpo}\nendobj\n`;
+  });
+
+  const inicioXref = pdf.length;
+
+  pdf += `xref\n0 ${objetos.length + 1}\n0000000000 65535 f \n`;
+  posiciones.forEach((posicion) => {
+    pdf += String(posicion).padStart(10, "0") + " 00000 n \n";
+  });
+  pdf += `trailer\n<< /Size ${objetos.length + 1} /Root 1 0 R >>\nstartxref\n${inicioXref}\n%%EOF\n`;
+
+  // Todo el archivo es ASCII: un byte por carácter.
+  const bytes = new Uint8Array(pdf.length);
+
+  for (let i = 0; i < pdf.length; i += 1) bytes[i] = pdf.charCodeAt(i);
+
+  return new Blob([bytes], { type: "application/pdf" });
 }
 
 // ------------------------------------------------------------
@@ -266,47 +321,181 @@ export function generarPdfLista(lista) {
 
   paginas.push(ops);
 
-  // ---------------------------------------------------------
-  // ARCHIVO
-  // ---------------------------------------------------------
-  const objetos = [];
-  const agregar = (cuerpo) => objetos.push(cuerpo);
+  return ensamblarPdf(paginas, PAGINA);
+}
 
-  const ids = paginas.map((_, i) => ({ pagina: 4 + i * 2, contenido: 5 + i * 2 }));
+// ============================================================
+// LISTA DE AMPAROS DIRECTOS
+// Mismo estilo de tabla, con el formato de las listas de la Mesa de
+// Amparos Directos:
+//
+//   LISTA NO. 102.
+//   ÁREA DE AMPARO DIRECTO A ACTUARÍA.
+//   --- 29 DE OCTUBRE DEL 2026 ---
+//   No. DE EXPEDIENTE | ACTOR | DEMANDADO | ESTADO PROCESAL | FOJAS
+//
+// lista = { numero, fecha, filas: [{ expediente, actor, demandado,
+//           estados: [texto], fojas }] }
+// ============================================================
+const PAGINA_AMPAROS = { ancho: 612, alto: 792 };
+const COLUMNAS_AMPAROS = [80, 86, 86, 112, 46];
+const TITULOS_AMPAROS = ["No. DE EXPEDIENTE", "ACTOR", "DEMANDADO", "ESTADO PROCESAL", "FOJAS"];
+const AREA_AMPAROS = "ÁREA DE AMPARO DIRECTO A ACTUARÍA.";
 
-  agregar("<< /Type /Catalog /Pages 2 0 R >>");
-  agregar(`<< /Type /Pages /Kids [${ids.map((id) => id.pagina + " 0 R").join(" ")}] /Count ${paginas.length} >>`);
-  agregar("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+export function fechaLargaAmparos(fechaISO) {
+  const [anio, mes, dia] = String(fechaISO || "").slice(0, 10).split("-");
 
-  paginas.forEach((operaciones, i) => {
-    const flujo = operaciones.join("\n");
+  return `${dia} DE ${MESES[Number(mes) - 1] || ""} DEL ${anio}`;
+}
 
-    agregar(
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGINA.ancho} ${PAGINA.alto}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${ids[i].contenido} 0 R >>`,
+export function tituloListaAmparos(lista) {
+  return `LISTA NO. ${lista.numero}.`;
+}
+
+// LISTA_DE_AMPAROS_No_102_29_OCT_2026.pdf
+export function nombreArchivoListaAmparos(lista) {
+  const [anio, mes, dia] = String(lista.fecha || "").slice(0, 10).split("-");
+  const mesCorto = (MESES[Number(mes) - 1] || "").slice(0, 3);
+
+  return `LISTA_DE_AMPAROS_No_${lista.numero}_${dia}_${mesCorto}_${anio}.pdf`;
+}
+
+export function generarPdfListaAmparos(lista) {
+  const anchoTabla = COLUMNAS_AMPAROS.reduce((a, b) => a + b, 0);
+  const x0 = (PAGINA_AMPAROS.ancho - anchoTabla) / 2;
+  const tope = PAGINA_AMPAROS.alto - 60;
+  const piso = 50;
+
+  const paginas = [];
+  let ops = [];
+  let y = tope;
+
+  const nuevaPagina = () => {
+    if (ops.length) paginas.push(ops);
+    ops = ["0.6 w", "0 G", "0 g"];
+    y = tope;
+  };
+
+  const rect = (x, yArriba, ancho, alto) => {
+    ops.push(
+      `${x.toFixed(2)} ${(yArriba - alto).toFixed(2)} ${ancho.toFixed(2)} ${alto.toFixed(2)} re S`,
     );
-    agregar(`<< /Length ${flujo.length} >>\nstream\n${flujo}\nendstream`);
+  };
+
+  // Texto centrado; renglones: [{ texto, tam, subrayado }]
+  const textoCelda = (renglones, x, yArriba, ancho, altoFila) => {
+    // Centrado vertical dentro de la celda
+    let cursor =
+      yArriba - RELLENO - (altoFila - altoRenglones(renglones)) / 2;
+
+    renglones.forEach(({ texto, tam = TAMANO, subrayado = false }) => {
+      const interlinea = tam + 2;
+
+      if (texto) {
+        const w = anchoTexto(texto, tam);
+        const tx = x + (ancho - w) / 2;
+        const ty = cursor - tam + 1.5;
+
+        ops.push(
+          `BT /F1 ${tam} Tf ${tx.toFixed(2)} ${ty.toFixed(2)} Td ${cadenaPdf(texto)} Tj ET`,
+        );
+
+        if (subrayado) {
+          ops.push(
+            `${tx.toFixed(2)} ${(ty - 1.5).toFixed(2)} m ${(tx + w).toFixed(2)} ${(ty - 1.5).toFixed(2)} l S`,
+          );
+        }
+      }
+
+      cursor -= interlinea;
+    });
+  };
+
+  const altoRenglones = (renglones) =>
+    renglones.reduce((suma, r) => suma + (r.tam || TAMANO) + 2, 0) + RELLENO * 2;
+
+  // Fila de celdas: [{ ancho, renglones: [{ texto, tam?, subrayado? }] }]
+  const fila = (celdas) => {
+    const alto = Math.max(...celdas.map((c) => altoRenglones(c.renglones)));
+    let x = x0;
+
+    celdas.forEach((celda) => {
+      rect(x, y, celda.ancho, alto);
+      textoCelda(celda.renglones, x, y, celda.ancho, alto);
+      x += celda.ancho;
+    });
+
+    y -= alto;
+  };
+
+  const partirRenglones = (texto, ancho, tam = TAMANO) =>
+    partir(texto, ancho - RELLENO * 2, tam).map((t) => ({ texto: t, tam }));
+
+  const encabezadoColumnas = () => {
+    fila(
+      TITULOS_AMPAROS.map((titulo, i) => ({
+        ancho: COLUMNAS_AMPAROS[i],
+        renglones: partirRenglones(titulo, COLUMNAS_AMPAROS[i], 9),
+      })),
+    );
+  };
+
+  nuevaPagina();
+
+  // Título, área y fecha (cada bloque en su propia celda, como el original)
+  fila([
+    {
+      ancho: anchoTabla,
+      renglones: [{ texto: tituloListaAmparos(lista), tam: 16 }],
+    },
+  ]);
+  fila([
+    {
+      ancho: anchoTabla,
+      renglones: [
+        { texto: AREA_AMPAROS, tam: 9 },
+        { texto: `--- ${fechaLargaAmparos(lista.fecha)} ---`, tam: 9, subrayado: true },
+      ],
+    },
+  ]);
+  encabezadoColumnas();
+
+  const filas = Array.isArray(lista.filas) ? lista.filas : [];
+  const lineasPorPagina = Math.floor((tope - piso - 60) / INTERLINEA);
+
+  if (!filas.length) {
+    fila([{ ancho: anchoTabla, renglones: [{ texto: "SIN AMPAROS.", tam: TAMANO }] }]);
+  }
+
+  filas.forEach((registro) => {
+    const celdas = [
+      partirRenglones(mayus(registro.expediente), COLUMNAS_AMPAROS[0]),
+      partirRenglones(mayus(registro.actor), COLUMNAS_AMPAROS[1]),
+      partirRenglones(mayus(registro.demandado), COLUMNAS_AMPAROS[2]),
+      partirRenglones(
+        (registro.estados || []).map(mayus).join("\n\n"),
+        COLUMNAS_AMPAROS[3],
+      ),
+      partirRenglones(String(registro.fojas ?? ""), COLUMNAS_AMPAROS[4]),
+    ];
+
+    const total = Math.max(...celdas.map((c) => c.length));
+
+    // Una fila más alta que la hoja se reparte en varias.
+    for (let inicio = 0; inicio < total; inicio += lineasPorPagina) {
+      const trozo = celdas.map((c) => c.slice(inicio, inicio + lineasPorPagina));
+      const alto = Math.max(...trozo.map((c) => altoRenglones(c)));
+
+      if (y - alto < piso) {
+        nuevaPagina();
+        encabezadoColumnas();
+      }
+
+      fila(trozo.map((renglones, i) => ({ ancho: COLUMNAS_AMPAROS[i], renglones })));
+    }
   });
 
-  let pdf = "%PDF-1.4\n";
-  const posiciones = [];
+  paginas.push(ops);
 
-  objetos.forEach((cuerpo, i) => {
-    posiciones.push(pdf.length);
-    pdf += `${i + 1} 0 obj\n${cuerpo}\nendobj\n`;
-  });
-
-  const inicioXref = pdf.length;
-
-  pdf += `xref\n0 ${objetos.length + 1}\n0000000000 65535 f \n`;
-  posiciones.forEach((posicion) => {
-    pdf += String(posicion).padStart(10, "0") + " 00000 n \n";
-  });
-  pdf += `trailer\n<< /Size ${objetos.length + 1} /Root 1 0 R >>\nstartxref\n${inicioXref}\n%%EOF\n`;
-
-  // Todo el archivo es ASCII: un byte por carácter.
-  const bytes = new Uint8Array(pdf.length);
-
-  for (let i = 0; i < pdf.length; i += 1) bytes[i] = pdf.charCodeAt(i);
-
-  return new Blob([bytes], { type: "application/pdf" });
+  return ensamblarPdf(paginas, PAGINA_AMPAROS);
 }

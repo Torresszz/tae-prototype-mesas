@@ -24,6 +24,24 @@ import { renderMesasAmparosIndirectos } from "./mesasAmparosIndirectos.js";
 
 import { formatoNumeroOficio } from "./mesas/oficios.js";
 
+// Apartados propios de Amparos Directos (cuadernillo, plantillas, listas, firma)
+import { renderSeccionesDirectos } from "./amparosDirectos/index.js";
+
+import {
+  abrirCuadernillo,
+  cuadernilloCompleto,
+  htmlResumenCuadernillo,
+  progresoCuadernillo,
+  sembrarCuadernilloDemo,
+} from "./amparosDirectos/cuadernillo.js";
+
+import {
+  htmlCajaFirma,
+  enviarAFirma,
+  verDocumentoFirma,
+  sembrarFirmaDemo,
+} from "./amparosDirectos/firma.js";
+
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
@@ -41,7 +59,6 @@ const DIAS_AVISO = 3; // avisar cuando falten estos días o menos
 
 const FLUJOS = {
   directo: [
-    { id: "registro", nombre: "Registro", dep: "Mesa de Amparos" },
     { id: "acuerdo", nombre: "Acuerdo", dep: "Mesa de Amparos" },
     { id: "notificacion", nombre: "Notificación", dep: "Actuaría" },
     { id: "informe", nombre: "Informe Justificado", dep: "Mesa de Amparos" },
@@ -74,21 +91,6 @@ const MOTIVOS = [
   "Otro",
 ];
 
-const DOCS_CUADERNILLO = [
-  { id: "laudo", texto: "Copia del laudo" },
-  {
-    id: "notificaciones",
-    texto: "Notificaciones y acuerdos posteriores al laudo",
-  },
-  { id: "demanda", texto: "Copia de la demanda de amparo" },
-  { id: "informe", texto: "Informe resultante" },
-  {
-    id: "oficioRecepcion",
-    texto: "Oficio y acuerdo de recepción del expediente (amparo negado)",
-    soloSiNegada: true,
-  },
-];
-
 // D-03 / D-11: categoría y ubicación (solo Amparos Directos)
 const CATEGORIAS = ["Radicación", "Laudo", "Otro"];
 
@@ -96,7 +98,10 @@ const CATEGORIAS = ["Radicación", "Laudo", "Otro"];
 const ANEXOS_INFORME = [
   { id: "expediente", texto: "Expediente" },
   { id: "demanda", texto: "Demanda de amparo original" },
-  { id: "notificaciones", texto: "Notificaciones al quejoso y terceros interesados" },
+  {
+    id: "notificaciones",
+    texto: "Notificaciones al quejoso y terceros interesados",
+  },
 ];
 
 // D-05: plantilla del oficio (⚠️ texto provisional; confirmar redacción con el tribunal)
@@ -125,7 +130,6 @@ const PLANTILLA_INFORME = [
 let estadoFiltro = "todos";
 let categoriaFiltro = "";
 let ubicacionFiltro = "";
-let cuadAbierto = false;
 
 // Cada página (directos / indirectos) declara su tipo en #mampPage[data-tipo]
 function tipoPagina() {
@@ -168,6 +172,14 @@ export function renderMesasAmparos() {
 
   renderAlertas(registros);
 
+  // Apartados Cuadernillos / Plantillas / Listas (solo Amparos Directos)
+  if (tipoPagina() === "directo") {
+    renderSeccionesDirectos({
+      nombreEtapa: (seg) => getEtapa(seg.tipo, seg.etapa).nombre,
+      alCambiar: renderMesasAmparos,
+    });
+  }
+
   if (tipoPagina() === "indirecto") {
     renderMesasAmparosIndirectos();
   }
@@ -204,6 +216,16 @@ function prepararSeguimiento() {
     changed = true;
   });
 
+  // La etapa "Registro" ya no existe (el registro lo hace Oficialía de
+  // Partes): los amparos directos que se quedaron ahí pasan a "Acuerdo".
+  Object.values(seguimiento).forEach((seg) => {
+    if (seg?.tipo === "directo" && seg.etapa === "registro") {
+      seg.etapa = "acuerdo";
+
+      changed = true;
+    }
+  });
+
   if (changed) {
     saveData(KEY, seguimiento);
   }
@@ -234,12 +256,17 @@ function crearEstado(amparo, tipo) {
     // D-05
     informe: null,
     // D-06 (símbolico): cuadernillo propio del amparo
-    cuadernillo: { oficiosTC: [], generado: false },
+    // Cuadernillo propio (apartado "Cuadernillos"): un documento por sección
+    cuadernillo: {
+      oficiosTC: [],
+      generado: false,
+      docs: {},
+      observaciones: "",
+    },
     acuerdoTexto: "",
     informeOficio: "",
     suspension: null,
     cumplimiento: { laudoNuevo: false, reenviado: false, cumplido: false },
-    cuad: {},
     juzgado: JUZGADOS.includes(amparo.juzgadoOrigen)
       ? amparo.juzgadoOrigen
       : "",
@@ -448,7 +475,9 @@ function renderTabla(registros) {
   }
 
   if (categoriaFiltro) {
-    visibles = visibles.filter((r) => (r.seg.categoria || "") === categoriaFiltro);
+    visibles = visibles.filter(
+      (r) => (r.seg.categoria || "") === categoriaFiltro,
+    );
   }
 
   if (ubicacionFiltro) {
@@ -654,7 +683,7 @@ function abrirAmparo(id) {
     ? {
         html:
           `<p class="mamp-note">Amparo concluido. ${seg.tipo === "directo" ? "El cuadernillo queda en la Mesa de Amparos y el expediente en Archivo." : "El juzgado notificó el archivo."}</p>` +
-          (seg.tipo === "directo" ? listaCopias(seg, true) : ""),
+          (seg.tipo === "directo" ? htmlResumenCuadernillo(seg) : ""),
       }
     : panelEtapa(amparo, seg);
 
@@ -733,7 +762,9 @@ function abrirAmparo(id) {
 
                 ${seg.tipo === "directo" && !final ? cajaActuaria(seg) : ""}
 
-                ${seg.tipo === "directo" ? cajaCuadernillo(seg) : ""}
+                ${seg.tipo === "directo" ? htmlCajaFirma(seg, { final }) : ""}
+
+                ${seg.tipo === "directo" && !final ? htmlResumenCuadernillo(seg) : ""}
 
                 <p class="mamp-note warn" id="mampAviso" hidden></p>
 
@@ -768,30 +799,8 @@ function abrirAmparo(id) {
     }
   });
 
-  // <details> no propaga "toggle": se escucha en captura
-  modal.addEventListener(
-    "toggle",
-    (event) => {
-      if (event.target.matches?.("[data-mamp-cuad-box]")) {
-        cuadAbierto = event.target.open;
-      }
-    },
-    true,
-  );
-
   modal.addEventListener("change", (event) => {
     const input = event.target;
-
-    // Cuadernillo: marcar documentos
-    if (input.matches("[data-cuad]")) {
-      actualizar(id, (s) => {
-        s.cuad[input.dataset.cuad] = input.checked;
-      });
-
-      abrirAmparo(id);
-
-      return;
-    }
 
     // D-05: anexos del oficio de Informe Justificado
     if (input.matches("[data-anexo]")) {
@@ -846,33 +855,6 @@ function panelEtapa(amparo, seg) {
 
   switch (clave) {
     // ------------------------------------------------ DIRECTOS
-    case "directo:registro": {
-      const partes = partesDe(seg);
-
-      return {
-        html:
-          campoTexto(
-            "mampUbicacion",
-            "¿Dónde está el expediente?",
-            seg.ubicacion,
-            "Ej. Mesa 2, Actuaría, Archivo...",
-          ) +
-          selectCategoria("mampCategoriaRegistro", seg.categoria) +
-          editorPartes("quejosos", "Quejoso(s)", partes.quejosos, true) +
-          editorPartes(
-            "terceros",
-            "Terceros interesados",
-            partes.terceros,
-            false,
-          ),
-        accion: {
-          act: "dir-registro",
-          label: "Registrar y turnar a acuerdo",
-          icono: "fa-clipboard-check",
-        },
-      };
-    }
-
     case "directo:acuerdo":
       return {
         html: `
@@ -1013,24 +995,21 @@ function panelEtapa(amparo, seg) {
     case "directo:cuadernillo": {
       const negada = seg.suspension?.resultado === "niega";
 
-      const docs = docsCuadernillo(seg);
-
-      const completo = docs.every((doc) => seg.cuad[doc.id]);
+      const { cargados, total } = progresoCuadernillo(seg);
 
       return {
         html: `
                 ${
                   negada
-                    ? `<p class="mamp-note warn">Suspensión negada: se integra el oficio y acuerdo de recepción del expediente y se manda a Archivo.</p>`
+                    ? `<p class="mamp-note warn">Suspensión negada: se integra el cuadernillo y se manda a Archivo.</p>`
                     : ""
                 }
-                <p class="mamp-note">Lista de copias para el cuadernillo. El cuadernillo se queda en la Mesa de Amparos; marca los documentos integrados.</p>
-                ${listaCopias(seg, false)}`,
+                <p class="mamp-note">El cuadernillo se integra en su apartado: sube un documento en cada una de sus ${total} secciones (${cargados} de ${total} cargados). El amparo solo puede ir a Archivo con el cuadernillo completo.</p>`,
         accion: {
           act: "dir-archivar",
           label: negada ? "Mandar a Archivo" : "Enviar a Archivo",
           icono: "fa-box-archive",
-          disabled: !completo,
+          disabled: !cuadernilloCompleto(seg),
         },
       };
     }
@@ -1151,7 +1130,9 @@ function ejecutar(act, id, modal, boton) {
     // ------------------------------------------------ DIRECTOS
     // D-02: lista de partes (alta / baja de filas sin volver a dibujar el modal)
     case "parte-add": {
-      const filas = boton?.closest("[data-partes]")?.querySelector(".mamp-partes-rows");
+      const filas = boton
+        ?.closest("[data-partes]")
+        ?.querySelector(".mamp-partes-rows");
 
       if (filas) {
         filas.insertAdjacentHTML("beforeend", filaParte());
@@ -1166,34 +1147,6 @@ function ejecutar(act, id, modal, boton) {
       boton?.closest(".mamp-parte-row")?.remove();
 
       return;
-
-    case "dir-registro": {
-      const quejosos = leerPartes(modal, "quejosos");
-
-      const terceros = leerPartes(modal, "terceros");
-
-      const categoria = val("#mampCategoriaRegistro");
-
-      if (!val("#mampUbicacion") || !quejosos.length) {
-        return error(
-          "Indica dónde está el expediente y al menos un quejoso.",
-        );
-      }
-
-      if (!categoria) {
-        return error("Selecciona la categoría (Radicación, Laudo u Otro).");
-      }
-
-      return avanzar(id, "acuerdo", (s) => {
-        s.ubicacion = val("#mampUbicacion");
-        s.partes = { quejosos, terceros };
-        s.quejoso = nombres(quejosos);
-        s.terceros = nombres(terceros);
-        s.categoria = categoria;
-
-        return `Registro completo (${categoria}). Expediente ubicado en: ${s.ubicacion}. Quejosos: ${quejosos.length}; terceros interesados: ${terceros.length}`;
-      });
-    }
 
     // D-04: enviar a Actuaría desde cualquier etapa
     case "actuaria-enviar": {
@@ -1220,54 +1173,21 @@ function ejecutar(act, id, modal, boton) {
     case "informe-descargar":
       return descargarInforme(id);
 
-    // D-06 (símbolico)
-    case "cuad-oficio-add": {
-      if (!val("#mampCuadNumero") || !val("#mampCuadFecha")) {
-        cuadAbierto = true;
+    // Cuadernillo propio y firma de Presidencia (amparosDirectos/)
+    case "cuad-abrir":
+      return abrirCuadernillo(id, { alCambiar: renderMesasAmparos });
 
-        return error("Indica el número y la fecha del oficio recibido.");
-      }
+    case "firma-enviar":
+      return enviarAFirma(id, {
+        alTerminar: () => {
+          renderMesasAmparos();
 
-      cuadAbierto = true;
-
-      return actualizarYRefrescar(id, (s) => {
-        const cuad = cuadernilloDe(s);
-
-        cuad.oficiosTC.push({
-          id: idCorto(),
-          numero: val("#mampCuadNumero"),
-          fecha: val("#mampCuadFecha"),
-          asunto: val("#mampCuadAsunto"),
-          registradoEn: new Date().toISOString(),
-        });
-
-        log(
-          s,
-          `Oficio del Tribunal Colegiado agregado al cuadernillo: ${val("#mampCuadNumero")}`,
-        );
+          abrirAmparo(id);
+        },
       });
-    }
 
-    case "cuad-oficio-del": {
-      const oid = boton?.dataset.oid;
-
-      cuadAbierto = true;
-
-      return actualizarYRefrescar(id, (s) => {
-        const cuad = cuadernilloDe(s);
-
-        cuad.oficiosTC = cuad.oficiosTC.filter((o) => o.id !== oid);
-
-        log(s, "Oficio del Tribunal Colegiado retirado del cuadernillo");
-      });
-    }
-
-    case "cuad-generar":
-      // PENDIENTE: la generación del cuadernillo (contenido y formato) no está
-      // definida; por ahora es solo simbólica y no produce ningún archivo.
-      return aviso(
-        "La generación del cuadernillo está pendiente de definir. Por ahora solo se conserva el listado de oficios recibidos.",
-      );
+    case "firma-ver":
+      return verDocumentoFirma(boton?.dataset.docid);
 
     case "dir-acuerdo": {
       if (!val("#mampAcuerdo")) {
@@ -1277,7 +1197,11 @@ function ejecutar(act, id, modal, boton) {
       return avanzar(id, "notificacion", (s) => {
         s.acuerdoTexto = val("#mampAcuerdo");
 
-        enviarAActuaria(s, "Notificar al quejoso y terceros interesados", false);
+        enviarAActuaria(
+          s,
+          "Notificar al quejoso y terceros interesados",
+          false,
+        );
 
         return "Acuerdo dictado; turnado a Actuaría para notificar a quejoso y terceros interesados";
       });
@@ -1289,7 +1213,10 @@ function ejecutar(act, id, modal, boton) {
     case "dir-informe": {
       const seg = getData(KEY, {})[String(id)];
 
-      if (seg.informe && !ANEXOS_INFORME.every((a) => seg.informe.anexos?.[a.id])) {
+      if (
+        seg.informe &&
+        !ANEXOS_INFORME.every((a) => seg.informe.anexos?.[a.id])
+      ) {
         return error(
           "Adjunta el expediente, la demanda original y las notificaciones.",
         );
@@ -1379,7 +1306,15 @@ function ejecutar(act, id, modal, boton) {
       );
     }
 
-    case "dir-archivar":
+    case "dir-archivar": {
+      const seguimiento = getData(KEY, {})[String(id)];
+
+      if (!cuadernilloCompleto(seguimiento)) {
+        return error(
+          "El cuadernillo está incompleto: sube un documento en cada sección.",
+        );
+      }
+
       return avanzar(id, "archivo", (s) => {
         s.archivadoEn = new Date().toISOString();
 
@@ -1387,6 +1322,7 @@ function ejecutar(act, id, modal, boton) {
           ? "Suspensión negada: cuadernillo integrado (queda en la mesa); expediente mandado a Archivo"
           : "Cuadernillo integrado (queda en la mesa); expediente enviado a Archivo";
       });
+    }
 
     // ------------------------------------------------ INDIRECTOS
     case "ind-recibido": {
@@ -1604,12 +1540,9 @@ function editorPartes(lista, etiqueta, partes, minimoUno) {
 }
 
 function leerPartes(modal, lista) {
-  return [
-    ...modal.querySelectorAll(`[data-partes="${lista}"] .mamp-parte-row`),
-  ]
+  return [...modal.querySelectorAll(`[data-partes="${lista}"] .mamp-parte-row`)]
     .map((fila) => ({
-      nombre:
-        fila.querySelector('[data-parte="nombre"]')?.value.trim() || "",
+      nombre: fila.querySelector('[data-parte="nombre"]')?.value.trim() || "",
       domicilio:
         fila.querySelector('[data-parte="domicilio"]')?.value.trim() || "",
     }))
@@ -1635,9 +1568,11 @@ function selectCategoria(id, valor) {
 
 function claseCategoria(categoria) {
   return (
-    { Radicación: "mamp-cat-rad", Laudo: "mamp-cat-laudo", Otro: "mamp-cat-otro" }[
-      categoria
-    ] || "mamp-cat-sin"
+    {
+      Radicación: "mamp-cat-rad",
+      Laudo: "mamp-cat-laudo",
+      Otro: "mamp-cat-otro",
+    }[categoria] || "mamp-cat-sin"
   );
 }
 
@@ -1649,7 +1584,7 @@ function renderCategoria(seg) {
 function enActuaria(seg) {
   return Boolean(
     seg.actuaria?.activo ||
-      (seg.tipo === "directo" && seg.etapa === "notificacion"),
+    (seg.tipo === "directo" && seg.etapa === "notificacion"),
   );
 }
 
@@ -1823,7 +1758,9 @@ function generarInforme(seg, amparo) {
 
   const partes = partesDe(seg);
 
-  const numAmparo = /\d/.test(amparo.juzgado || "") ? amparo.juzgado : amparo.id;
+  const numAmparo = /\d/.test(amparo.juzgado || "")
+    ? amparo.juzgado
+    : amparo.id;
 
   const texto = PLANTILLA_INFORME.replace("{{numero}}", numero)
     .replace(
@@ -1914,75 +1851,6 @@ function descargarInforme(id) {
 // D-06 (símbolico): CUADERNILLO PROPIO DEL AMPARO
 // D-08 / D-09 / D-10: copias, suspensión y archivo
 // ============================================================
-
-function cuadernilloDe(seg) {
-  if (!seg.cuadernillo || !Array.isArray(seg.cuadernillo.oficiosTC)) {
-    seg.cuadernillo = { oficiosTC: [], generado: false };
-  }
-
-  return seg.cuadernillo;
-}
-
-function cajaCuadernillo(seg) {
-  const oficios = seg.cuadernillo?.oficiosTC || [];
-
-  return `
-        <details class="mamp-cuad-box" data-mamp-cuad-box ${cuadAbierto || oficios.length ? "open" : ""}>
-            <summary>
-                <i class="fa-solid fa-folder-open"></i>
-                Cuadernillo del amparo · ${oficios.length} ${oficios.length === 1 ? "oficio recibido" : "oficios recibidos"} del Tribunal Colegiado
-            </summary>
-            ${
-              oficios.length
-                ? `<ul class="mamp-req-list">${oficios
-                    .map(
-                      (o) => `
-                        <li>
-                            <strong>${escapeHTML(formatFecha(o.fecha))} · ${escapeHTML(o.numero)}</strong>
-                            ${escapeHTML(o.asunto || "Sin asunto")}
-                            <button type="button" class="mamp-parte-del" data-mamp-act="cuad-oficio-del" data-oid="${escapeHTML(o.id)}" title="Quitar" aria-label="Quitar">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </li>`,
-                    )
-                    .join("")}</ul>`
-                : `<p class="mamp-note">Aún no hay oficios del Tribunal Colegiado en el cuadernillo.</p>`
-            }
-            <div class="mamp-cuad-form">
-                <input type="text" id="mampCuadNumero" placeholder="Número de oficio">
-                <input type="date" id="mampCuadFecha">
-                <input type="text" id="mampCuadAsunto" placeholder="Asunto (opcional)">
-                <button type="button" class="mesas-secondary-btn" data-mamp-act="cuad-oficio-add">
-                    <i class="fa-solid fa-plus"></i> Agregar oficio recibido
-                </button>
-            </div>
-            <button type="button" class="mesas-secondary-btn" data-mamp-act="cuad-generar">
-                <i class="fa-solid fa-file-zipper"></i> Generar cuadernillo
-            </button>
-        </details>`;
-}
-
-function docsCuadernillo(seg) {
-  return DOCS_CUADERNILLO.filter(
-    (doc) => !doc.soloSiNegada || seg.suspension?.resultado === "niega",
-  );
-}
-
-// D-10: lista de copias del cuadernillo (editable en la etapa; solo lectura al cerrar)
-function listaCopias(seg, soloLectura) {
-  return `
-        <div class="mamp-options">
-            ${docsCuadernillo(seg)
-              .map(
-                (doc) => `
-                    <label class="mamp-option">
-                        <input type="checkbox" data-cuad="${doc.id}" ${seg.cuad[doc.id] ? "checked" : ""} ${soloLectura ? "disabled" : ""}>
-                        ${escapeHTML(doc.texto)}
-                    </label>`,
-              )
-              .join("")}
-        </div>`;
-}
 
 // D-09: las dos rutas de amparo concedido
 function rutaConcedido(seg) {
@@ -2164,7 +2032,8 @@ function recibirDeOficialia(id, categoria) {
 
   const ahora = new Date().toISOString();
 
-  const quien = getSession()?.nombre || getSession()?.email || "Mesa de Amparos";
+  const quien =
+    getSession()?.nombre || getSession()?.email || "Mesa de Amparos";
 
   const seg = crearEstado(amparo, "directo");
 
@@ -2193,6 +2062,17 @@ function recibirDeOficialia(id, categoria) {
 // DEMO
 // ============================================================
 
+// Actor y demandado de prueba para los amparos demo
+const PARTES_DEMO = [
+  ["C. ROSA ELENA PÉREZ", "H. AYTO. COQUIMATLÁN, COLIMA"],
+  ["C. JOSÉ MANUEL TORRES", "H. AYTO. COLIMA, COLIMA"],
+  ["C. LAURA PATRICIA VEGA", "GOBIERNO DEL ESTADO DE COLIMA"],
+  ["C. ARTURO NAVA CHÁVEZ", "DIF MUNICIPAL MANZANILLO"],
+  ["C. MIRIAM LÓPEZ CRUZ", "H. AYTO. VILLA DE ÁLVAREZ, COLIMA"],
+  ["C. DANIEL ORTIZ RUBIO", "SERVICIOS DE SALUD DEL ESTADO"],
+  ["C. ELENA VARGAS LUNA", "H. AYTO. IXTLAHUACÁN, COLIMA"],
+];
+
 function cargarDemo() {
   const amparos = getData("amparos", []);
 
@@ -2204,7 +2084,7 @@ function cargarDemo() {
     {
       n: "D1",
       tipo: "directo",
-      etapa: "registro",
+      etapa: "acuerdo",
       dia: 1,
       prom: "HAC COQUIMATLÁN",
       juz: "Tribunal Colegiado en Materia de Trabajo",
@@ -2218,6 +2098,15 @@ function cargarDemo() {
       prom: "MARÍA GÓMEZ RUIZ",
       juz: "Tribunal Colegiado en Materia de Trabajo",
       acto: "Laudo absolutorio",
+      // Demo de firma: esperando a la Magistrada
+      cat: "Radicación",
+      firmas: [
+        {
+          estado: "en-firma",
+          estadoProcesal: "RADICACIÓN A.D. PARTE ACTORA",
+          fojas: 242,
+        },
+      ],
     },
     {
       n: "D3",
@@ -2227,6 +2116,15 @@ function cargarDemo() {
       prom: "CARLOS MARTÍNEZ",
       juz: "Tribunal Colegiado de Circuito",
       acto: "Laudo condenatorio",
+      // Demo de lista: ya firmado, pendiente de listar
+      cat: "Radicación",
+      firmas: [
+        {
+          estado: "firmado",
+          estadoProcesal: "RADICACIÓN A.D. PARTE DEMANDADA",
+          fojas: 255,
+        },
+      ],
     },
     {
       n: "D4",
@@ -2247,6 +2145,8 @@ function cargarDemo() {
       juz: "Tribunal Colegiado de Circuito",
       acto: "Laudo",
       suspension: { resultado: "niega" },
+      // Demo de cuadernillo: falta la última sección
+      cuadDemo: 8,
     },
     {
       n: "I1",
@@ -2314,6 +2214,18 @@ function cargarDemo() {
       juz: "Tribunal Colegiado de Circuito",
       acto: "Falta de radicación de la demanda",
       cat: "Radicación",
+      firmas: [
+        {
+          estado: "firmado",
+          estadoProcesal: "LAUDO EN CUMPLIMIENTO A.D. 258/2025",
+          fojas: 1065,
+        },
+        {
+          estado: "firmado",
+          estadoProcesal: "RADICACIÓN A.D. PARTE DEMANDADA",
+          fojas: 1065,
+        },
+      ],
     },
   ];
 
@@ -2327,6 +2239,9 @@ function cargarDemo() {
         hora: "09:00",
         expediente: `${130 + indice}/2026`,
         promovente: item.prom,
+        // Partes del juicio laboral (la lista de amparos las usa)
+        actor: PARTES_DEMO[indice % PARTES_DEMO.length][0],
+        demandado: PARTES_DEMO[indice % PARTES_DEMO.length][1],
         juzgado: item.juz,
         oficio: `TAE-SA-${200 + indice}/2026`,
         actoReclamado: item.acto,
@@ -2350,7 +2265,7 @@ function cargarDemo() {
     seg.desde = hace(item.desde ?? 0).toISOString();
 
     if (item.tipo === "directo") {
-      seg.ubicacion = item.etapa === "registro" ? "" : "Mesa 2";
+      seg.ubicacion = "Mesa 2";
       seg.suspension = item.suspension || null;
 
       // D-02 / D-03: partes estructuradas y categoría
@@ -2377,23 +2292,26 @@ function cargarDemo() {
 
       // D-05: etapas posteriores al informe ya traen su oficio enviado
       if (["resolucion", "cumplimiento", "cuadernillo"].includes(item.etapa)) {
-        generarInforme(seg, amparos.find((a) => a.id === id));
+        generarInforme(
+          seg,
+          amparos.find((a) => a.id === id),
+        );
 
         if (seg.informe) {
-          seg.informe.anexos = { expediente: true, demanda: true, notificaciones: true };
+          seg.informe.anexos = {
+            expediente: true,
+            demanda: true,
+            notificaciones: true,
+          };
           seg.informe.enviado = true;
         }
       }
 
-      // D-06: oficio del Tribunal Colegiado en el cuadernillo
-      if (item.n === "D5") {
-        seg.cuadernillo.oficiosTC.push({
-          id: `demo-${item.n}-1`,
-          numero: "TC-2026/88",
-          fecha: fechaISO(hace(4)),
-          asunto: "Requerimiento de copias certificadas",
-          registradoEn: hace(4).toISOString(),
-        });
+      // Firma de Presidencia y cuadernillo de demostración
+      (item.firmas || []).forEach((firma) => sembrarFirmaDemo(seg, id, firma));
+
+      if (item.cuadDemo) {
+        sembrarCuadernilloDemo(seg, id, item.cuadDemo);
       }
 
       if (item.etapa === "cumplimiento") {

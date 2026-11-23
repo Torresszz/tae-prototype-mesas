@@ -40,8 +40,34 @@ import {
   espacioUsadoBytes,
 } from "./plantillasStore.js";
 
-// Categoría elegida en el selector de la pestaña (se conserva en la sesión de la página)
-let categoriaFiltro = "";
+// ------------------------------------------------------------
+// CONTEXTO
+// El componente es el mismo para Mesas y para Amparos Directos; lo que
+// cambia (categorías, dónde se guardan, quién gestiona y los textos)
+// viene en un "contexto". Si no se indica, se usa el de las Mesas.
+//
+//   categorias          [{ clave, etiqueta }]
+//   etiquetaCategoria   (clave) => etiqueta
+//   store               { listar, obtener, guardar, actualizar, borrar, espacioUsadoBytes }
+//   puedeGestionar      () => boolean   (subir, editar y borrar)
+//   filtrosGlobales     false = no usar la barra de filtros de Mesas
+//   textoUso            frase sobre quién comparte las plantillas
+//   textoSoloGestores   aviso para quien solo puede descargar
+//   textoBorrar         "Dejará de estar disponible para ..."
+//   categoriaFiltro     categoría elegida en el selector de la pestaña
+// ------------------------------------------------------------
+const CONTEXTO_MESAS = {
+  categorias: PLANTILLA_CATEGORIAS,
+  etiquetaCategoria: etiquetaCategoriaPlantilla,
+  store: { listar, obtener, guardar, actualizar, borrar, espacioUsadoBytes },
+  puedeGestionar: () => canManageTemplates(),
+  filtrosGlobales: true,
+  textoUso: "Archivos .docx y .pdf de uso compartido por todas las mesas.",
+  textoSoloGestores:
+    "Solo los secretarios de acuerdos pueden subir o borrar plantillas.",
+  textoBorrar: "Dejará de estar disponible para todas las mesas.",
+  categoriaFiltro: "",
+};
 
 // ============================================================
 // RENDER
@@ -58,23 +84,30 @@ export function renderPlantillas() {
 
 // Apartado reutilizable. `categoria` vacía = pestaña completa;
 // con valor = categoría fija (apartado dentro de una sección).
-export function montarPlantillasEn(contenedor, { categoria = "" } = {}) {
+export function montarPlantillasEn(
+  contenedor,
+  { categoria = "", contexto = CONTEXTO_MESAS } = {},
+) {
   if (!contenedor) return;
+
+  const ctx = contexto;
 
   const fija = Boolean(categoria);
 
   const pestana = !fija;
 
-  const activa = fija ? categoria : categoriaFiltro;
+  const activa = fija ? categoria : ctx.categoriaFiltro;
 
   // En la pestaña, el texto de la barra global busca por nombre y las
   // fechas filtran por fecha de subida. En los apartados no se aplican.
-  const lista = listar({ categoria: activa }).filter(
+  const lista = ctx.store.listar({ categoria: activa }).filter(
     (item) =>
-      !pestana || (coincideExpediente(item.nombre) && coincideFecha(item.fecha)),
+      !pestana ||
+      !ctx.filtrosGlobales ||
+      (coincideExpediente(item.nombre) && coincideFecha(item.fecha)),
   );
 
-  const puedeGestionar = canManageTemplates();
+  const puedeGestionar = ctx.puedeGestionar();
 
   contenedor.innerHTML = `
     <section class="mesas-plantillas ${fija ? "mesas-plantillas--seccion" : ""}">
@@ -83,11 +116,11 @@ export function montarPlantillasEn(contenedor, { categoria = "" } = {}) {
         <div>
           <h2>
             <i class="fa-solid fa-folder-open"></i>
-            ${fija ? `Plantillas de ${escapeHTML(etiquetaCategoriaPlantilla(categoria))}` : "Plantillas"}
+            ${fija ? `Plantillas de ${escapeHTML(ctx.etiquetaCategoria(categoria))}` : "Plantillas"}
           </h2>
           <p>
-            Archivos .docx y .pdf de uso compartido por todas las mesas.
-            ${puedeGestionar ? "" : "Solo los secretarios de acuerdos pueden subir o borrar plantillas."}
+            ${escapeHTML(ctx.textoUso)}
+            ${puedeGestionar ? "" : escapeHTML(ctx.textoSoloGestores)}
           </p>
         </div>
 
@@ -99,10 +132,12 @@ export function montarPlantillasEn(contenedor, { categoria = "" } = {}) {
               <span>Categoría</span>
               <select data-plantilla-categoria aria-label="Filtrar por categoría">
                 <option value="">Todas las categorías</option>
-                ${PLANTILLA_CATEGORIAS.map(
-                  (c) =>
-                    `<option value="${c.clave}" ${c.clave === categoriaFiltro ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
-                ).join("")}
+                ${ctx.categorias
+                  .map(
+                    (c) =>
+                      `<option value="${c.clave}" ${c.clave === ctx.categoriaFiltro ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
+                  )
+                  .join("")}
               </select>
             </label>`
               : ""
@@ -120,20 +155,21 @@ export function montarPlantillasEn(contenedor, { categoria = "" } = {}) {
         </div>
       </header>
 
-      ${lista.length ? renderTabla(lista, { mostrarCategoria: pestana, puedeGestionar }) : renderVacio(pestana)}
+      ${lista.length ? renderTabla(lista, { mostrarCategoria: pestana, puedeGestionar, ctx }) : renderVacio(pestana, ctx)}
 
-      ${pestana ? `<p class="mesas-plantillas-uso">Espacio usado por plantillas en este navegador: ${formatoTamano(espacioUsadoBytes())} (prototipo con localStorage).</p>` : ""}
+      ${pestana ? `<p class="mesas-plantillas-uso">Espacio usado por plantillas en este navegador: ${formatoTamano(ctx.store.espacioUsadoBytes())} (prototipo con localStorage).</p>` : ""}
 
     </section>
   `;
 
-  const refrescar = () => montarPlantillasEn(contenedor, { categoria });
+  const refrescar = () =>
+    montarPlantillasEn(contenedor, { categoria, contexto: ctx });
 
   const selector = contenedor.querySelector("[data-plantilla-categoria]");
 
   if (selector) {
     selector.onchange = (event) => {
-      categoriaFiltro = event.target.value;
+      ctx.categoriaFiltro = event.target.value;
 
       refrescar();
     };
@@ -148,34 +184,34 @@ export function montarPlantillasEn(contenedor, { categoria = "" } = {}) {
 
     switch (boton.dataset.plantillaAction) {
             case "descargar":
-        descargarPlantilla(id);
+        descargarPlantilla(id, ctx);
 
         break;
 
       case "vista-previa":
-        abrirVistaPrevia(id);
+        abrirVistaPrevia(id, ctx);
 
         break;
 
       case "editar":
-        abrirEditarPlantilla(id, refrescar);
+        abrirEditarPlantilla(id, refrescar, ctx);
 
         break;
 
       case "subir":
-        abrirSubirPlantilla({ categoria, onGuardado: refrescar });
+        abrirSubirPlantilla({ categoria, onGuardado: refrescar, ctx });
 
         break;
 
       case "borrar":
-        abrirBorrarPlantilla(id, refrescar);
+        abrirBorrarPlantilla(id, refrescar, ctx);
 
         break;
     }
   };
 }
 
-function renderTabla(lista, { mostrarCategoria, puedeGestionar }) {
+function renderTabla(lista, { mostrarCategoria, puedeGestionar, ctx }) {
   const filas = lista
     .map(
       (item) => `
@@ -191,7 +227,7 @@ function renderTabla(lista, { mostrarCategoria, puedeGestionar }) {
           </td>
           ${
             mostrarCategoria
-              ? `<td><span class="mesas-plantilla-categoria">${escapeHTML(etiquetaCategoriaPlantilla(item.categoria))}</span></td>`
+              ? `<td><span class="mesas-plantilla-categoria">${escapeHTML(ctx.etiquetaCategoria(item.categoria))}</span></td>`
               : ""
           }
           <td>${escapeHTML(String(item.tipoArchivo || "").toUpperCase())}</td>
@@ -257,12 +293,12 @@ function renderTabla(lista, { mostrarCategoria, puedeGestionar }) {
   `;
 }
 
-function renderVacio(pestana) {
+function renderVacio(pestana, ctx) {
   return `
     <div class="mesas-empty-state">
       <div class="mesas-empty-icon"><i class="fa-regular fa-folder-open"></i></div>
       <strong>No hay plantillas${pestana ? " con estos filtros" : " en esta categoría"}</strong>
-      <span>${canManageTemplates() ? "Usa \"Subir plantilla\" para agregar la primera." : "Un secretario de acuerdos puede subir plantillas."}</span>
+      <span>${ctx.puedeGestionar() ? "Usa \"Subir plantilla\" para agregar la primera." : "Un usuario autorizado puede subir plantillas."}</span>
     </div>
   `;
 }
@@ -271,8 +307,8 @@ function renderVacio(pestana) {
 // DESCARGAR
 // ============================================================
 
-function descargarPlantilla(id) {
-  const plantilla = obtener(id);
+function descargarPlantilla(id, ctx) {
+  const plantilla = ctx.store.obtener(id);
 
   if (!plantilla) return;
 
@@ -328,9 +364,9 @@ function dataUrlABlob(dataUrl) {
 // SUBIR (modal)
 // ============================================================
 
-function abrirSubirPlantilla({ categoria = "", onGuardado }) {
-  // Defensa: aunque alguien llame esta función, solo el rol "mesa" sube
-  if (!canManageTemplates()) return;
+function abrirSubirPlantilla({ categoria = "", onGuardado, ctx }) {
+  // Defensa: aunque alguien llame esta función, solo quien gestiona sube
+  if (!ctx.puedeGestionar()) return;
 
   const fija = Boolean(categoria);
 
@@ -359,10 +395,12 @@ function abrirSubirPlantilla({ categoria = "", onGuardado }) {
                 ? ""
                 : `<option value="">Selecciona una categoría...</option>`
             }
-            ${PLANTILLA_CATEGORIAS.map(
-              (c) =>
-                `<option value="${c.clave}" ${c.clave === categoria ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
-            ).join("")}
+            ${ctx.categorias
+              .map(
+                (c) =>
+                  `<option value="${c.clave}" ${c.clave === categoria ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
+              )
+              .join("")}
           </select>
         </label>
 
@@ -441,7 +479,7 @@ function abrirSubirPlantilla({ categoria = "", onGuardado }) {
     try {
       const dataUrl = await leerComoDataUrl(archivo);
 
-      const resultado = guardar({
+      const resultado = ctx.store.guardar({
         nombre,
         categoria: categoriaElegida,
         archivo,
@@ -477,10 +515,10 @@ function abrirSubirPlantilla({ categoria = "", onGuardado }) {
 // Solo el rol "mesa". No edita el contenido del documento.
 // ============================================================
 
-function abrirEditarPlantilla(id, onGuardado) {
-  if (!canManageTemplates()) return;
+function abrirEditarPlantilla(id, onGuardado, ctx) {
+  if (!ctx.puedeGestionar()) return;
 
-  const plantilla = obtener(id);
+  const plantilla = ctx.store.obtener(id);
 
   if (!plantilla) return;
 
@@ -504,10 +542,12 @@ function abrirEditarPlantilla(id, onGuardado) {
         <label class="mesas-plantillas-field">
           <span>Categoría</span>
           <select id="plantillaEditCategoria">
-            ${PLANTILLA_CATEGORIAS.map(
-              (c) =>
-                `<option value="${c.clave}" ${c.clave === plantilla.categoria ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
-            ).join("")}
+            ${ctx.categorias
+              .map(
+                (c) =>
+                  `<option value="${c.clave}" ${c.clave === plantilla.categoria ? "selected" : ""}>${escapeHTML(c.etiqueta)}</option>`,
+              )
+              .join("")}
           </select>
         </label>
 
@@ -575,7 +615,7 @@ function abrirEditarPlantilla(id, onGuardado) {
     try {
       const dataUrl = archivo ? await leerComoDataUrl(archivo) : "";
 
-      const resultado = actualizar(id, {
+      const resultado = ctx.store.actualizar(id, {
         nombre,
         categoria: $("plantillaEditCategoria").value,
         archivo,
@@ -608,8 +648,8 @@ function abrirEditarPlantilla(id, onGuardado) {
 // El dibujo vive en vistaPrevia.js (PDF con pdf.js, Word con lector propio).
 // ============================================================
 
-async function abrirVistaPrevia(id) {
-  const plantilla = obtener(id);
+async function abrirVistaPrevia(id, ctx) {
+  const plantilla = ctx.store.obtener(id);
 
   if (!plantilla) return;
 
@@ -654,10 +694,10 @@ async function abrirVistaPrevia(id) {
 // BORRAR (con confirmación)
 // ============================================================
 
-function abrirBorrarPlantilla(id, onBorrado) {
-  if (!canManageTemplates()) return;
+function abrirBorrarPlantilla(id, onBorrado, ctx) {
+  if (!ctx.puedeGestionar()) return;
 
-  const plantilla = obtener(id);
+  const plantilla = ctx.store.obtener(id);
 
   if (!plantilla) return;
 
@@ -678,7 +718,7 @@ function abrirBorrarPlantilla(id, onBorrado) {
             ¿Seguro que quieres borrar la plantilla
             <strong>${escapeHTML(plantilla.nombre)}</strong>
             (${escapeHTML(extensionDe(plantilla.nombreArchivo).toUpperCase())})?
-            Dejará de estar disponible para todas las mesas.
+            ${escapeHTML(ctx.textoBorrar)}
           </span>
         </div>
       </div>
@@ -696,7 +736,7 @@ function abrirBorrarPlantilla(id, onBorrado) {
   document.getElementById("plantillaBorrarCancelar").onclick = closeForm;
 
   document.getElementById("plantillaBorrarConfirmar").onclick = () => {
-    borrar(id);
+    ctx.store.borrar(id);
 
     closeForm();
 
