@@ -3,16 +3,9 @@
 // assets/js/modules/mesas/promociones.js
 // ============================================================
 
-import {
-  getData,
-  saveData,
-} from "../../storage.js";
+import { getData, saveData } from "../../storage.js";
 
-import {
-  createId,
-  escapeHTML,
-  todayISO,
-} from "../../utils.js";
+import { createId, escapeHTML, todayISO } from "../../utils.js";
 
 import {
   aplicarFiltrosGlobales,
@@ -20,97 +13,56 @@ import {
   sincronizarBarraFiltros,
 } from "./filtros.js";
 
-import {
-  aplicarAccion,
-  accionDeBoton,
-  renderBotonesFlujo,
-  renderEstadoBadge,
-} from "./flujoEstados.js";
+import { aplicarAccion, renderEstadoBadge } from "./flujoEstados.js";
+
 import { abrirEnvioFirma } from "./documentosFirma.js";
 
-import {
-  getSession,
-} from "../../auth.js";
+import { getSession } from "../../auth.js";
 
-import {
-  etiquetaEstadoAcuerdo,
-} from "./catalogos.js";
+import { getExpedientesMesaActual, getNumeroExpediente } from "./mesaUtils.js";
 
-import {
-  getExpedientesMesaActual,
-  getNumeroExpediente,
-} from "./mesaUtils.js";
+import { esCritico } from "./config.js";
 
-import {
-  esCritico,
-} from "./config.js";
+import { openAgendarAudienciaPromocion } from "./promocionAgenda.js";
 
-import {
-  openAgendarAudienciaPromocion,
-} from "./promocionAgenda.js";
-
+import { openAcordarPromocion } from "./promocionAcordar.js";
 
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
 
-const KEY_PROMOCIONES =
-  "promociones";
+const KEY_PROMOCIONES = "promociones";
 
-const KEY_AGENDA =
-  "mesasAgenda";
+const KEY_AGENDA = "mesasAgenda";
 
-let busquedaPersona =
-  "";
+let busquedaPersona = "";
 
-let categoriaActiva =
-  "todas";
-
+let categoriaActiva = "todas";
 
 // ============================================================
 // RENDER PRINCIPAL
 // ============================================================
 
 export function renderPromociones() {
-  const vista =
-    document.querySelector(
-      '[data-mesas-vista="promociones"]',
-    );
-
+  const vista = document.querySelector('[data-mesas-vista="promociones"]');
 
   if (!vista) {
     return;
   }
 
-
   prepararPromociones();
 
+  const registros = getRegistrosPromociones();
 
-  const registros =
-    getRegistrosPromociones();
+  const porAcordar = registros.filter(
+    (item) => item.estadoPromocion === "por-acordar",
+  );
 
+  const acordadas = registros.filter(
+    (item) => item.estadoPromocion === "acordado",
+  );
 
-  const porAcordar =
-    registros.filter(
-      (item) =>
-        item.estadoPromocion ===
-        "por-acordar",
-    );
-
-
-  const acordadas =
-    registros.filter(
-      (item) =>
-        item.estadoPromocion ===
-        "acordado",
-    );
-
-
-  const prioridad =
-    getExpedientePrioritario(
-      registros,
-    );
-
+  const prioridad = getExpedientePrioritario(registros);
 
   vista.innerHTML = `
     <section class="mesas-fase4-section">
@@ -145,9 +97,7 @@ export function renderPromociones() {
       PRIORIDAD
       ================================================= -->
 
-      ${renderPrioridad(
-        prioridad,
-      )}
+      ${renderPrioridad(prioridad)}
 
 
       <!-- ================================================
@@ -160,10 +110,7 @@ export function renderPromociones() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            categoriaActiva ===
-            "todas"
-              ? "active"
-              : ""
+            categoriaActiva === "todas" ? "active" : ""
           }"
           data-promociones-action="categoria"
           data-categoria="todas"
@@ -183,10 +130,7 @@ export function renderPromociones() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            categoriaActiva ===
-            "por-acordar"
-              ? "active"
-              : ""
+            categoriaActiva === "por-acordar" ? "active" : ""
           }"
           data-promociones-action="categoria"
           data-categoria="por-acordar"
@@ -206,10 +150,7 @@ export function renderPromociones() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            categoriaActiva ===
-            "acordado"
-              ? "active"
-              : ""
+            categoriaActiva === "acordado" ? "active" : ""
           }"
           data-promociones-action="categoria"
           data-categoria="acordado"
@@ -249,9 +190,7 @@ export function renderPromociones() {
             <input
               id="promocionesBusquedaPersona"
               type="search"
-              value="${escapeHTML(
-                busquedaPersona,
-              )}"
+              value="${escapeHTML(busquedaPersona)}"
               placeholder="Buscar por actor o demandado..."
               autocomplete="off"
             >
@@ -321,9 +260,7 @@ export function renderPromociones() {
 
             <tbody>
 
-              ${renderFilasPromociones(
-                getRegistrosVisibles(),
-              )}
+              ${renderFilasPromociones(getRegistrosVisibles())}
 
             </tbody>
 
@@ -369,493 +306,357 @@ export function renderPromociones() {
     </section>
   `;
 
-
   actualizarListado();
 
-
-  configurarEventosPromociones(
-    vista,
-  );
+  configurarEventosPromociones(vista);
 }
-
 
 // ============================================================
 // NORMALIZAR PROMOCIONES
 // ============================================================
 
 function prepararPromociones() {
-  const datos =
-    getData(
-      KEY_PROMOCIONES,
-      [],
-    );
+  const datos = getData(KEY_PROMOCIONES, []);
 
-
-  if (
-    !Array.isArray(
-      datos,
-    )
-  ) {
-    saveData(
-      KEY_PROMOCIONES,
-      [],
-    );
+  if (!Array.isArray(datos)) {
+    saveData(KEY_PROMOCIONES, []);
 
     return;
   }
 
+  let changed = false;
 
-  let changed =
-    false;
+  datos.forEach((promocion) => {
+    if (!promocion.id) {
+      promocion.id = createId();
 
+      changed = true;
+    }
 
-  datos.forEach(
-    (promocion) => {
+    if (!promocion.estadoPromocion) {
+      promocion.estadoPromocion = "por-acordar";
 
+      changed = true;
+    }
 
-      if (
-        !promocion.id
-      ) {
-        promocion.id =
-          createId();
+    if (!promocion.estadoAcuerdo) {
+      promocion.estadoAcuerdo = "en-proceso";
 
-        changed =
-          true;
-      }
+      changed = true;
+    }
+  });
 
-
-      if (
-        !promocion.estadoPromocion
-      ) {
-        promocion.estadoPromocion =
-          "por-acordar";
-
-        changed =
-          true;
-      }
-
-
-      if (
-        !promocion.estadoAcuerdo
-      ) {
-        promocion.estadoAcuerdo =
-          "en-proceso";
-
-        changed =
-          true;
-      }
-
-
-    },
-  );
-
-
-  if (
-    changed
-  ) {
-    saveData(
-      KEY_PROMOCIONES,
-      datos,
-    );
+  if (changed) {
+    saveData(KEY_PROMOCIONES, datos);
   }
 }
-
-
 // ============================================================
 // REGISTROS
 // ============================================================
 
 function getRegistrosPromociones() {
-  const promociones =
-    getData(
-      KEY_PROMOCIONES,
-      [],
-    );
+  const promociones = getData(KEY_PROMOCIONES, []);
 
-
-  if (
-    !Array.isArray(
-      promociones,
-    )
-  ) {
+  if (!Array.isArray(promociones)) {
     return [];
   }
 
+  const expedientes = getExpedientesMesaActual();
 
-  const expedientes =
-    getExpedientesMesaActual();
+  const mapaExpedientes = new Map(
+    expedientes.map((expediente) => [
+      getNumeroExpediente(expediente),
+      expediente,
+    ]),
+  );
 
+  const agenda = getAgenda();
 
-  const mapaExpedientes =
-    new Map(
-      expedientes.map(
-        (expediente) => [
-          getNumeroExpediente(
-            expediente,
-          ),
-          expediente,
-        ],
-      ),
-    );
+  return (
+    promociones
 
+      // Solo promociones ya recibidas por la mesa.
+      .filter((promocion) => promocion.recibidaMesa === true)
 
-  const agenda =
-    getAgenda();
+      .map((promocion) => {
+        const numero = String(promocion.expediente || promocion.numero || "");
 
+        const expediente = mapaExpedientes.get(numero);
 
-  return promociones
-
-    // Solo promociones ya recibidas por la mesa.
-    .filter(
-      (promocion) =>
-        promocion.recibidaMesa ===
-        true,
-    )
-
-    .map(
-      (promocion) => {
-
-        const numero =
-          String(
-            promocion.expediente ||
-            promocion.numero ||
-            "",
-          );
-
-
-        const expediente =
-          mapaExpedientes.get(
-            numero,
-          );
-
-
-        if (
-          !expediente
-        ) {
+        if (!expediente) {
           return null;
         }
 
+        const audiencia = buscarAudienciaPromocion(promocion, agenda);
 
-        const audiencia =
-          buscarAudienciaPromocion(
-            promocion,
-            agenda,
-          );
+        const estadoAcuerdo = promocion.estadoAcuerdo || "en-proceso";
 
+        const estadoPromocion = promocion.estadoPromocion || "por-acordar";
 
         return {
-
-          id:
-            promocion.id,
-
+          id: promocion.id,
 
           numero,
 
+          fecha: promocion.fecha || promocion.creadoEn || "",
 
-          fecha:
-            promocion.fecha ||
-            promocion.creadoEn ||
-            "",
+          actor: expediente.actor || expediente.promovente || "—",
 
+          demandado: expediente.demandado || "—",
 
-          actor:
-            expediente.actor ||
-            expediente.promovente ||
-            "—",
+          descripcion: promocion.descripcion || promocion.tipo || "Promoción",
 
+          estadoPromocion,
 
-          demandado:
-            expediente.demandado ||
-            "—",
+          estadoAcuerdo,
 
+          situacionVisual: obtenerSituacionVisual(promocion),
 
-          descripcion:
-            promocion.descripcion ||
-            promocion.tipo ||
-            "Promoción",
-
-
-          estadoPromocion:
-            promocion.estadoPromocion ||
-            "por-acordar",
-
-
-          estadoAcuerdo:
-            promocion.estadoAcuerdo ||
-            "en-proceso",
-
+          tieneProyecto: tieneProyectoAcuerdo(promocion),
 
           audiencia,
-
 
           promocion,
 
           expediente,
-
         };
-      },
-    )
+      })
 
-    .filter(
-      Boolean,
-    );
+      .filter(Boolean)
+  );
 }
 
+// ============================================================
+// ¿YA EXISTE PROYECTO DE ACUERDO?
+// ============================================================
+
+function tieneProyectoAcuerdo(promocion) {
+  if (!promocion || !promocion.acuerdo) {
+    return false;
+  }
+
+  const acuerdo = promocion.acuerdo;
+
+  // Soporte para acuerdo almacenado como texto.
+  if (typeof acuerdo === "string") {
+    return Boolean(acuerdo.trim());
+  }
+
+  // Soporte para el formato actual y para el
+  // modal que agregaremos después.
+  if (typeof acuerdo === "object") {
+    return Boolean(
+      acuerdo.titulo ||
+      acuerdo.texto ||
+      acuerdo.contenido ||
+      acuerdo.extracto ||
+      acuerdo.archivo ||
+      acuerdo.documento ||
+      acuerdo.nombreArchivo,
+    );
+  }
+
+  return false;
+}
+
+// ============================================================
+// SITUACIÓN VISUAL
+// ============================================================
+//
+// Esta columna ya no depende únicamente de "estadoPromocion".
+// Muestra al usuario en qué parte real del flujo se encuentra.
+//
+// ============================================================
+
+function obtenerSituacionVisual(promocion) {
+  const estadoPromocion = promocion.estadoPromocion || "por-acordar";
+
+  const estadoAcuerdo = promocion.estadoAcuerdo || "en-proceso";
+
+  // Ya quedó acordada.
+  if (
+    estadoPromocion === "acordado" ||
+    estadoAcuerdo === "en-lista" ||
+    estadoAcuerdo === "en-actuaria" ||
+    estadoAcuerdo === "en-archivo"
+  ) {
+    return {
+      clave: "acordada",
+
+      texto: "Acordada",
+
+      clase: "done",
+    };
+  }
+
+  // Ya fue enviada a firma.
+  if (estadoAcuerdo === "en-firma") {
+    return {
+      clave: "en-firma",
+
+      texto: "En firma",
+
+      clase: "sign",
+    };
+  }
+
+  // Existe un acuerdo preparado pero todavía
+  // no se ha enviado a firma.
+  if (
+    tieneProyectoAcuerdo(promocion) ||
+    estadoAcuerdo === "en-revision-interna"
+  ) {
+    return {
+      clave: "en-proyecto",
+
+      texto: "En proyecto",
+
+      clase: "project",
+    };
+  }
+
+  // Estado inicial.
+  return {
+    clave: "por-acordar",
+
+    texto: "Por acordar",
+
+    clase: "pending",
+  };
+}
 
 // ============================================================
 // AGENDA
 // ============================================================
 
 function getAgenda() {
-  const datos =
-    getData(
-      KEY_AGENDA,
-      [],
-    );
+  const datos = getData(KEY_AGENDA, []);
 
-
-  return Array.isArray(
-    datos,
-  )
-    ? datos
-    : [];
+  return Array.isArray(datos) ? datos : [];
 }
 
-
 // ============================================================
-// BUSCAR AUDIENCIA DE PROMOCIÓN
+// BUSCAR AUDIENCIA RELACIONADA A LA PROMOCIÓN
 // ============================================================
 
-function buscarAudienciaPromocion(
-  promocion,
-  agenda,
-) {
+function buscarAudienciaPromocion(promocion, agenda) {
+  // Primero intentamos localizarla con el ID
+  // guardado directamente en la promoción.
+  if (promocion.audienciaEventoId) {
+    const evento = agenda.find(
+      (item) => item.id === promocion.audienciaEventoId,
+    );
 
-  if (
-    promocion.audienciaEventoId
-  ) {
-
-    const evento =
-      agenda.find(
-        (item) =>
-          item.id ===
-          promocion.audienciaEventoId,
-      );
-
-
-    if (
-      evento
-    ) {
+    if (evento) {
       return evento;
     }
-
   }
 
-
+  // Compatibilidad con eventos creados anteriormente.
   return (
     agenda.find(
       (evento) =>
-        evento.tipo ===
-          "audiencia" &&
-        evento.origen ===
-          "promocion" &&
-        evento.promocionId ===
-          promocion.id,
-    ) ||
-    null
+        evento.tipo === "audiencia" &&
+        evento.origen === "promocion" &&
+        evento.promocionId === promocion.id,
+    ) || null
   );
 }
-
 
 // ============================================================
 // FILTRADO
 // ============================================================
 
 function getRegistrosVisibles() {
-  let registros =
-    getRegistrosPromociones();
+  let registros = getRegistrosPromociones();
 
+  registros = aplicarFiltrosGlobales(registros, {
+    numero: (item) => item.numero,
 
-  registros =
-    aplicarFiltrosGlobales(
-      registros,
-      {
+    fecha: (item) => item.fecha,
 
-        numero:
-          (item) =>
-            item.numero,
+    estado: (item) => item.estadoAcuerdo,
+  });
 
+  const texto = busquedaPersona.trim().toLowerCase();
 
-        fecha:
-          (item) =>
-            item.fecha,
-
-
-        estado:
-          (item) =>
-            item.estadoAcuerdo,
-
-      },
-    );
-
-
-  const texto =
-    busquedaPersona
-      .trim()
-      .toLowerCase();
-
-
-  if (
-    texto
-  ) {
-
-    registros =
-      registros.filter(
-        (item) => {
-
-          const persona = `
+  if (texto) {
+    registros = registros.filter((item) => {
+      const persona = `
             ${item.actor}
             ${item.demandado}
           `.toLowerCase();
 
-
-          return persona.includes(
-            texto,
-          );
-
-        },
-      );
-
+      return persona.includes(texto);
+    });
   }
 
-
-  if (
-    categoriaActiva !==
-    "todas"
-  ) {
-
-    registros =
-      registros.filter(
-        (item) =>
-          item.estadoPromocion ===
-          categoriaActiva,
-      );
-
+  if (categoriaActiva !== "todas") {
+    registros = registros.filter(
+      (item) => item.estadoPromocion === categoriaActiva,
+    );
   }
-
 
   return registros;
 }
-
 
 // ============================================================
 // PRIORIDAD
 // ============================================================
 
-function getExpedientePrioritario(
-  registros,
-) {
-
-  if (
-    !registros.length
-  ) {
+function getExpedientePrioritario(registros) {
+  if (!registros.length) {
     return null;
   }
 
+  const conteo = new Map();
 
-  const conteo =
-    new Map();
+  registros.forEach((item) => {
+    conteo.set(item.numero, (conteo.get(item.numero) || 0) + 1);
+  });
 
+  let numero = "";
 
-  registros.forEach(
-    (item) => {
+  let cantidad = 0;
 
-      conteo.set(
-        item.numero,
-        (
-          conteo.get(
-            item.numero,
-          ) ||
-          0
-        ) + 1,
-      );
+  conteo.forEach((total, expediente) => {
+    if (total > cantidad) {
+      numero = expediente;
 
-    },
-  );
+      cantidad = total;
+    }
+  });
 
-
-  let numero =
-    "";
-
-  let cantidad =
-    0;
-
-
-  conteo.forEach(
-    (
-      total,
-      expediente,
-    ) => {
-
-      if (
-        total >
-        cantidad
-      ) {
-
-        numero =
-          expediente;
-
-        cantidad =
-          total;
-
-      }
-
-    },
-  );
-
-
-  if (
-    !numero
-  ) {
+  if (!numero) {
     return null;
   }
-
 
   return {
-
     numero,
 
     cantidad,
 
-    critico:
-      esCritico(
-        cantidad,
-      ),
-
+    critico: esCritico(cantidad),
   };
 }
 
-
 // ============================================================
-// RENDER PRIORIDAD
+// ALERTA / PRIORIDAD SUPERIOR
+// ============================================================
+//
+// ESTA PARTE SE CONSERVA.
+// Es la franja roja que ya tienes arriba.
+//
 // ============================================================
 
-function renderPrioridad(
-  prioridad,
-) {
-
-  if (
-    !prioridad
-  ) {
+function renderPrioridad(prioridad) {
+  if (!prioridad) {
     return "";
   }
 
-
   return `
     <section class="mesas-promociones-priority ${
-      prioridad.critico
-        ? "danger"
-        : ""
+      prioridad.critico ? "danger" : ""
     }">
 
 
@@ -879,9 +680,7 @@ function renderPrioridad(
 
         <strong>
           Expediente
-          ${escapeHTML(
-            prioridad.numero,
-          )}
+          ${escapeHTML(prioridad.numero)}
         </strong>
 
 
@@ -889,18 +688,9 @@ function renderPrioridad(
 
           ${prioridad.cantidad}
 
-          ${
-            prioridad.cantidad ===
-            1
-              ? "promoción"
-              : "promociones"
-          }
+          ${prioridad.cantidad === 1 ? "promoción" : "promociones"}
 
-          ${
-            prioridad.critico
-              ? "· Nivel crítico"
-              : ""
-          }
+          ${prioridad.critico ? " · Nivel crítico" : ""}
 
         </small>
 
@@ -915,9 +705,7 @@ function renderPrioridad(
             : "mesas-secondary-btn"
         }"
         data-promociones-action="prioridad"
-        data-expediente="${escapeHTML(
-          prioridad.numero,
-        )}"
+        data-expediente="${escapeHTML(prioridad.numero)}"
       >
 
         <i class="fa-solid fa-arrow-right"></i>
@@ -934,87 +722,76 @@ function renderPrioridad(
 // TABLA
 // ============================================================
 
-function renderFilasPromociones(
-  registros,
-) {
-
+function renderFilasPromociones(registros) {
   return registros
 
-    .map(
-      (item) => {
+    .map((item) => {
+      const tieneAudiencia = Boolean(item.audiencia);
 
-        const acordada =
-          item.estadoPromocion ===
-          "acordado";
-
-
-        const tieneAudiencia =
-          Boolean(
-            item.audiencia,
-          );
-
-
-        return `
+      return `
           <tr>
 
 
-            <!-- EXPEDIENTE -->
+            <!-- =========================================
+            EXPEDIENTE
+            ========================================== -->
 
             <td>
 
               <strong class="mesas-expediente-number">
 
-                ${escapeHTML(
-                  item.numero,
-                )}
+                ${escapeHTML(item.numero)}
 
               </strong>
 
             </td>
 
 
-            <!-- FECHA -->
+            <!-- =========================================
+            FECHA
+            ========================================== -->
 
             <td>
 
-              ${escapeHTML(
-                formatFecha(
-                  item.fecha,
-                ),
-              )}
+              ${escapeHTML(formatFecha(item.fecha))}
 
             </td>
 
 
-            <!-- ACTOR -->
+            <!-- =========================================
+            ACTOR
+            ========================================== -->
 
             <td>
 
-              ${escapeHTML(
-                item.actor,
-              )}
+              ${escapeHTML(item.actor)}
 
             </td>
 
 
-            <!-- DEMANDADO -->
+            <!-- =========================================
+            DEMANDADO
+            ========================================== -->
 
             <td>
 
-              ${escapeHTML(
-                item.demandado,
-              )}
+              ${escapeHTML(item.demandado)}
 
             </td>
 
 
-            <!-- PROMOCIÓN -->
+            <!-- =========================================
+            PROMOCIÓN
+            ========================================== -->
 
             <td>
 
-              ${escapeHTML(
-                item.descripcion,
-              )}
+              <div class="mesas-promocion-description">
+
+                ${escapeHTML(item.descripcion)}
+
+              </div>
+
 
               ${
                 tieneAudiencia
@@ -1023,20 +800,21 @@ function renderFilasPromociones(
 
                       <i class="fa-regular fa-calendar-check"></i>
 
-                      Audiencia:
-                      ${escapeHTML(
-                        formatFecha(
-                          item.audiencia.fecha,
-                        ),
-                      )}
+                      <span>
 
-                      ${
-                        item.audiencia.hora
-                          ? ` · ${escapeHTML(
-                              item.audiencia.hora,
-                            )}`
-                          : ""
-                      }
+                        Audiencia:
+
+                        ${escapeHTML(formatFecha(item.audiencia.fecha))}
+
+                        ${
+                          item.audiencia.hora
+                            ? `
+                              · ${escapeHTML(item.audiencia.hora)}
+                            `
+                            : ""
+                        }
+
+                      </span>
 
                     </div>
                   `
@@ -1046,524 +824,591 @@ function renderFilasPromociones(
             </td>
 
 
-            <!-- ESTADO DEL ACUERDO -->
+            <!-- =========================================
+            ESTADO DEL ACUERDO
+            ========================================== -->
 
             <td>
 
-              ${renderEstadoBadge(
-                item.estadoAcuerdo,
-              )}
+              ${renderEstadoBadge(item.estadoAcuerdo)}
 
             </td>
 
 
-            <!-- SITUACIÓN -->
+            <!-- =========================================
+            SITUACIÓN
+            ========================================== -->
 
             <td>
 
-              <span class="mesas-fase4-category-badge ${
-                acordada
-                  ? "done"
-                  : "pending"
-              }">
-
-                ${escapeHTML(
-                  etiquetaEstadoAcuerdo(
-                    item.estadoPromocion,
-                  ),
-                )}
-
-              </span>
+              ${renderSituacionPromocion(item.situacionVisual)}
 
             </td>
 
 
-            <!-- ACCIONES -->
+            <!-- =========================================
+            ACCIONES
+            ========================================== -->
 
-            <td>
+            <td class="mesas-promociones-actions-cell">
 
-              <div class="mesas-actions">
-
-
-                <!-- FLUJO AUTOMÁTICO -->
-
-                ${renderBotonesFlujo(
-                  item.estadoAcuerdo,
-                  {
-                    actionAttr:
-                      "data-promociones-action",
-                    attrs: `data-promocion-id="${escapeHTML(
-                      item.id,
-                    )}"`,
-                    acuerdo:
-                      item.promocion.acuerdo,
-                  },
-                )}
-
-
-                <!-- AUDIENCIA -->
-
-                <button
-                  type="button"
-                  class="mesas-secondary-btn"
-                  data-promociones-action="agendar-audiencia"
-                  data-promocion-id="${escapeHTML(
-                    item.id,
-                  )}"
-                >
-
-                  <i class="fa-regular ${
-                    tieneAudiencia
-                      ? "fa-calendar-check"
-                      : "fa-calendar-plus"
-                  }"></i>
-
-                  ${
-                    tieneAudiencia
-                      ? "Ver audiencia"
-                      : "Agendar audiencia"
-                  }
-
-                </button>
-
-
-              </div>
+              ${renderAccionesPromocion(item)}
 
             </td>
 
 
           </tr>
         `;
-
-      },
-    )
+    })
 
     .join("");
 }
 
+// ============================================================
+// SITUACIÓN
+// ============================================================
+
+function renderSituacionPromocion(situacion) {
+  if (!situacion) {
+    return `
+      <span class="mesas-fase4-category-badge pending">
+        Por acordar
+      </span>
+    `;
+  }
+
+  return `
+    <span
+      class="
+        mesas-fase4-category-badge
+        ${escapeHTML(situacion.clase || "pending")}
+      "
+    >
+
+      ${escapeHTML(situacion.texto || "Por acordar")}
+
+    </span>
+  `;
+}
+
+// ============================================================
+// ACCIONES DE PROMOCIÓN
+// ============================================================
+//
+// POR ACORDAR:
+// Acordar | Enviar a firma bloqueado | Agendar audiencia
+//
+// EN PROYECTO:
+// Editar acuerdo | Enviar a firma | Agendar audiencia
+//
+// EN FIRMA:
+// En firma | Audiencia
+//
+// ACORDADA:
+// Acordada | Audiencia
+//
+// ============================================================
+
+function renderAccionesPromocion(item) {
+  const id = escapeHTML(String(item.id));
+
+  const tieneAudiencia = Boolean(item.audiencia);
+
+  const situacion = item.situacionVisual?.clave || "por-acordar";
+
+  const audienciaButton = `
+    <button
+      type="button"
+      class="mesas-secondary-btn mesas-promocion-action-btn"
+      data-promociones-action="agendar-audiencia"
+      data-promocion-id="${id}"
+    >
+
+      <i class="fa-regular ${
+        tieneAudiencia ? "fa-calendar-check" : "fa-calendar-plus"
+      }"></i>
+
+      <span>
+
+        ${tieneAudiencia ? "Ver audiencia" : "Agendar audiencia"}
+
+      </span>
+
+    </button>
+  `;
+
+  // ==========================================================
+  // POR ACORDAR
+  // ==========================================================
+
+  if (situacion === "por-acordar") {
+    return `
+      <div class="mesas-promociones-actions">
+
+
+        <button
+          type="button"
+          class="mesas-primary-btn mesas-promocion-action-btn"
+          data-promociones-action="acordar"
+          data-promocion-id="${id}"
+        >
+
+          <i class="fa-solid fa-pen-to-square"></i>
+
+          <span>
+            Acordar
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="mesas-secondary-btn mesas-promocion-action-btn"
+          disabled
+          title="Primero debes acordar la promoción"
+        >
+
+          <i class="fa-solid fa-paper-plane"></i>
+
+          <span>
+            Enviar a firma
+          </span>
+
+        </button>
+
+
+        ${audienciaButton}
+
+
+      </div>
+    `;
+  }
+
+  // ==========================================================
+  // EN PROYECTO
+  // ==========================================================
+
+  if (situacion === "en-proyecto") {
+    return `
+      <div class="mesas-promociones-actions">
+
+
+        <button
+          type="button"
+          class="mesas-secondary-btn mesas-promocion-action-btn"
+          data-promociones-action="acordar"
+          data-promocion-id="${id}"
+        >
+
+          <i class="fa-solid fa-pen-to-square"></i>
+
+          <span>
+            Editar acuerdo
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="mesas-primary-btn mesas-promocion-action-btn"
+          data-promociones-action="enviar-firma"
+          data-promocion-id="${id}"
+        >
+
+          <i class="fa-solid fa-paper-plane"></i>
+
+          <span>
+            Enviar a firma
+          </span>
+
+        </button>
+
+
+        ${audienciaButton}
+
+
+      </div>
+    `;
+  }
+
+  // ==========================================================
+  // EN FIRMA
+  // ==========================================================
+
+  if (situacion === "en-firma") {
+    return `
+      <div class="mesas-promociones-actions">
+
+
+        <button
+          type="button"
+          class="mesas-secondary-btn mesas-promocion-action-btn"
+          disabled
+        >
+
+          <i class="fa-solid fa-hourglass-half"></i>
+
+          <span>
+            En firma
+          </span>
+
+        </button>
+
+
+        ${audienciaButton}
+
+
+      </div>
+    `;
+  }
+
+  // ==========================================================
+  // ACORDADA
+  // ==========================================================
+
+  return `
+    <div class="mesas-promociones-actions">
+
+
+      <button
+        type="button"
+        class="mesas-secondary-btn mesas-promocion-action-btn"
+        disabled
+      >
+
+        <i class="fa-solid fa-circle-check"></i>
+
+        <span>
+          Acordada
+        </span>
+
+      </button>
+
+
+      ${audienciaButton}
+
+
+    </div>
+  `;
+}
 
 // ============================================================
 // ACTUALIZAR LISTADO
 // ============================================================
 
 function actualizarListado() {
-  const vista =
-    document.querySelector(
-      '[data-mesas-vista="promociones"]',
-    );
+  const vista = document.querySelector('[data-mesas-vista="promociones"]');
 
-
-  if (
-    !vista
-  ) {
+  if (!vista) {
     return;
   }
 
+  const tbody = vista.querySelector(".mesas-promociones-table tbody");
 
-  const tbody =
-    vista.querySelector(
-      ".mesas-promociones-table tbody",
-    );
+  const empty = vista.querySelector("#promocionesEmpty");
 
-
-  const empty =
-    vista.querySelector(
-      "#promocionesEmpty",
-    );
-
-
-  if (
-    !tbody
-  ) {
+  if (!tbody) {
     return;
   }
 
+  const registros = getRegistrosVisibles();
 
-  const registros =
-    getRegistrosVisibles();
+  if (!registros.length) {
+    tbody.innerHTML = "";
 
-
-  if (
-    !registros.length
-  ) {
-
-    tbody.innerHTML =
-      "";
-
-
-    if (
-      empty
-    ) {
-      empty.hidden =
-        false;
+    if (empty) {
+      empty.hidden = false;
     }
 
-
     return;
   }
 
-
-  if (
-    empty
-  ) {
-    empty.hidden =
-      true;
+  if (empty) {
+    empty.hidden = true;
   }
 
-
-  tbody.innerHTML =
-    renderFilasPromociones(
-      registros,
-    );
-
-
-  }
-
-
+  tbody.innerHTML = renderFilasPromociones(registros);
+}
 // ============================================================
 // EVENTOS
 // ============================================================
 
-function configurarEventosPromociones(
-  vista,
-) {
+function configurarEventosPromociones(vista) {
+  const search = vista.querySelector("#promocionesBusquedaPersona");
 
-  const search =
-    vista.querySelector(
-      "#promocionesBusquedaPersona",
-    );
+  // ==========================================================
+  // BUSCADOR
+  // ==========================================================
 
+  if (search) {
+    search.oninput = (event) => {
+      busquedaPersona = event.target.value;
 
-  if (
-    search
-  ) {
-
-    search.oninput =
-      (event) => {
-
-        busquedaPersona =
-          event.target.value;
-
-
-        actualizarListado();
-
-      };
-
+      actualizarListado();
+    };
   }
 
+  // ==========================================================
+  // ACCIONES
+  // ==========================================================
 
-  vista.onclick =
-    (event) => {
+  vista.onclick = (event) => {
+    const button = event.target.closest("[data-promociones-action]");
 
-      const button =
-        event.target.closest(
-          "[data-promociones-action]",
+    if (!button) {
+      return;
+    }
+
+    if (button.disabled) {
+      return;
+    }
+
+    const action = button.dataset.promocionesAction;
+
+    const promocionId = button.dataset.promocionId;
+
+    switch (action) {
+      // ====================================================
+      // CATEGORÍAS
+      // ====================================================
+
+      case "categoria":
+        categoriaActiva = button.dataset.categoria || "todas";
+
+        renderPromociones();
+
+        break;
+
+      // ====================================================
+      // PRIORIDAD
+      // ====================================================
+
+      case "prioridad":
+        irAExpedientePrioritario(button.dataset.expediente);
+
+        break;
+
+      // ====================================================
+      // ACORDAR
+      // ====================================================
+      //
+      // Por ahora solo detectamos correctamente la acción.
+      // En el siguiente cambio reemplazaremos este punto
+      // por el nuevo modal de atención de Promociones.
+      //
+      // NO cambiamos ningún estado automáticamente aquí.
+      // ====================================================
+
+      case "acordar":
+        openAcordarPromocion(
+          promocionId,
+
+          () => {
+            renderPromociones();
+          },
         );
 
+        break;
 
-      if (
-        !button
-      ) {
-        return;
-      }
+      // ====================================================
+      // ENVIAR A FIRMA
+      // ====================================================
 
+      case "enviar-firma":
+        ejecutarAccionPromocion(promocionId, "enviar-firma");
 
-      const action =
-        button.dataset
-          .promocionesAction;
+        break;
 
+      // ====================================================
+      // AUDIENCIA
+      // ====================================================
 
-      switch (
-        action
-      ) {
+      case "agendar-audiencia":
+        openAgendarAudienciaPromocion(
+          promocionId,
 
+          () => {
+            renderPromociones();
+          },
+        );
 
-        // ================================================
-        // CATEGORÍAS
-        // ================================================
-
-        case "categoria":
-
-          categoriaActiva =
-            button.dataset.categoria ||
-            "todas";
-
-
-          renderPromociones();
-
-          break;
-
-
-        // ================================================
-        // PRIORIDAD
-        // ================================================
-
-        case "prioridad":
-
-          irAExpedientePrioritario(
-            button.dataset.expediente,
-          );
-
-          break;
-
-
-        // ================================================
-        // ACORDADA
-        // ================================================
-
-                case "flujo":
-
-          ejecutarAccionPromocion(
-            button.dataset.promocionId,
-            accionDeBoton(
-              button,
-            ),
-          );
-
-          break;
-
-
-        // ================================================
-        // AGENDAR AUDIENCIA
-        // ================================================
-
-        case "agendar-audiencia":
-
-          openAgendarAudienciaPromocion(
-            button.dataset.promocionId,
-
-            () => {
-              renderPromociones();
-            },
-          );
-
-          break;
-
-      }
-
-    };
+        break;
+    }
+  };
 }
 
+// ============================================================
+// PREPARAR ATENCIÓN DE PROMOCIÓN
+// ============================================================
+//
+// Este punto queda separado intencionalmente.
+//
+// El siguiente cambio será únicamente este flujo:
+// - Sentido del acuerdo
+// - Título
+// - Subir documento
+// - Observaciones
+// - Guardar proyecto
+//
+// Por ahora NO modificamos la promoción ni su estado.
+// ============================================================
+
+function prepararAtencionPromocion(id) {
+  const promociones = getData(KEY_PROMOCIONES, []);
+
+  const promocion = Array.isArray(promociones)
+    ? promociones.find((item) => String(item.id) === String(id))
+    : null;
+
+  if (!promocion) {
+    return;
+  }
+
+  // Dejamos este aviso únicamente mientras terminamos
+  // el nuevo modal en el siguiente paso.
+  //
+  // No cambia estados ni guarda información.
+
+  window.alert(
+    "La promoción está lista para acordarse. En el siguiente cambio configuraremos el modal de atención.",
+  );
+}
 
 // ============================================================
 // FLUJO AUTOMÁTICO DEL ACUERDO
-// El estado ya no se elige: lo calcula flujoEstados.js según la acción.
 // ============================================================
 
-function ejecutarAccionPromocion(
-  id,
-  accion,
-) {
-
-  if (
-    !accion
-  ) {
+function ejecutarAccionPromocion(id, accion) {
+  if (!accion) {
     return;
   }
 
+  const promociones = getData(KEY_PROMOCIONES, []);
 
-  const promociones =
-    getData(
-      KEY_PROMOCIONES,
-      [],
-    );
+  const promocion = Array.isArray(promociones)
+    ? promociones.find((item) => String(item.id) === String(id))
+    : null;
 
-
-  const promocion =
-    Array.isArray(
-      promociones,
-    )
-      ? promociones.find(
-          (item) =>
-            item.id ===
-            id,
-        )
-      : null;
-
-
-  if (
-    !promocion
-  ) {
+  if (!promocion) {
     return;
   }
 
+  // ==========================================================
+  // ENVIAR A FIRMA
+  // ==========================================================
+  //
+  // No permitimos enviar directamente una promoción
+  // que todavía no tenga proyecto/acuerdo.
+  // ==========================================================
 
-  // Enviar a firma pide documento adjunto y concepto "Acuerdo".
-  if (
-    accion ===
-    "enviar-firma"
-  ) {
+  if (accion === "enviar-firma") {
+    if (!tieneProyectoAcuerdo(promocion)) {
+      window.alert(
+        "Primero debes acordar la promoción y guardar el proyecto de acuerdo.",
+      );
+
+      return;
+    }
+
     abrirEnvioFirma({
-      referencia:
-        `Promoción · Expediente ${
-          promocion.expediente ||
-          promocion.numero ||
-          ""
-        }`,
+      referencia: `Promoción · Expediente ${
+        promocion.expediente || promocion.numero || ""
+      }`,
 
-      acuerdo:
-        promocion.acuerdo,
+      acuerdo: promocion.acuerdo,
 
-      aplicar:
-        (acuerdo) => {
-          const enviado =
-            aplicarAccion(
-              promocion,
-              accion,
-              {
-                extra: {
-                  acuerdo,
-                },
+      aplicar: (acuerdo) => {
+        const enviado = aplicarAccion(promocion, "enviar-firma", {
+          extra: {
+            acuerdo,
+          },
 
-                campo:
-                  "estadoAcuerdo",
-                campoHistorial:
-                  "historialAcuerdo",
-                usuario:
-                  getSession()?.nombre ||
-                  "",
-              },
-            );
+          campo: "estadoAcuerdo",
 
-          if (enviado.ok) {
-            saveData(
-              KEY_PROMOCIONES,
-              promociones,
-            );
-          }
+          campoHistorial: "historialAcuerdo",
 
-          return enviado;
-        },
+          usuario: getSession()?.nombre || getSession()?.email || "",
+        });
 
-      alTerminar:
-        renderPromociones,
+        if (enviado.ok) {
+          saveData(KEY_PROMOCIONES, promociones);
+        }
+
+        return enviado;
+      },
+
+      alTerminar: renderPromociones,
     });
 
     return;
   }
 
+  // ==========================================================
+  // RESTO DEL FLUJO
+  // ==========================================================
 
-  const resultado =
-    aplicarAccion(
-      promocion,
-      accion,
-      {
-        // Regla: la promoción pasa a "Acordada" al firmarse.
-        extra:
-          accion ===
-          "firmar"
-            ? {
-                estadoPromocion:
-                  "acordado",
-                // Estadística "Acuerdos emitidos": fecha de la firma.
-                acordadoEn:
-                  todayISO(),
-              }
-            : {},
+  const resultado = aplicarAccion(promocion, accion, {
+    // Cuando se firma se considera acordada.
+    extra:
+      accion === "firmar"
+        ? {
+            estadoPromocion: "acordado",
 
-        campo:
-          "estadoAcuerdo",
-        campoHistorial:
-          "historialAcuerdo",
-        usuario:
-          getSession()?.nombre ||
-          "",
-      },
-    );
+            acordadoEn: todayISO(),
+          }
+        : {},
 
+    campo: "estadoAcuerdo",
 
-  if (
-    !resultado.ok
-  ) {
-    window.alert(
-      resultado.error,
-    );
+    campoHistorial: "historialAcuerdo",
+
+    usuario: getSession()?.nombre || getSession()?.email || "",
+  });
+
+  if (!resultado.ok) {
+    window.alert(resultado.error);
 
     return;
   }
 
-
-  saveData(
-    KEY_PROMOCIONES,
-    promociones,
-  );
-
+  saveData(KEY_PROMOCIONES, promociones);
 
   renderPromociones();
 }
-
-
 // ============================================================
-// PRIORIDAD
+// IR AL EXPEDIENTE PRIORITARIO
 // ============================================================
 
-function irAExpedientePrioritario(
-  numero,
-) {
-
-  if (
-    !numero
-  ) {
+function irAExpedientePrioritario(numero) {
+  if (!numero) {
     return;
   }
 
-
-  setFiltro(
-    "expediente",
-    numero,
-  );
-
+  setFiltro("expediente", numero);
 
   sincronizarBarraFiltros();
 
-
-  categoriaActiva =
-    "todas";
-
+  categoriaActiva = "todas";
 
   renderPromociones();
 }
 
-
 // ============================================================
-// FECHA
+// FORMATO DE FECHA
 // ============================================================
 
-function formatFecha(
-  value,
-) {
-
-  if (
-    !value
-  ) {
+function formatFecha(value) {
+  if (!value) {
     return "—";
   }
 
+  const parts = String(value).slice(0, 10).split("-");
 
-  const parts =
-    String(
-      value,
-    )
-      .slice(
-        0,
-        10,
-      )
-      .split(
-        "-",
-      );
-
-
-  if (
-    parts.length ===
-    3
-  ) {
-
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
-
+  if (parts.length === 3) {
+    return `${parts[2]}/` + `${parts[1]}/` + `${parts[0]}`;
   }
 
-
-  return String(
-    value,
-  );
+  return String(value);
 }
