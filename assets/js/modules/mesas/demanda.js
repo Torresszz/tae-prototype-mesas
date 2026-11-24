@@ -1,12 +1,22 @@
 // ============================================================
 // DEMANDA
 // assets/js/modules/mesas/demanda.js
-// FASE 4 - T-13
 // ============================================================
 
-import { getData, saveData } from "../../storage.js";
-import { escapeHTML, todayISO } from "../../utils.js";
-import { showModal, closeForm } from "../../forms/formHelper.js";
+import {
+  getData,
+  saveData,
+} from "../../storage.js";
+
+import {
+  escapeHTML,
+  todayISO,
+} from "../../utils.js";
+
+import {
+  showModal,
+  closeForm,
+} from "../../forms/formHelper.js";
 
 import {
   aplicarFiltrosGlobales,
@@ -15,13 +25,14 @@ import {
 import {
   etiquetaEstado,
 } from "./estados.js";
+
 import {
   aplicarAccion,
   accionDeBoton,
   renderBotonesFlujo,
   renderEstadoBadge,
 } from "./flujoEstados.js";
-import { abrirEnvioFirma } from "./documentosFirma.js";
+
 import {
   getSession,
 } from "../../auth.js";
@@ -41,18 +52,22 @@ import {
 // CONFIGURACIÓN
 // ============================================================
 
-const KEY_DEMANDAS = "mesasDemandas";
+const KEY_DEMANDAS =
+  "mesasDemandas";
 
-const ESTADOS_RADICACION = [
-  "en-proceso",
-  "en-firma",
-  "en-lista",
-  "en-actuaria",
-  "en-archivo",
-];
+const MAX_ACUERDO_MB =
+  2;
 
-let busquedaGeneral = "";
-let categoriaActiva = "todas";
+const MAX_ACUERDO_BYTES =
+  MAX_ACUERDO_MB *
+  1024 *
+  1024;
+
+let busquedaGeneral =
+  "";
+
+let categoriaActiva =
+  "todas";
 
 
 // ============================================================
@@ -60,9 +75,11 @@ let categoriaActiva = "todas";
 // ============================================================
 
 export function renderDemanda() {
-  const vista = document.querySelector(
-    '[data-mesas-vista="demanda"]',
-  );
+
+  const vista =
+    document.querySelector(
+      '[data-mesas-vista="demanda"]',
+    );
 
   if (!vista) {
     return;
@@ -70,30 +87,32 @@ export function renderDemanda() {
 
   prepararDemandas();
 
-  const registros = getRegistrosDemanda();
+  const registros =
+    getRegistrosDemanda();
 
-  const porRadicar = registros.filter(
-    (item) =>
-      item.demanda.categoria === "por-radicar",
-  );
+  const porRadicar =
+    registros.filter(
+      item =>
+        item.demanda.categoria ===
+        "por-radicar",
+    );
 
-  const radicados = registros.filter(
-    (item) =>
-      item.demanda.categoria === "radicado",
-  );
-
+  const radicados =
+    registros.filter(
+      item =>
+        item.demanda.categoria ===
+        "radicado",
+    );
 
   vista.innerHTML = `
     <section class="mesas-fase4-section">
 
-      <!-- ================================================
-      ENCABEZADO
-      ================================================= -->
       <div class="mesas-fase4-header">
 
         <div>
+
           <span class="mesas-mini-eyebrow">
-            Fase 4 · T-13
+            Secretaría de Acuerdos
           </span>
 
           <h2>
@@ -101,16 +120,15 @@ export function renderDemanda() {
           </h2>
 
           <p>
-            Radicación y seguimiento inicial de las demandas.
+            Calificación, radicación y preparación
+            del acuerdo para firma.
           </p>
+
         </div>
 
       </div>
 
 
-      <!-- ================================================
-      CONTADORES
-      ================================================= -->
       <div class="mesas-fase4-counters">
 
         <button
@@ -160,9 +178,6 @@ export function renderDemanda() {
       </div>
 
 
-      <!-- ================================================
-      BUSCADORES
-      ================================================= -->
       <div class="mesas-demanda-search-grid">
 
         <label class="mesas-fase4-field">
@@ -234,9 +249,6 @@ export function renderDemanda() {
       ></p>
 
 
-      <!-- ================================================
-      TABLA
-      ================================================= -->
       <section class="mesas-secretaria-table-card">
 
         <div class="mesas-table-wrapper">
@@ -263,11 +275,13 @@ export function renderDemanda() {
 
         </div>
 
+
         <div
           class="mesas-empty-state"
           id="demandaEmpty"
           hidden
         >
+
           <div class="mesas-empty-icon">
             <i class="fa-regular fa-folder-open"></i>
           </div>
@@ -279,32 +293,31 @@ export function renderDemanda() {
           <span>
             Cambia la búsqueda, categoría o filtros globales.
           </span>
+
         </div>
 
       </section>
 
 
-      <!-- ================================================
-      PLANTILLAS
-      IMPORTANTE: navegacion.js llena este slot.
-      ================================================= -->
       <div data-plantillas-slot></div>
 
     </section>
   `;
 
-
   renderListadoDemanda();
 
-  configurarEventosDemanda(vista);
+  configurarEventosDemanda(
+    vista,
+  );
 }
 
 
 // ============================================================
-// PREPARAR ALMACENAMIENTO
+// PREPARAR DATOS
 // ============================================================
 
 function prepararDemandas() {
+
   const expedientes =
     getExpedientesMesaActual();
 
@@ -314,11 +327,12 @@ function prepararDemandas() {
       {},
     );
 
-  let changed = false;
-
+  let changed =
+    false;
 
   expedientes.forEach(
-    (expediente) => {
+    expediente => {
+
       const numero =
         getNumeroExpediente(
           expediente,
@@ -328,24 +342,38 @@ function prepararDemandas() {
         return;
       }
 
-      if (demandas[numero]) {
+      if (
+        demandas[numero]
+      ) {
         return;
       }
 
       demandas[numero] = {
+
         radicacion:
           "en-proceso",
 
         categoria:
           "por-radicar",
+
+        calificacion:
+          null,
+
+        acuerdo:
+          null,
+
+        historialRadicacion:
+          [],
+
       };
 
-      changed = true;
+      changed =
+        true;
     },
   );
 
-
   if (changed) {
+
     saveData(
       KEY_DEMANDAS,
       demandas,
@@ -355,10 +383,11 @@ function prepararDemandas() {
 
 
 // ============================================================
-// OBTENER REGISTROS
+// REGISTROS
 // ============================================================
 
 function getRegistrosDemanda() {
+
   const expedientes =
     getExpedientesMesaActual();
 
@@ -368,15 +397,16 @@ function getRegistrosDemanda() {
       {},
     );
 
-
   return expedientes.map(
-    (expediente) => {
+    expediente => {
+
       const numero =
         getNumeroExpediente(
           expediente,
         );
 
       return {
+
         expediente,
 
         numero,
@@ -404,11 +434,18 @@ function getRegistrosDemanda() {
 
         demanda:
           demandas[numero] || {
+
             radicacion:
               "en-proceso",
 
             categoria:
               "por-radicar",
+
+            calificacion:
+              null,
+
+            acuerdo:
+              null,
           },
       };
     },
@@ -421,70 +458,75 @@ function getRegistrosDemanda() {
 // ============================================================
 
 function getRegistrosVisibles() {
+
   let registros =
     getRegistrosDemanda();
 
-
-  // Filtros globales del módulo Mesas.
   registros =
     aplicarFiltrosGlobales(
       registros,
       {
+
         numero:
-          (item) =>
+          item =>
             item.numero,
 
         fecha:
-          (item) =>
+          item =>
             item.fecha,
 
         estado:
-          (item) =>
+          item =>
             item.demanda.radicacion,
       },
     );
 
-
-  // Buscador general propio.
   const texto =
     busquedaGeneral
       .trim()
       .toLowerCase();
 
   if (texto) {
+
     registros =
       registros.filter(
-        (item) =>
-          item.numero
-            .toLowerCase()
-            .includes(texto),
+        item => {
+
+          const contenido = `
+            ${item.numero}
+            ${item.actor}
+            ${item.demandado}
+            ${item.asunto}
+          `.toLowerCase();
+
+          return contenido.includes(
+            texto,
+          );
+        },
       );
   }
 
-
-  // Categoría.
   if (
     categoriaActiva !==
     "todas"
   ) {
+
     registros =
       registros.filter(
-        (item) =>
+        item =>
           item.demanda.categoria ===
           categoriaActiva,
       );
   }
 
-
   return registros;
 }
-
-
 // ============================================================
-// RENDER TABLA
+// LISTADO
 // ============================================================
 
 function renderListadoDemanda() {
+
   const vista =
     document.querySelector(
       '[data-mesas-vista="demanda"]',
@@ -508,13 +550,13 @@ function renderListadoDemanda() {
     return;
   }
 
-
   const registros =
     getRegistrosVisibles();
 
-
   if (!registros.length) {
-    tbody.innerHTML = "";
+
+    tbody.innerHTML =
+      "";
 
     if (empty) {
       empty.hidden = false;
@@ -523,11 +565,9 @@ function renderListadoDemanda() {
     return;
   }
 
-
   if (empty) {
     empty.hidden = true;
   }
-
 
   tbody.innerHTML =
     renderFilasDemanda(
@@ -536,12 +576,18 @@ function renderListadoDemanda() {
 }
 
 
+// ============================================================
+// FILAS
+// ============================================================
+
 function renderFilasDemanda(
   registros,
 ) {
+
   return registros
     .map(
-      (item) => {
+      item => {
+
         const radicado =
           item.demanda.categoria ===
           "radicado";
@@ -580,54 +626,37 @@ function renderFilasDemanda(
 
 
             <td>
-
               ${renderEstadoBadge(
                 item.demanda.radicacion,
               )}
-
             </td>
 
 
             <td>
 
-              <span class="mesas-fase4-category-badge ${
-                radicado
-                  ? "done"
-                  : "pending"
-              }">
+              <span
+                class="mesas-fase4-category-badge ${
+                  radicado
+                    ? "done"
+                    : "pending"
+                }"
+              >
+
                 ${escapeHTML(
                   etiquetaCategoriaDemanda(
                     item.demanda.categoria,
                   ),
                 )}
+
               </span>
 
             </td>
 
 
             <td>
-
-              <div class="mesas-actions">
-
-                <button
-                  type="button"
-                  class="mesas-secondary-btn"
-                  data-demanda-action="ver"
-                  data-expediente="${escapeHTML(item.numero)}"
-                >
-                  <i class="fa-regular fa-eye"></i>
-                                    Ver
-                </button>
-                ${renderBotonesFlujo(
-                  item.demanda.radicacion,
-                  {
-                    actionAttr: "data-demanda-action",
-                    attrs: `data-expediente="${escapeHTML(item.numero)}"`,
-                    acuerdo: item.demanda.acuerdo,
-                  },
-                )}
-</div>
-
+              ${renderAccionesDemanda(
+                item,
+              )}
             </td>
 
           </tr>
@@ -639,21 +668,173 @@ function renderFilasDemanda(
 
 
 // ============================================================
+// ACCIONES
+// ============================================================
+
+function renderAccionesDemanda(
+  item,
+) {
+
+  const numero =
+    escapeHTML(
+      item.numero,
+    );
+
+  const registro =
+    item.demanda;
+
+  const acuerdoListo =
+    tieneAcuerdoGuardado(
+      registro,
+    );
+
+  const estado =
+    registro.radicacion ||
+    "en-proceso";
+
+
+  if (
+    estado ===
+    "en-proceso"
+  ) {
+
+    return `
+      <div class="mesas-actions">
+
+        <button
+          type="button"
+          class="mesas-secondary-btn"
+          data-demanda-action="ver"
+          data-expediente="${numero}"
+        >
+          <i class="fa-regular fa-eye"></i>
+          Ver
+        </button>
+
+
+        <button
+          type="button"
+          class="mesas-primary-btn"
+          data-demanda-action="atender"
+          data-expediente="${numero}"
+        >
+          <i class="fa-solid fa-file-circle-check"></i>
+
+          ${
+            acuerdoListo
+              ? "Editar atención"
+              : "Atender / Calificar"
+          }
+
+        </button>
+
+
+        <button
+          type="button"
+          class="mesas-primary-btn"
+          data-demanda-action="enviar-firma"
+          data-expediente="${numero}"
+          ${
+            acuerdoListo
+              ? ""
+              : `
+                disabled
+                title="Primero califica y sube el acuerdo"
+              `
+          }
+        >
+          <i class="fa-solid fa-paper-plane"></i>
+          Enviar a firma
+        </button>
+
+      </div>
+    `;
+  }
+
+
+  return `
+    <div class="mesas-actions">
+
+      <button
+        type="button"
+        class="mesas-secondary-btn"
+        data-demanda-action="ver"
+        data-expediente="${numero}"
+      >
+        <i class="fa-regular fa-eye"></i>
+        Ver
+      </button>
+
+
+      ${renderBotonesFlujo(
+        estado,
+        {
+
+          actionAttr:
+            "data-demanda-action",
+
+          attrs:
+            `data-expediente="${numero}"`,
+
+          acuerdo:
+            registro.acuerdo,
+        },
+      )}
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// ACUERDO LISTO
+// ============================================================
+
+function tieneAcuerdoGuardado(
+  registro,
+) {
+
+  const acuerdo =
+    registro?.acuerdo;
+
+  if (
+    !acuerdo ||
+    typeof acuerdo !==
+    "object"
+  ) {
+    return false;
+  }
+
+  const archivo =
+    acuerdo.archivo;
+
+  return Boolean(
+    acuerdo.titulo &&
+    archivo &&
+    archivo.nombre &&
+    archivo.dataUrl,
+  );
+}
+
+
+// ============================================================
 // EVENTOS
 // ============================================================
 
 function configurarEventosDemanda(
   vista,
 ) {
+
   const general =
     vista.querySelector(
       "#demandaBusquedaGeneral",
     );
 
-
   if (general) {
+
     general.oninput =
-      (event) => {
+      event => {
+
         busquedaGeneral =
           event.target.value;
 
@@ -663,13 +844,18 @@ function configurarEventosDemanda(
 
 
   vista.onclick =
-    (event) => {
+    event => {
+
       const button =
         event.target.closest(
           "[data-demanda-action]",
         );
 
       if (!button) {
+        return;
+      }
+
+      if (button.disabled) {
         return;
       }
 
@@ -681,94 +867,937 @@ function configurarEventosDemanda(
 
 
       switch (action) {
+
         case "categoria":
+
           categoriaActiva =
             button.dataset.categoria ||
             "todas";
 
           renderDemanda();
+
           break;
 
 
         case "buscar-exacto":
+
           buscarExacto();
+
           break;
 
 
         case "ver":
+
           openDetalleDemanda(
             numero,
           );
+
           break;
 
 
-                case "flujo":
-          ejecutarAccionDemanda(
-            button.dataset.expediente,
-            accionDeBoton(button),
+        case "atender":
+
+          openAtenderCalificar(
+            numero,
           );
+
+          break;
+
+
+        case "enviar-firma":
+
+          openConfirmarEnvioFirma(
+            numero,
+          );
+
+          break;
+
+
+        case "flujo":
+
+          ejecutarAccionDemanda(
+            numero,
+            accionDeBoton(
+              button,
+            ),
+          );
+
           break;
       }
     };
 }
-
-
 // ============================================================
-// FLUJO AUTOMÁTICO DE LA RADICACIÓN (sin selector manual)
-// ============================================================
-function ejecutarAccionDemanda(numero, accion) {
-  if (!accion) return;
-  const demandas = getData(KEY_DEMANDAS, {});
-  const registro = demandas[numero];
-  if (!registro) return;
-
-  // Enviar a firma pide documento adjunto y concepto "Acuerdo".
-  if (accion === "enviar-firma") {
-    abrirEnvioFirma({
-      referencia: `Demanda · Expediente ${numero}`,
-      acuerdo: registro.acuerdo,
-      aplicar: (acuerdo) => {
-        const enviado = aplicarAccion(registro, accion, {
-          campo: "radicacion",
-          campoHistorial: "historialRadicacion",
-          extra: { acuerdo },
-          usuario: getSession()?.nombre || "",
-        });
-
-        if (enviado.ok) saveData(KEY_DEMANDAS, demandas);
-
-        return enviado;
-      },
-      alTerminar: renderDemanda,
-    });
-
-    return;
-  }
-
-  const resultado = aplicarAccion(registro, accion, {
-    campo: "radicacion",
-    campoHistorial: "historialRadicacion",
-    // Regla: la demanda pasa a "Radicado" al llegar a En lista (firma).
-    extra:
-      accion === "firmar"
-        ? { categoria: "radicado", radicadoEn: todayISO() }
-        : {},
-    usuario: getSession()?.nombre || "",
-  });
-  if (!resultado.ok) {
-    window.alert(resultado.error);
-    return;
-  }
-  saveData(KEY_DEMANDAS, demandas);
-  renderDemanda();
-}
-// ============================================================
-// MARCAR RADICADA
+// ATENDER / CALIFICAR
 // ============================================================
 
-function marcarComoRadicada(
+function openAtenderCalificar(
   numero,
 ) {
+
+  const item =
+    getRegistrosDemanda()
+      .find(
+        registro =>
+          registro.numero ===
+          numero,
+      );
+
+  if (!item) {
+    return;
+  }
+
+  const demanda =
+    item.demanda;
+
+  const acuerdo =
+    typeof demanda.acuerdo ===
+      "object" &&
+    demanda.acuerdo
+
+      ? demanda.acuerdo
+
+      : {};
+
+  const calificacion =
+    demanda.calificacion ||
+    {};
+
+  const resultado =
+    calificacion.resultado ||
+    "radicar";
+
+  const archivoActual =
+    acuerdo.archivo ||
+    null;
+
+
+  showModal(`
+    <div class="mesas-modal-shell">
+
+      <header class="mesas-modal-header">
+
+        <div class="mesas-modal-step">
+          <i class="fa-solid fa-file-circle-check"></i>
+        </div>
+
+        <div class="mesas-modal-header-text">
+
+          <h2>
+            Atender / Calificar
+          </h2>
+
+          <p>
+            Expediente
+            ${escapeHTML(numero)}
+          </p>
+
+        </div>
+
+      </header>
+
+
+      <div class="mesas-modal-body">
+
+        <div class="mesas-modal-info">
+
+          <div class="mesas-modal-info-item">
+
+            <span>
+              Actor
+            </span>
+
+            <strong>
+              ${escapeHTML(item.actor)}
+            </strong>
+
+          </div>
+
+
+          <div class="mesas-modal-info-item">
+
+            <span>
+              Demandado
+            </span>
+
+            <strong>
+              ${escapeHTML(item.demandado)}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="mesas-form-group"
+          style="margin-top:18px;"
+        >
+
+          <label>
+            Resultado de la calificación
+          </label>
+
+
+          <div
+            style="
+              display:grid;
+              grid-template-columns:repeat(2,minmax(0,1fr));
+              gap:10px;
+              margin-top:8px;
+            "
+          >
+
+            ${renderOpcionCalificacion(
+              "radicar",
+              "Radicar",
+              "La demanda continúa con su trámite.",
+              resultado,
+            )}
+
+            ${renderOpcionCalificacion(
+              "prevenir",
+              "Prevenir",
+              "Se requiere corregir o completar información.",
+              resultado,
+            )}
+
+            ${renderOpcionCalificacion(
+              "rechazar",
+              "Rechazar",
+              "No procede la radicación de la demanda.",
+              resultado,
+            )}
+
+            ${renderOpcionCalificacion(
+              "otro",
+              "Otro",
+              "Usar una determinación distinta.",
+              resultado,
+            )}
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="mesas-form-group"
+          style="margin-top:18px;"
+        >
+
+          <label for="demandaAcuerdoTitulo">
+            Título del acuerdo / auto
+          </label>
+
+
+          <input
+            type="text"
+            id="demandaAcuerdoTitulo"
+            class="mesas-input"
+            value="${escapeHTML(
+              acuerdo.titulo ||
+              "Auto de radicación",
+            )}"
+            placeholder="Ej. Auto de radicación"
+          >
+
+        </div>
+
+
+        <div
+          class="mesas-form-group"
+          style="margin-top:18px;"
+        >
+
+          <label for="demandaAcuerdoArchivo">
+            Documento del acuerdo / auto
+          </label>
+
+
+          <div
+            style="
+              margin-top:7px;
+              padding:18px;
+              border:1px dashed #b9c9da;
+              border-radius:10px;
+              background:#f8fbff;
+            "
+          >
+
+            <input
+              type="file"
+              id="demandaAcuerdoArchivo"
+              class="mesas-input"
+              accept=".pdf,.doc,.docx"
+            >
+
+
+            <small
+              style="
+                display:block;
+                margin-top:8px;
+                color:#74889c;
+              "
+            >
+              PDF, DOC o DOCX.
+              Máximo ${MAX_ACUERDO_MB} MB.
+            </small>
+
+
+            ${
+              archivoActual
+
+                ? `
+                  <div
+                    style="
+                      display:flex;
+                      align-items:center;
+                      gap:9px;
+                      margin-top:12px;
+                      padding:9px 11px;
+                      border-radius:7px;
+                      background:#eaf3ff;
+                      color:#2a5f99;
+                    "
+                  >
+
+                    <i class="fa-regular fa-file"></i>
+
+                    <div>
+                      <strong>
+                        Archivo actual:
+                      </strong>
+
+                      ${escapeHTML(
+                        archivoActual.nombre ||
+                        "Documento",
+                      )}
+                    </div>
+
+                  </div>
+                `
+
+                : ""
+            }
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="mesas-form-group"
+          style="margin-top:18px;"
+        >
+
+          <label for="demandaCalificacionNotas">
+
+            Observaciones
+
+            <span
+              id="demandaNotasRequired"
+              style="
+                color:#c23d35;
+                display:none;
+              "
+            >
+              *
+            </span>
+
+          </label>
+
+
+          <textarea
+            id="demandaCalificacionNotas"
+            class="mesas-textarea"
+            rows="4"
+            placeholder="Opcional. Obligatorio únicamente para Rechazar u Otro."
+          >${escapeHTML(
+            calificacion.notas ||
+            "",
+          )}</textarea>
+
+
+          <small
+            id="demandaNotasHelp"
+            style="
+              display:block;
+              margin-top:5px;
+              color:#74889c;
+            "
+          >
+            Las observaciones son opcionales.
+          </small>
+
+        </div>
+
+
+        <p
+          class="mesas-form-error"
+          id="demandaCalificacionError"
+          hidden
+        ></p>
+
+      </div>
+
+
+      <footer class="mesas-modal-footer">
+
+        <button
+          type="button"
+          class="mesas-modal-cancel"
+          id="cancelarCalificacionDemanda"
+        >
+          Cancelar
+        </button>
+
+
+        <button
+          type="button"
+          class="mesas-modal-confirm"
+          id="guardarCalificacionDemanda"
+        >
+
+          <i class="fa-solid fa-floppy-disk"></i>
+
+          Guardar borrador
+
+        </button>
+
+      </footer>
+
+    </div>
+  `);
+
+
+  configurarValidacionObservaciones();
+
+
+  document
+    .getElementById(
+      "cancelarCalificacionDemanda",
+    )
+    ?.addEventListener(
+      "click",
+      closeForm,
+    );
+
+
+  document
+    .getElementById(
+      "guardarCalificacionDemanda",
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+
+        guardarAtencionDemanda(
+          numero,
+        );
+      },
+    );
+}
+
+
+// ============================================================
+// OPCIÓN CALIFICACIÓN
+// ============================================================
+
+function renderOpcionCalificacion(
+  value,
+  titulo,
+  descripcion,
+  seleccionado,
+) {
+
+  return `
+    <label
+      style="
+        display:flex;
+        align-items:flex-start;
+        gap:9px;
+        padding:12px;
+        border:1px solid #d8e2ec;
+        border-radius:9px;
+        background:#ffffff;
+        cursor:pointer;
+      "
+    >
+
+      <input
+        type="radio"
+        name="demandaResultadoCalificacion"
+        value="${escapeHTML(value)}"
+        ${
+          seleccionado === value
+            ? "checked"
+            : ""
+        }
+        style="margin-top:3px;"
+      >
+
+
+      <span>
+
+        <strong
+          style="
+            display:block;
+            color:#254866;
+          "
+        >
+          ${escapeHTML(titulo)}
+        </strong>
+
+
+        <small
+          style="
+            display:block;
+            margin-top:3px;
+            color:#75889b;
+          "
+        >
+          ${escapeHTML(descripcion)}
+        </small>
+
+      </span>
+
+    </label>
+  `;
+}
+
+
+// ============================================================
+// VALIDAR OBSERVACIONES
+// ============================================================
+
+function configurarValidacionObservaciones() {
+
+  const radios =
+    document.querySelectorAll(
+      'input[name="demandaResultadoCalificacion"]',
+    );
+
+
+  const actualizar =
+    () => {
+
+      const resultado =
+        getResultadoCalificacion();
+
+      const obligatorio =
+        resultado === "rechazar" ||
+        resultado === "otro";
+
+      const required =
+        document.getElementById(
+          "demandaNotasRequired",
+        );
+
+      const help =
+        document.getElementById(
+          "demandaNotasHelp",
+        );
+
+
+      if (required) {
+
+        required.style.display =
+          obligatorio
+            ? "inline"
+            : "none";
+      }
+
+
+      if (help) {
+
+        help.textContent =
+          obligatorio
+
+            ? "Debes indicar el motivo de esta determinación."
+
+            : "Las observaciones son opcionales.";
+      }
+    };
+
+
+  radios.forEach(
+    radio => {
+
+      radio.addEventListener(
+        "change",
+        actualizar,
+      );
+    },
+  );
+
+
+  actualizar();
+}
+
+
+// ============================================================
+// RESULTADO
+// ============================================================
+
+function getResultadoCalificacion() {
+
+  return (
+    document.querySelector(
+      'input[name="demandaResultadoCalificacion"]:checked',
+    )?.value ||
+    ""
+  );
+}
+
+
+// ============================================================
+// GUARDAR ATENCIÓN
+// ============================================================
+
+async function guardarAtencionDemanda(
+  numero,
+) {
+
+  const demandas =
+    getData(
+      KEY_DEMANDAS,
+      {},
+    );
+
+  const registro =
+    demandas[numero];
+
+  if (!registro) {
+    return;
+  }
+
+
+  const resultado =
+    getResultadoCalificacion();
+
+
+  const titulo =
+    document
+      .getElementById(
+        "demandaAcuerdoTitulo",
+      )
+      ?.value
+      .trim() ||
+    "";
+
+
+  const notas =
+    document
+      .getElementById(
+        "demandaCalificacionNotas",
+      )
+      ?.value
+      .trim() ||
+    "";
+
+
+  const inputArchivo =
+    document.getElementById(
+      "demandaAcuerdoArchivo",
+    );
+
+
+  const nuevoArchivo =
+    inputArchivo?.files?.[0] ||
+    null;
+
+
+  if (!resultado) {
+
+    mostrarErrorCalificacion(
+      "Selecciona el resultado de la calificación.",
+    );
+
+    return;
+  }
+
+
+  if (!titulo) {
+
+    mostrarErrorCalificacion(
+      "Escribe el título del acuerdo o auto.",
+    );
+
+    return;
+  }
+
+
+  if (
+    (
+      resultado === "rechazar" ||
+      resultado === "otro"
+    ) &&
+    !notas
+  ) {
+
+    mostrarErrorCalificacion(
+      "Las observaciones son obligatorias cuando seleccionas Rechazar u Otro.",
+    );
+
+    return;
+  }
+
+
+  let archivo =
+    registro.acuerdo?.archivo ||
+    null;
+
+
+  if (nuevoArchivo) {
+
+    const validacion =
+      validarArchivoAcuerdo(
+        nuevoArchivo,
+      );
+
+
+    if (!validacion.ok) {
+
+      mostrarErrorCalificacion(
+        validacion.error,
+      );
+
+      return;
+    }
+
+
+    archivo = {
+
+      nombre:
+        nuevoArchivo.name,
+
+      tipo:
+        nuevoArchivo.type,
+
+      tamano:
+        nuevoArchivo.size,
+
+      dataUrl:
+        await fileToDataUrl(
+          nuevoArchivo,
+        ),
+    };
+  }
+
+
+  if (!archivo) {
+
+    mostrarErrorCalificacion(
+      "Debes subir el documento del acuerdo o auto.",
+    );
+
+    return;
+  }
+
+
+  const ahora =
+    new Date()
+      .toISOString();
+
+
+  const usuario =
+    getSession()?.nombre ||
+    getSession()?.email ||
+    "Secretaría de Acuerdos";
+
+
+  registro.calificacion = {
+
+    resultado,
+
+    notas,
+
+    fecha:
+      ahora,
+
+    usuario,
+  };
+
+
+  registro.acuerdo = {
+
+    ...(
+      registro.acuerdo ||
+      {}
+    ),
+
+    concepto:
+      "Acuerdo",
+
+    titulo,
+
+    archivo,
+
+    estado:
+      "borrador",
+
+    guardadoEn:
+      ahora,
+
+    guardadoPor:
+      usuario,
+  };
+
+
+  registro.historialRadicacion =
+    Array.isArray(
+      registro.historialRadicacion,
+    )
+      ? registro.historialRadicacion
+      : [];
+
+
+  registro.historialRadicacion.push({
+
+    fecha:
+      ahora,
+
+    movimiento:
+      "Demanda calificada y acuerdo cargado en borrador",
+
+    usuario,
+  });
+
+
+  saveData(
+    KEY_DEMANDAS,
+    demandas,
+  );
+
+
+  closeForm();
+
+  renderDemanda();
+}
+
+
+// ============================================================
+// ARCHIVOS
+// ============================================================
+
+function validarArchivoAcuerdo(
+  file,
+) {
+
+  const extension =
+    file.name
+      .split(".")
+      .pop()
+      ?.toLowerCase();
+
+
+  if (
+    ![
+      "pdf",
+      "doc",
+      "docx",
+    ].includes(
+      extension,
+    )
+  ) {
+
+    return {
+
+      ok:
+        false,
+
+      error:
+        "El acuerdo debe ser PDF, DOC o DOCX.",
+    };
+  }
+
+
+  if (
+    file.size >
+    MAX_ACUERDO_BYTES
+  ) {
+
+    return {
+
+      ok:
+        false,
+
+      error:
+        `El archivo no puede superar ${MAX_ACUERDO_MB} MB.`,
+    };
+  }
+
+
+  return {
+    ok:
+      true,
+  };
+}
+
+
+function fileToDataUrl(
+  file,
+) {
+
+  return new Promise(
+    (
+      resolve,
+      reject,
+    ) => {
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        () =>
+          resolve(
+            reader.result,
+          );
+
+
+      reader.onerror =
+        () =>
+          reject(
+            reader.error,
+          );
+
+
+      reader.readAsDataURL(
+        file,
+      );
+    },
+  );
+}
+
+
+function mostrarErrorCalificacion(
+  mensaje,
+) {
+
+  const error =
+    document.getElementById(
+      "demandaCalificacionError",
+    );
+
+  if (!error) {
+    return;
+  }
+
+  error.textContent =
+    mensaje;
+
+  error.hidden =
+    false;
+}
+// ============================================================
+// MODAL ENVIAR A FIRMA
+// ============================================================
+
+function openConfirmarEnvioFirma(
+  numero,
+) {
+
   const demandas =
     getData(
       KEY_DEMANDAS,
@@ -776,17 +1805,796 @@ function marcarComoRadicada(
     );
 
 
-  if (!demandas[numero]) {
+  const registro =
+    demandas[numero];
+
+
+  if (
+    !registro ||
+    !tieneAcuerdoGuardado(
+      registro,
+    )
+  ) {
+
+    window.alert(
+      "Primero debes atender la demanda y subir el acuerdo.",
+    );
+
     return;
   }
 
 
-  demandas[numero].categoria =
-    "radicado";
+  const acuerdo =
+    registro.acuerdo;
 
-  // Fase 7 (Estadística): fecha en que se marcó como radicada
-  demandas[numero].radicadoEn =
-    todayISO();
+
+  const comentarios =
+    registro.calificacion?.notas ||
+    "";
+
+
+  const resultado =
+    registro.calificacion?.resultado ||
+    "";
+
+
+  showModal(`
+    <div class="mesas-modal-shell">
+
+      <header class="mesas-modal-header">
+
+        <div class="mesas-modal-step">
+
+          <i class="fa-solid fa-signature"></i>
+
+        </div>
+
+
+        <div class="mesas-modal-header-text">
+
+          <h2>
+            Enviar a firma
+          </h2>
+
+          <p>
+            Expediente
+            ${escapeHTML(numero)}
+          </p>
+
+        </div>
+
+      </header>
+
+
+      <div class="mesas-modal-body">
+
+
+        <!-- =========================================
+        INFORMACIÓN
+        ========================================== -->
+
+        <div class="mesas-modal-info">
+
+          <div class="mesas-modal-info-item">
+
+            <span>
+              Acuerdo
+            </span>
+
+            <strong>
+              ${escapeHTML(
+                acuerdo.titulo ||
+                "Acuerdo",
+              )}
+            </strong>
+
+          </div>
+
+
+          <div class="mesas-modal-info-item">
+
+            <span>
+              Documento
+            </span>
+
+            <strong>
+              ${escapeHTML(
+                acuerdo.archivo.nombre ||
+                "Documento",
+              )}
+            </strong>
+
+          </div>
+
+
+          <div class="mesas-modal-info-item">
+
+            <span>
+              Calificación
+            </span>
+
+            <strong>
+              ${escapeHTML(
+                etiquetaCalificacion(
+                  resultado,
+                ),
+              )}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================================
+        VISTA PREVIA
+        ========================================== -->
+
+        <div
+          style="
+            margin-top:18px;
+          "
+        >
+
+          <span
+            style="
+              display:block;
+              margin-bottom:8px;
+              color:#71869a;
+              font-size:11px;
+              font-weight:700;
+              text-transform:uppercase;
+            "
+          >
+            Vista previa del acuerdo
+          </span>
+
+
+          ${renderVistaPreviaArchivo(
+            acuerdo.archivo,
+          )}
+
+        </div>
+
+
+        <!-- =========================================
+        COMENTARIOS
+        ========================================== -->
+
+        ${
+          comentarios
+
+            ? `
+              <div
+                style="
+                  margin-top:18px;
+                  padding:14px;
+                  border:1px solid #dce5ee;
+                  border-radius:9px;
+                  background:#f8fbff;
+                "
+              >
+
+                <span
+                  style="
+                    display:block;
+                    margin-bottom:6px;
+                    color:#71869a;
+                    font-size:11px;
+                    font-weight:700;
+                    text-transform:uppercase;
+                  "
+                >
+                  Comentarios / observaciones
+                </span>
+
+
+                <p
+                  style="
+                    margin:0;
+                    color:#405b73;
+                    line-height:1.6;
+                    white-space:pre-wrap;
+                  "
+                >
+                  ${escapeHTML(
+                    comentarios,
+                  )}
+                </p>
+
+              </div>
+            `
+
+            : ""
+        }
+
+
+        <!-- =========================================
+        EXTRACTO
+        ========================================== -->
+
+        <div
+          class="mesas-form-group"
+          style="
+            margin-top:18px;
+          "
+        >
+
+          <label for="demandaFirmaExtracto">
+
+            Extracto
+            <span style="color:#c33;">
+              *
+            </span>
+
+          </label>
+
+
+          <textarea
+            id="demandaFirmaExtracto"
+            class="mesas-textarea"
+            rows="5"
+            placeholder="Escribe el extracto que acompañará el acuerdo para firma..."
+          >${escapeHTML(
+            acuerdo.extracto ||
+            "",
+          )}</textarea>
+
+
+          <small
+            style="
+              display:block;
+              margin-top:5px;
+              color:#74889c;
+            "
+          >
+            Este extracto quedará guardado junto con el acuerdo.
+          </small>
+
+        </div>
+
+
+        <p
+          class="mesas-form-error"
+          id="demandaFirmaError"
+          hidden
+        ></p>
+
+
+        <div
+          style="
+            margin-top:15px;
+            padding:13px;
+            border-radius:8px;
+            background:#f5f9ff;
+            color:#49657e;
+          "
+        >
+
+          <i class="fa-solid fa-circle-info"></i>
+
+          El acuerdo será enviado a Presidencia
+          para firma de la Magistrada.
+
+        </div>
+
+      </div>
+
+
+      <footer class="mesas-modal-footer">
+
+        <button
+          type="button"
+          class="mesas-modal-cancel"
+          id="cancelarEnvioFirmaDemanda"
+        >
+          Cancelar
+        </button>
+
+
+        <button
+          type="button"
+          class="mesas-modal-confirm"
+          id="confirmarEnvioFirmaDemanda"
+        >
+
+          <i class="fa-solid fa-paper-plane"></i>
+
+          Enviar a firma
+
+        </button>
+
+      </footer>
+
+    </div>
+  `);
+
+
+  document
+    .getElementById(
+      "cancelarEnvioFirmaDemanda",
+    )
+    ?.addEventListener(
+      "click",
+      closeForm,
+    );
+
+
+  document
+    .getElementById(
+      "confirmarEnvioFirmaDemanda",
+    )
+    ?.addEventListener(
+      "click",
+      () => {
+
+        enviarDemandaAFirma(
+          numero,
+        );
+      },
+    );
+}
+
+
+// ============================================================
+// VISTA PREVIA
+// ============================================================
+
+function renderVistaPreviaArchivo(
+  archivo,
+) {
+
+  if (
+    !archivo ||
+    !archivo.dataUrl
+  ) {
+
+    return `
+      <div
+        style="
+          padding:20px;
+          border:1px solid #dce5ee;
+          border-radius:9px;
+          background:#f8fafc;
+          color:#74889c;
+          text-align:center;
+        "
+      >
+        No hay archivo disponible.
+      </div>
+    `;
+  }
+
+
+  const nombre =
+    archivo.nombre ||
+    "Documento";
+
+
+  const extension =
+    nombre
+      .split(".")
+      .pop()
+      ?.toLowerCase();
+
+
+  // ==========================================================
+  // PDF
+  // ==========================================================
+
+  if (
+    extension ===
+    "pdf"
+  ) {
+
+    return `
+      <div
+        style="
+          overflow:hidden;
+          border:1px solid #d7e1eb;
+          border-radius:10px;
+          background:#f4f6f8;
+        "
+      >
+
+        <iframe
+          src="${archivo.dataUrl}"
+          title="Vista previa del acuerdo"
+          style="
+            display:block;
+            width:100%;
+            height:390px;
+            border:0;
+            background:white;
+          "
+        ></iframe>
+
+      </div>
+    `;
+  }
+
+
+  // ==========================================================
+  // WORD
+  // ==========================================================
+
+  return `
+    <div
+      style="
+        display:flex;
+        align-items:center;
+        gap:14px;
+        padding:18px;
+        border:1px solid #d7e1eb;
+        border-radius:10px;
+        background:#f8fbff;
+      "
+    >
+
+      <div
+        style="
+          width:52px;
+          height:52px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          flex-shrink:0;
+          border-radius:10px;
+          background:#e7f1ff;
+          color:#1769d2;
+          font-size:22px;
+        "
+      >
+        <i class="fa-regular fa-file-word"></i>
+      </div>
+
+
+      <div style="flex:1;">
+
+        <strong
+          style="
+            display:block;
+            color:#173d60;
+          "
+        >
+          ${escapeHTML(nombre)}
+        </strong>
+
+
+        <span
+          style="
+            display:block;
+            margin-top:4px;
+            color:#72869a;
+            font-size:11px;
+          "
+        >
+          Documento de Word
+          ${
+            archivo.tamano
+              ? ` · ${escapeHTML(
+                  formatFileSize(
+                    archivo.tamano,
+                  ),
+                )}`
+              : ""
+          }
+        </span>
+
+
+        <span
+          style="
+            display:block;
+            margin-top:5px;
+            color:#8796a5;
+            font-size:10px;
+          "
+        >
+          El navegador no muestra el contenido de DOC/DOCX
+          dentro del modal.
+        </span>
+
+      </div>
+
+
+      <a
+        href="${archivo.dataUrl}"
+        download="${escapeHTML(nombre)}"
+        class="mesas-secondary-btn"
+        style="
+          text-decoration:none;
+          flex-shrink:0;
+        "
+      >
+
+        <i class="fa-solid fa-download"></i>
+
+        Abrir archivo
+
+      </a>
+
+    </div>
+  `;
+}
+
+
+// ============================================================
+// TAMAÑO DE ARCHIVO
+// ============================================================
+
+function formatFileSize(
+  bytes,
+) {
+
+  if (!bytes) {
+    return "";
+  }
+
+
+  if (
+    bytes <
+    1024
+  ) {
+
+    return `${bytes} B`;
+  }
+
+
+  if (
+    bytes <
+    1024 * 1024
+  ) {
+
+    return `${(
+      bytes /
+      1024
+    ).toFixed(1)} KB`;
+  }
+
+
+  return `${(
+    bytes /
+    1024 /
+    1024
+  ).toFixed(1)} MB`;
+}
+
+
+// ============================================================
+// ERROR ENVÍO
+// ============================================================
+
+function mostrarErrorFirma(
+  mensaje,
+) {
+
+  const error =
+    document.getElementById(
+      "demandaFirmaError",
+    );
+
+
+  if (!error) {
+    return;
+  }
+
+
+  error.textContent =
+    mensaje;
+
+  error.hidden =
+    false;
+}
+
+
+// ============================================================
+// ENVIAR A FIRMA
+// ============================================================
+
+function enviarDemandaAFirma(
+  numero,
+) {
+
+  const demandas =
+    getData(
+      KEY_DEMANDAS,
+      {},
+    );
+
+
+  const registro =
+    demandas[numero];
+
+
+  if (
+    !registro ||
+    !tieneAcuerdoGuardado(
+      registro,
+    )
+  ) {
+
+    return;
+  }
+
+
+  const extracto =
+    document
+      .getElementById(
+        "demandaFirmaExtracto",
+      )
+      ?.value
+      .trim() ||
+    "";
+
+
+  if (!extracto) {
+
+    mostrarErrorFirma(
+      "Escribe el extracto antes de enviar el acuerdo a firma.",
+    );
+
+    return;
+  }
+
+
+  const ahora =
+    new Date()
+      .toISOString();
+
+
+  const acuerdo = {
+
+    ...registro.acuerdo,
+
+    extracto,
+
+    estado:
+      "en-firma",
+
+    enviadoFirmaEn:
+      ahora,
+
+    enviadoFirmaPor:
+      getSession()?.nombre ||
+      getSession()?.email ||
+      "Secretaría de Acuerdos",
+  };
+
+
+  const resultado =
+    aplicarAccion(
+      registro,
+      "enviar-firma",
+      {
+
+        campo:
+          "radicacion",
+
+        campoHistorial:
+          "historialRadicacion",
+
+        extra: {
+          acuerdo,
+        },
+
+        usuario:
+          getSession()?.nombre ||
+          "",
+      },
+    );
+
+
+  if (
+    !resultado.ok
+  ) {
+
+    window.alert(
+      resultado.error,
+    );
+
+    return;
+  }
+
+
+  saveData(
+    KEY_DEMANDAS,
+    demandas,
+  );
+
+
+  closeForm();
+
+  renderDemanda();
+}
+
+
+// ============================================================
+// FLUJO POSTERIOR
+// ============================================================
+
+function ejecutarAccionDemanda(
+  numero,
+  accion,
+) {
+
+  if (!accion) {
+    return;
+  }
+
+
+  const demandas =
+    getData(
+      KEY_DEMANDAS,
+      {},
+    );
+
+
+  const registro =
+    demandas[numero];
+
+
+  if (!registro) {
+    return;
+  }
+
+
+  if (
+    accion ===
+    "enviar-firma"
+  ) {
+
+    openConfirmarEnvioFirma(
+      numero,
+    );
+
+    return;
+  }
+
+
+  const resultado =
+    aplicarAccion(
+      registro,
+      accion,
+      {
+
+        campo:
+          "radicacion",
+
+        campoHistorial:
+          "historialRadicacion",
+
+        extra:
+          accion ===
+          "firmar"
+
+            ? {
+
+                categoria:
+                  "radicado",
+
+                radicadoEn:
+                  todayISO(),
+              }
+
+            : {},
+
+        usuario:
+          getSession()?.nombre ||
+          "",
+      },
+    );
+
+
+  if (
+    !resultado.ok
+  ) {
+
+    window.alert(
+      resultado.error,
+    );
+
+    return;
+  }
 
 
   saveData(
@@ -804,10 +2612,12 @@ function marcarComoRadicada(
 // ============================================================
 
 function buscarExacto() {
+
   const input =
     document.getElementById(
       "demandaBusquedaExacta",
     );
+
 
   const error =
     document.getElementById(
@@ -816,17 +2626,23 @@ function buscarExacto() {
 
 
   const numero =
-    input?.value.trim() ||
+    input?.value
+      .trim() ||
     "";
 
 
   if (error) {
-    error.hidden = true;
-    error.textContent = "";
+
+    error.hidden =
+      true;
+
+    error.textContent =
+      "";
   }
 
 
   if (!numero) {
+
     mostrarErrorBusqueda(
       "Escribe el número exacto del expediente.",
     );
@@ -842,6 +2658,7 @@ function buscarExacto() {
 
 
   if (!expediente) {
+
     mostrarErrorBusqueda(
       "No se encontró ese expediente en la mesa actual.",
     );
@@ -858,17 +2675,24 @@ function buscarExacto() {
 }
 
 
+// ============================================================
+// ERROR BÚSQUEDA
+// ============================================================
+
 function mostrarErrorBusqueda(
   mensaje,
 ) {
+
   const error =
     document.getElementById(
       "demandaSearchError",
     );
 
+
   if (!error) {
     return;
   }
+
 
   error.textContent =
     mensaje;
@@ -885,17 +2709,33 @@ function mostrarErrorBusqueda(
 function openDetalleDemanda(
   numero,
 ) {
+
   const item =
     getRegistrosDemanda()
       .find(
-        (registro) =>
-          registro.numero === numero,
+        registro =>
+          registro.numero ===
+          numero,
       );
 
 
   if (!item) {
     return;
   }
+
+
+  const acuerdo =
+    typeof item.demanda.acuerdo ===
+      "object"
+
+      ? item.demanda.acuerdo
+
+      : null;
+
+
+  const calificacion =
+    item.demanda.calificacion ||
+    null;
 
 
   showModal(`
@@ -906,6 +2746,7 @@ function openDetalleDemanda(
         <div class="mesas-modal-step">
           <i class="fa-solid fa-file-lines"></i>
         </div>
+
 
         <div class="mesas-modal-header-text">
 
@@ -928,29 +2769,36 @@ function openDetalleDemanda(
         <div class="mesas-modal-info">
 
           <div class="mesas-modal-info-item">
-            <span>Actor</span>
+
+            <span>
+              Actor
+            </span>
 
             <strong>
-              ${escapeHTML(
-                item.actor,
-              )}
+              ${escapeHTML(item.actor)}
             </strong>
+
           </div>
 
 
           <div class="mesas-modal-info-item">
-            <span>Demandado</span>
+
+            <span>
+              Demandado
+            </span>
 
             <strong>
-              ${escapeHTML(
-                item.demandado,
-              )}
+              ${escapeHTML(item.demandado)}
             </strong>
+
           </div>
 
 
           <div class="mesas-modal-info-item">
-            <span>Radicación</span>
+
+            <span>
+              Radicación
+            </span>
 
             <strong>
               ${escapeHTML(
@@ -959,11 +2807,15 @@ function openDetalleDemanda(
                 ),
               )}
             </strong>
+
           </div>
 
 
           <div class="mesas-modal-info-item">
-            <span>Categoría</span>
+
+            <span>
+              Categoría
+            </span>
 
             <strong>
               ${escapeHTML(
@@ -972,6 +2824,7 @@ function openDetalleDemanda(
                 ),
               )}
             </strong>
+
           </div>
 
         </div>
@@ -990,6 +2843,154 @@ function openDetalleDemanda(
           </strong>
 
         </div>
+
+
+        ${
+          calificacion
+
+            ? `
+              <div
+                style="
+                  margin-top:16px;
+                  padding:14px;
+                  border:1px solid #dce5ee;
+                  border-radius:9px;
+                  background:#f8fbff;
+                "
+              >
+
+                <span>
+                  Calificación
+                </span>
+
+                <strong
+                  style="
+                    display:block;
+                    margin-top:5px;
+                  "
+                >
+                  ${escapeHTML(
+                    etiquetaCalificacion(
+                      calificacion.resultado,
+                    ),
+                  )}
+                </strong>
+
+
+                ${
+                  calificacion.notas
+
+                    ? `
+                      <p>
+                        ${escapeHTML(
+                          calificacion.notas,
+                        )}
+                      </p>
+                    `
+
+                    : ""
+                }
+
+              </div>
+            `
+
+            : ""
+        }
+
+
+        ${
+          acuerdo
+
+            ? `
+              <div
+                style="
+                  margin-top:14px;
+                  padding:14px;
+                  border:1px solid #dce5ee;
+                  border-radius:9px;
+                "
+              >
+
+                <span>
+                  Acuerdo / Auto
+                </span>
+
+
+                <strong
+                  style="
+                    display:block;
+                    margin-top:5px;
+                  "
+                >
+                  ${escapeHTML(
+                    acuerdo.titulo ||
+                    "Acuerdo",
+                  )}
+                </strong>
+
+
+                ${
+                  acuerdo.archivo
+
+                    ? `
+                      <div
+                        style="
+                          margin-top:10px;
+                          padding:9px;
+                          background:#f5f8fb;
+                          border-radius:7px;
+                        "
+                      >
+
+                        <i class="fa-regular fa-file"></i>
+
+                        ${escapeHTML(
+                          acuerdo.archivo.nombre ||
+                          "Documento",
+                        )}
+
+                      </div>
+                    `
+
+                    : ""
+                }
+
+
+                ${
+                  acuerdo.extracto
+
+                    ? `
+                      <div
+                        style="
+                          margin-top:12px;
+                        "
+                      >
+
+                        <span>
+                          Extracto
+                        </span>
+
+                        <p
+                          style="
+                            white-space:pre-wrap;
+                          "
+                        >
+                          ${escapeHTML(
+                            acuerdo.extracto,
+                          )}
+                        </p>
+
+                      </div>
+                    `
+
+                    : ""
+                }
+
+              </div>
+            `
+
+            : ""
+        }
 
       </div>
 
@@ -1022,15 +3023,49 @@ function openDetalleDemanda(
 
 
 // ============================================================
+// CALIFICACIÓN
+// ============================================================
+
+function etiquetaCalificacion(
+  value,
+) {
+
+  const etiquetas = {
+
+    radicar:
+      "Radicar",
+
+    prevenir:
+      "Prevenir",
+
+    rechazar:
+      "Rechazar",
+
+    otro:
+      "Otro",
+  };
+
+
+  return (
+    etiquetas[value] ||
+    value ||
+    "—"
+  );
+}
+
+
+// ============================================================
 // FECHA
 // ============================================================
 
 function formatFecha(
   value,
 ) {
+
   if (!value) {
     return "—";
   }
+
 
   const parts =
     String(value)
@@ -1038,8 +3073,16 @@ function formatFecha(
       .split("-");
 
 
-  if (parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  if (
+    parts.length ===
+    3
+  ) {
+
+    return (
+      `${parts[2]}/` +
+      `${parts[1]}/` +
+      `${parts[0]}`
+    );
   }
 
 
