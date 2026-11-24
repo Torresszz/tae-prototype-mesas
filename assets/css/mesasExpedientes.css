@@ -1,0 +1,2330 @@
+/* ============================================================
+   EXPEDIENTES · CONSULTA JUDICIAL
+   assets/css/mesasExpedientes.css
+   ============================================================ */
+
+
+/* ============================================================
+   VARIABLES Y CONFIGURACIÓN GENERAL
+   ============================================================ */
+
+.expedientes-consulta,
+.expediente-detalle,
+.expediente-documento-modal {
+
+    --exp-primary: #1768cf;
+    --exp-primary-hover: #1259b3;
+    --exp-primary-light: #edf5ff;
+
+    --exp-title: #102b45;
+    --exp-text: #29445c;
+    --exp-muted: #71869a;
+
+    --exp-border: #dce4ed;
+    --exp-background: #f5f7fa;
+    --exp-white: #ffffff;
+
+    --exp-radius: 10px;
+
+    width: 100%;
+    min-width: 0;
+
+    color: var(--exp-text);
+
+    font-family: inherit;
+    font-size: 12px;
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle,
+    .expediente-documento-modal
+) * {
+
+    box-sizing: border-box;
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle
+) [hidden] {
+
+    display: none !important;
+
+}
+
+.expedientes-consulta,
+.expediente-detalle {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+
+    animation: expedienteFadeIn 0.2s ease;
+
+}
+
+@keyframes expedienteFadeIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+/* ============================================================
+   NIVEL 1 · ENCABEZADO GENERAL
+   ============================================================ */
+
+.expedientes-consulta-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+}
+
+.expedientes-consulta-header h2 {
+
+    margin: 5px 0;
+
+    color: var(--exp-title);
+
+    font-size: 24px;
+    font-weight: 700;
+
+}
+
+.expedientes-consulta-header p {
+
+    margin: 0;
+
+    color: var(--exp-muted);
+
+    font-size: 11px;
+    line-height: 17px;
+
+}
+
+
+/* ============================================================
+   CONTADORES
+   ============================================================ */
+
+.expedientes-consulta-stats,
+.expediente-promociones-stats,
+.expediente-actuaciones-stats {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+
+}
+
+.expedientes-stat,
+.expediente-promocion-stat,
+.expediente-actuacion-stat {
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    min-width: 0;
+    min-height: 83px;
+
+    padding: 16px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius);
+
+    background: var(--exp-white);
+
+}
+
+.expedientes-stat-icon,
+.expediente-promocion-stat-icon,
+.expediente-actuacion-stat-icon {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 43px;
+    height: 43px;
+
+    border-radius: 9px;
+
+    background: var(--exp-primary-light);
+
+    color: var(--exp-primary);
+
+    font-size: 17px;
+
+}
+
+.expedientes-stat.proceso
+.expedientes-stat-icon {
+
+    background: #fff5e6;
+
+    color: #b7791f;
+
+}
+
+.expedientes-stat.firma
+.expedientes-stat-icon {
+
+    background: #eeeafd;
+
+    color: #7955c7;
+
+}
+
+.expedientes-stat-info,
+.expediente-promocion-stat > div:last-child,
+.expediente-actuacion-stat-info {
+
+    min-width: 0;
+
+}
+
+.expedientes-stat-info span,
+.expediente-promocion-stat span,
+.expediente-actuacion-stat-info span {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+    font-weight: 500;
+
+}
+
+.expedientes-stat-info strong,
+.expediente-promocion-stat strong,
+.expediente-actuacion-stat-info strong {
+
+    display: block;
+
+    color: var(--exp-title);
+
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 29px;
+
+}
+
+
+/* ============================================================
+   FILTROS DEL LISTADO GENERAL
+   ============================================================ */
+
+.expedientes-filtros {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1.5fr)
+        minmax(0, 1fr)
+        auto;
+
+    align-items: end;
+
+    gap: 13px;
+
+    padding: 16px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius);
+
+    background: var(--exp-white);
+
+}
+
+.expedientes-filtro-field {
+
+    min-width: 0;
+
+}
+
+.expedientes-filtro-field label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--exp-text);
+
+    font-size: 11px;
+    font-weight: 600;
+
+}
+
+.expedientes-search {
+
+    position: relative;
+
+    width: 100%;
+
+}
+
+.expedientes-search > i {
+
+    position: absolute;
+
+    top: 50%;
+    left: 12px;
+
+    transform: translateY(-50%);
+
+    color: #8ca0b3;
+
+    font-size: 12px;
+
+    pointer-events: none;
+
+}
+
+.expedientes-filtros input,
+.expedientes-filtros select {
+
+    width: 100%;
+    height: 38px;
+
+    margin: 0;
+    padding: 0 11px;
+
+    border: 1px solid #d4dee9;
+    border-radius: 7px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: var(--exp-text);
+
+    font-family: inherit;
+    font-size: 11px;
+
+}
+
+.expedientes-search input {
+
+    padding-left: 33px;
+
+}
+
+.expedientes-filtros input::placeholder {
+
+    color: #94a3b4;
+
+}
+
+.expedientes-filtros input:focus,
+.expedientes-filtros select:focus {
+
+    border-color: var(--exp-primary);
+
+    box-shadow:
+        0 0 0 3px rgba(23, 104, 207, 0.08);
+
+}
+
+.expedientes-filtros select {
+
+    cursor: pointer;
+
+}
+
+.expedientes-filtros
+.expedientes-limpiar-btn {
+
+    min-height: 38px;
+
+}
+
+
+/* ============================================================
+   TABLAS · CONTENEDORES
+   ============================================================ */
+
+.expedientes-table-card,
+.expediente-promociones-card {
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--exp-border);
+    border-radius: var(--exp-radius);
+
+    background: var(--exp-white);
+
+}
+
+.expedientes-table-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding: 16px 18px;
+
+    border-bottom: 1px solid var(--exp-border);
+
+}
+
+.expedientes-table-header h3 {
+
+    margin: 0 0 4px;
+
+    color: var(--exp-title);
+
+    font-size: 14px;
+    font-weight: 700;
+
+}
+
+.expedientes-table-header p {
+
+    margin: 0;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+#expedientesTotalVisible,
+.expediente-count-badge {
+
+    flex-shrink: 0;
+
+    padding: 6px 10px;
+
+    border-radius: 6px;
+
+    background: #eef3f8;
+
+    color: #60758a;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+/* ============================================================
+   TABLA GENERAL Y TABLA DE PROMOCIONES
+   ============================================================ */
+
+.expedientes-table-wrapper,
+.expediente-promociones-table-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+}
+
+.expedientes-consulta-table,
+.expediente-promociones-table {
+
+    width: 100%;
+
+    min-width: 870px;
+
+    margin: 0;
+
+    border-collapse: collapse;
+
+    table-layout: auto;
+
+}
+
+.expedientes-consulta-table thead,
+.expediente-promociones-table thead {
+
+    background: #f7f9fb;
+
+}
+
+.expedientes-consulta-table th,
+.expediente-promociones-table th {
+
+    height: 42px;
+
+    padding: 10px 13px;
+
+    border-bottom: 1px solid var(--exp-border);
+
+    color: #60758a;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+
+    white-space: nowrap;
+
+}
+
+.expedientes-consulta-table td,
+.expediente-promociones-table td {
+
+    padding: 15px 13px;
+
+    border-bottom: 1px solid #e6ecf2;
+
+    color: #455e76;
+
+    font-size: 11px;
+    line-height: 17px;
+
+    vertical-align: middle;
+
+    overflow-wrap: anywhere;
+
+}
+
+.expedientes-consulta-table tbody tr:last-child td,
+.expediente-promociones-table tbody tr:last-child td {
+
+    border-bottom: 0;
+
+}
+
+.expedientes-consulta-table tbody tr:hover,
+.expediente-promociones-table tbody tr:hover {
+
+    background: #f8fbff;
+
+}
+
+.expedientes-consulta-row {
+
+    cursor: pointer;
+
+}
+
+.expedientes-consulta-table td:nth-child(2),
+.expedientes-consulta-table td:nth-child(5),
+.expedientes-consulta-table td:nth-child(6) {
+
+    white-space: nowrap;
+
+}
+
+.expedientes-consulta-table th:last-child {
+
+    width: 160px;
+
+}
+
+.expedientes-persona {
+
+    color: var(--exp-text);
+
+    font-size: 10.5px;
+    font-weight: 600;
+
+}
+
+.expedientes-numero-link {
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: var(--exp-primary);
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+}
+
+.expedientes-numero-link:hover {
+
+    text-decoration: underline;
+
+}
+
+.expedientes-mesa-badge {
+
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 9px;
+
+    border-radius: 5px;
+
+    background: #eef3f8;
+
+    color: #536d85;
+
+    font-size: 10px;
+    font-weight: 600;
+
+}
+
+.expedientes-table-footer,
+.expediente-table-footer {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 18px;
+
+    border-top: 1px solid var(--exp-border);
+
+    background: #fbfcfd;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle,
+    .expediente-documento-modal
+) :is(
+    .mesas-primary-btn,
+    .mesas-secondary-btn
+) {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 33px;
+
+    padding: 7px 11px;
+
+    border: 1px solid #d4dee9;
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: var(--exp-text);
+
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+
+    text-decoration: none;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle
+) .mesas-primary-btn {
+
+    border-color: var(--exp-primary);
+
+    background: var(--exp-primary);
+
+    color: #ffffff;
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle
+) .mesas-primary-btn:hover:not(:disabled) {
+
+    border-color: var(--exp-primary-hover);
+
+    background: var(--exp-primary-hover);
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle,
+    .expediente-documento-modal
+) .mesas-secondary-btn:hover:not(:disabled) {
+
+    border-color: #aac7eb;
+
+    background: #f3f8ff;
+
+    color: var(--exp-primary);
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle,
+    .expediente-documento-modal
+) button:disabled {
+
+    border-color: #e0e6ed;
+
+    background: #f1f4f8;
+
+    color: #9aa9b8;
+
+    opacity: 0.75;
+
+    cursor: not-allowed;
+
+}
+
+:is(
+    .expedientes-consulta,
+    .expediente-detalle
+) button:focus-visible {
+
+    outline: 2px solid var(--exp-primary);
+
+    outline-offset: 3px;
+
+}
+
+
+/* ============================================================
+   NIVEL 2 · NAVEGACIÓN DEL DETALLE
+   ============================================================ */
+
+.expediente-detalle-navigation {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+}
+
+.expediente-volver-btn {
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 9px 12px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: var(--exp-primary);
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+.expediente-volver-btn:hover {
+
+    border-color: #aac7eb;
+
+    background: var(--exp-primary-light);
+
+}
+
+.expediente-breadcrumb {
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-breadcrumb i {
+
+    color: #a3b2c2;
+
+    font-size: 8px;
+
+}
+
+.expediente-breadcrumb strong {
+
+    color: var(--exp-text);
+
+}
+
+
+/* ============================================================
+   CARÁTULA DEL EXPEDIENTE
+   ============================================================ */
+
+.expediente-caratula {
+
+    padding: 21px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 12px;
+
+    background: var(--exp-white);
+
+}
+
+.expediente-caratula-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding-bottom: 19px;
+    margin-bottom: 18px;
+
+    border-bottom: 1px solid #e4eaf1;
+
+}
+
+.expediente-caratula-identidad {
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    min-width: 0;
+
+}
+
+.expediente-caratula-icon {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 57px;
+    height: 57px;
+
+    border-radius: 12px;
+
+    background: var(--exp-primary-light);
+
+    color: var(--exp-primary);
+
+    font-size: 23px;
+
+}
+
+.expediente-caratula-identidad h2 {
+
+    margin: 4px 0;
+
+    color: var(--exp-title);
+
+    font-size: 27px;
+    font-weight: 750;
+
+}
+
+.expediente-caratula-identidad p {
+
+    margin: 0;
+
+    color: var(--exp-muted);
+
+    font-size: 11px;
+
+}
+
+.expediente-caratula-estado {
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    flex-shrink: 0;
+
+    gap: 7px;
+
+}
+
+.expediente-caratula-estado > span:first-child {
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+
+/* ============================================================
+   CAMPOS DE LA CARÁTULA
+   ============================================================ */
+
+.expediente-caratula-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.3fr)
+        minmax(0, 1.3fr)
+        minmax(0, 0.8fr)
+        minmax(0, 0.7fr);
+
+    gap: 11px;
+
+}
+
+.expediente-caratula-field {
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+    min-height: 67px;
+
+    padding: 13px;
+
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+}
+
+.expediente-field-icon {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 31px;
+    height: 31px;
+
+    border-radius: 7px;
+
+    background: #edf2f7;
+
+    color: #6d849b;
+
+    font-size: 12px;
+
+}
+
+.expediente-field-info {
+
+    min-width: 0;
+
+}
+
+.expediente-field-info span {
+
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-field-info strong {
+
+    display: block;
+
+    color: var(--exp-text);
+
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+
+    overflow-wrap: anywhere;
+
+}
+
+
+/* ============================================================
+   CONTENEDOR DE PESTAÑAS
+   ============================================================ */
+
+.expediente-detalle-card {
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 12px;
+
+    background: var(--exp-white);
+
+}
+
+.expediente-detalle-tabs {
+
+    display: flex;
+    align-items: stretch;
+
+    gap: 23px;
+
+    padding: 0 20px;
+
+    border-bottom: 1px solid var(--exp-border);
+
+    overflow-x: auto;
+
+}
+
+.expediente-detalle-tab {
+
+    display: inline-flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    gap: 8px;
+
+    min-height: 54px;
+
+    padding: 0 9px;
+
+    border: 0;
+    border-bottom: 3px solid transparent;
+
+    background: transparent;
+
+    color: var(--exp-muted);
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+}
+
+.expediente-detalle-tab:hover {
+
+    color: var(--exp-primary);
+
+    background: #f8fbff;
+
+}
+
+.expediente-detalle-tab.active {
+
+    border-bottom-color: var(--exp-primary);
+
+    color: var(--exp-primary);
+
+}
+
+.expediente-tab-counter {
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 20px;
+    height: 20px;
+
+    padding: 0 6px;
+
+    border-radius: 20px;
+
+    background: #edf1f5;
+
+    color: #60758a;
+
+    font-size: 10px;
+    font-weight: 700;
+
+}
+
+.expediente-detalle-tab.active
+.expediente-tab-counter {
+
+    background: #e4efff;
+
+    color: var(--exp-primary);
+
+}
+
+.expediente-detalle-content {
+
+    min-width: 0;
+
+    padding: 21px;
+
+}
+
+.expediente-tab-panel {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 19px;
+
+    min-width: 0;
+
+    animation: expedienteFadeIn 0.18s ease;
+
+}
+
+
+/* ============================================================
+   ENCABEZADO INTERNO DE CADA PESTAÑA
+   ============================================================ */
+
+.expediente-panel-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+}
+
+.expediente-panel-header h3 {
+
+    margin: 0 0 5px;
+
+    color: var(--exp-title);
+
+    font-size: 17px;
+    font-weight: 700;
+
+}
+
+.expediente-panel-header p {
+
+    margin: 0;
+
+    color: var(--exp-muted);
+
+    font-size: 11px;
+    line-height: 17px;
+
+}
+
+.expediente-section-heading {
+
+    display: flex;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 9px;
+
+    margin-bottom: 13px;
+
+}
+
+.expediente-section-heading > i {
+
+    color: var(--exp-primary);
+
+    font-size: 14px;
+
+}
+
+.expediente-section-heading h4 {
+
+    flex: 1;
+
+    margin: 0;
+
+    color: var(--exp-title);
+
+    font-size: 13px;
+    font-weight: 700;
+
+}
+
+
+/* ============================================================
+   PESTAÑA 1 · DEMANDA INICIAL
+   ============================================================ */
+
+.expediente-demanda-info {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 11px;
+
+}
+
+.expediente-demanda-field {
+
+    min-width: 0;
+
+    padding: 13px;
+
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+}
+
+.expediente-demanda-field span {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-demanda-field strong {
+
+    display: block;
+
+    color: var(--exp-text);
+
+    font-size: 12px;
+    line-height: 17px;
+
+    overflow-wrap: anywhere;
+
+}
+
+.expediente-resumen-card {
+
+    padding: 16px;
+
+    border: 1px solid #e0e7ef;
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+}
+
+.expediente-resumen-card > span {
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: var(--exp-text);
+
+    font-size: 11px;
+    font-weight: 700;
+
+}
+
+.expediente-resumen-card p {
+
+    margin: 0;
+
+    color: #455e76;
+
+    font-size: 12px;
+    line-height: 1.8;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+}
+
+
+/* ============================================================
+   DOCUMENTOS DEL EXPEDIENTE
+   ============================================================ */
+
+.expediente-documentos-list {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+}
+
+.expediente-documento-card {
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    min-width: 0;
+
+    padding: 14px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 9px;
+
+    background: #ffffff;
+
+}
+
+.expediente-documento-icon {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 43px;
+    height: 47px;
+
+    border-radius: 8px;
+
+    background: var(--exp-primary-light);
+
+    color: var(--exp-primary);
+
+    font-size: 19px;
+
+}
+
+.expediente-documento-info {
+
+    flex: 1;
+    min-width: 0;
+
+}
+
+.expediente-documento-info strong {
+
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: var(--exp-text);
+
+    font-size: 12px;
+    font-weight: 600;
+
+}
+
+.expediente-documento-info span {
+
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-documento-info small {
+
+    display: block;
+
+    font-size: 10px;
+
+}
+
+.expediente-documento-info small.disponible {
+
+    color: #15803d;
+
+}
+
+.expediente-documento-info small.pendiente {
+
+    color: #94a3b8;
+
+}
+
+
+/* ============================================================
+   PESTAÑA 2 · PROMOCIONES
+   ============================================================ */
+
+.expediente-promociones-stats
+.expediente-promocion-stat:nth-child(2)
+.expediente-promocion-stat-icon {
+
+    background: #fff5e6;
+
+    color: #b7791f;
+
+}
+
+.expediente-promociones-stats
+.expediente-promocion-stat:nth-child(3)
+.expediente-promocion-stat-icon {
+
+    background: #eaf7ef;
+
+    color: #21804a;
+
+}
+
+.expediente-promociones-table {
+
+    min-width: 850px;
+
+}
+
+.expediente-promociones-table td:first-child {
+
+    white-space: nowrap;
+
+}
+
+.expediente-promociones-table th:nth-child(3) {
+
+    min-width: 220px;
+
+}
+
+.expediente-promocion-persona {
+
+    color: var(--exp-text);
+
+    font-size: 11px;
+    font-weight: 600;
+
+}
+
+.expediente-promocion-resumen {
+
+    color: #455e76;
+
+    font-size: 11px;
+    line-height: 17px;
+
+}
+
+.expediente-promocion-anexos {
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    margin-top: 8px;
+
+    color: var(--exp-muted);
+
+    font-size: 9px;
+
+}
+
+.expediente-promocion-actions {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    min-width: 108px;
+
+}
+
+.expediente-promocion-actions button {
+
+    justify-content: flex-start !important;
+
+    width: 100%;
+
+}
+
+
+/* ============================================================
+   ETIQUETAS DE SITUACIÓN
+   ============================================================ */
+
+.expediente-situacion-badge {
+
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 9px;
+
+    border-radius: 5px;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+.expediente-situacion-badge.pending {
+
+    background: #fff3df;
+
+    color: #a66b16;
+
+}
+
+.expediente-situacion-badge.project {
+
+    background: #eaf2ff;
+
+    color: #1768cf;
+
+}
+
+.expediente-situacion-badge.sign {
+
+    background: #eeeafd;
+
+    color: #7955c7;
+
+}
+
+.expediente-situacion-badge.done {
+
+    background: #e5f5eb;
+
+    color: #21804a;
+
+}
+
+.expediente-situacion-badge.neutral {
+
+    background: #edf1f5;
+
+    color: #71869a;
+
+}
+
+
+/* ============================================================
+   PESTAÑA 3 · ACTUACIONES Y AUDIENCIAS
+   ============================================================ */
+
+.expediente-actuaciones-stats
+.expediente-actuacion-stat:nth-child(2)
+.expediente-actuacion-stat-icon {
+
+    background: #fff5e6;
+
+    color: #b7791f;
+
+}
+
+.expediente-actuaciones-stats
+.expediente-actuacion-stat:nth-child(3)
+.expediente-actuacion-stat-icon {
+
+    background: #eaf7ef;
+
+    color: #21804a;
+
+}
+
+.expediente-audiencias-list {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+}
+
+.expediente-audiencia-card {
+
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 16px;
+
+    border: 1px solid #d5e4f6;
+    border-radius: 9px;
+
+    background: #f8fbff;
+
+}
+
+.expediente-audiencia-date {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    gap: 2px;
+
+    width: 65px;
+    min-height: 77px;
+
+    padding: 9px;
+
+    border: 1px solid #d5e4f6;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+}
+
+.expediente-audiencia-date span {
+
+    color: var(--exp-primary);
+
+    font-size: 10px;
+    font-weight: 700;
+
+}
+
+.expediente-audiencia-date strong {
+
+    color: var(--exp-primary);
+
+    font-size: 27px;
+    line-height: 30px;
+
+}
+
+.expediente-audiencia-date small {
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-audiencia-info {
+
+    flex: 1;
+    min-width: 0;
+
+}
+
+.expediente-audiencia-info h5 {
+
+    margin: 0 0 9px;
+
+    color: var(--exp-title);
+
+    font-size: 14px;
+    font-weight: 700;
+
+}
+
+.expediente-audiencia-meta {
+
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 8px 15px;
+
+}
+
+.expediente-audiencia-meta span {
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-audiencia-info p {
+
+    margin: 10px 0 0;
+
+    color: #536d85;
+
+    font-size: 11px;
+    line-height: 16px;
+
+    overflow-wrap: anywhere;
+
+}
+
+.expediente-audiencia-origen {
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 9px;
+
+    color: var(--exp-primary);
+
+    font-size: 10px;
+
+}
+
+.expediente-audiencia-status {
+
+    flex-shrink: 0;
+
+}
+
+
+/* ============================================================
+   LÍNEA DE TIEMPO
+   ============================================================ */
+
+.expediente-actuaciones-section {
+
+    padding-top: 18px;
+
+    border-top: 1px solid #e2e8f0;
+
+}
+
+.expediente-timeline {
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 15px;
+
+}
+
+.expediente-timeline::before {
+
+    position: absolute;
+
+    top: 18px;
+    bottom: 18px;
+    left: 17px;
+
+    width: 2px;
+
+    background: #dce6f0;
+
+    content: "";
+
+}
+
+.expediente-timeline-item {
+
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        36px
+        minmax(0, 1fr);
+
+    align-items: start;
+
+    gap: 13px;
+
+}
+
+.expediente-timeline-marker {
+
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+
+    background: #eaf2ff;
+
+    color: var(--exp-primary);
+
+    font-size: 12px;
+
+}
+
+.expediente-timeline-marker.demanda {
+
+    background: #e5f5eb;
+
+    color: #21804a;
+
+}
+
+.expediente-timeline-marker.promocion {
+
+    background: #eeeafd;
+
+    color: #7955c7;
+
+}
+
+.expediente-timeline-content {
+
+    min-width: 0;
+
+    padding: 14px 16px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 8px;
+
+    background: #ffffff;
+
+}
+
+.expediente-timeline-header {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-bottom: 9px;
+
+}
+
+.expediente-timeline-date {
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+.expediente-timeline-origin {
+
+    padding: 4px 7px;
+
+    border-radius: 5px;
+
+    background: #eaf2ff;
+
+    color: var(--exp-primary);
+
+    font-size: 9px;
+    font-weight: 600;
+
+}
+
+.expediente-timeline-origin.demanda {
+
+    background: #e5f5eb;
+
+    color: #21804a;
+
+}
+
+.expediente-timeline-origin.promocion {
+
+    background: #eeeafd;
+
+    color: #7955c7;
+
+}
+
+.expediente-timeline-content h5 {
+
+    margin: 0;
+
+    color: var(--exp-text);
+
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 18px;
+
+}
+
+.expediente-timeline-content p {
+
+    margin: 7px 0 0;
+
+    color: #536d85;
+
+    font-size: 11px;
+    line-height: 17px;
+
+    overflow-wrap: anywhere;
+
+}
+
+.expediente-timeline-user {
+
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 10px;
+
+    color: var(--exp-muted);
+
+    font-size: 10px;
+
+}
+
+
+/* ============================================================
+   ESTADOS VACÍOS
+   ============================================================ */
+
+.expedientes-empty,
+.expediente-detalle-empty {
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    min-height: 155px;
+
+    padding: 26px;
+
+    text-align: center;
+
+}
+
+.expediente-detalle-empty {
+
+    border: 1px dashed #d4dee9;
+    border-radius: 8px;
+
+    background: #fafbfd;
+
+}
+
+.expedientes-empty > i,
+.expediente-detalle-empty > i {
+
+    margin-bottom: 4px;
+
+    color: #a1b3c6;
+
+    font-size: 30px;
+
+}
+
+.expedientes-empty strong,
+.expediente-detalle-empty strong {
+
+    color: #536d85;
+
+    font-size: 12px;
+
+}
+
+.expedientes-empty span,
+.expediente-detalle-empty span {
+
+    color: #8a9bad;
+
+    font-size: 11px;
+    line-height: 17px;
+
+}
+
+
+/* ============================================================
+   MODAL · CONSULTA DE DOCUMENTOS
+   ============================================================ */
+
+#modal.show:has(.expediente-documento-modal) {
+
+    zoom: 1;
+
+}
+
+#modal.show:has(.expediente-documento-modal)
+.modal-card {
+
+    width: 900px;
+
+    max-width: calc(100vw - 35px);
+    max-height: 90vh;
+
+    padding: 0;
+
+    overflow: hidden;
+
+}
+
+.expediente-documento-modal {
+
+    max-height: 86vh;
+
+}
+
+.expediente-documento-texto {
+
+    margin-bottom: 15px;
+    padding: 20px;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    color: var(--exp-text);
+
+    font-size: 12px;
+    line-height: 1.9;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+
+}
+
+.expediente-documento-preview {
+
+    overflow: hidden;
+
+    border: 1px solid var(--exp-border);
+    border-radius: 8px;
+
+}
+
+.expediente-preview-toolbar {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding: 12px;
+
+    border-bottom: 1px solid var(--exp-border);
+
+    background: #f8fafc;
+
+}
+
+.expediente-preview-toolbar strong {
+
+    color: var(--exp-text);
+
+    font-size: 11px;
+
+    overflow-wrap: anywhere;
+
+}
+
+.expediente-preview-toolbar strong i {
+
+    margin-right: 5px;
+
+    color: var(--exp-primary);
+
+}
+
+.expediente-preview-frame {
+
+    display: block;
+
+    width: 100%;
+    height: 58vh;
+
+    min-height: 240px;
+
+    border: 0;
+
+    background: #ffffff;
+
+}
+
+
+/* ============================================================
+   SCROLL PERSONALIZADO
+   ============================================================ */
+
+.expedientes-table-wrapper::-webkit-scrollbar,
+.expediente-promociones-table-wrapper::-webkit-scrollbar,
+.expediente-detalle-tabs::-webkit-scrollbar {
+
+    height: 6px;
+
+}
+
+.expedientes-table-wrapper::-webkit-scrollbar-thumb,
+.expediente-promociones-table-wrapper::-webkit-scrollbar-thumb,
+.expediente-detalle-tabs::-webkit-scrollbar-thumb {
+
+    border-radius: 20px;
+
+    background: #c9d5df;
+
+}
+
+.expedientes-table-wrapper::-webkit-scrollbar-track,
+.expediente-promociones-table-wrapper::-webkit-scrollbar-track,
+.expediente-detalle-tabs::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+
+/* ============================================================
+   RESPONSIVE · PANTALLAS MEDIANAS
+   ============================================================ */
+
+@media (max-width: 1150px) {
+
+    .expediente-caratula-grid,
+    .expediente-demanda-info {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+    }
+
+    .expedientes-filtros {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+    }
+
+}
+
+
+/* ============================================================
+   RESPONSIVE · PANTALLAS PEQUEÑAS
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .expedientes-consulta,
+    .expediente-detalle {
+
+        gap: 13px;
+
+    }
+
+    .expedientes-consulta-stats,
+    .expediente-promociones-stats,
+    .expediente-actuaciones-stats {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .expedientes-filtros {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .expedientes-stat,
+    .expediente-promocion-stat,
+    .expediente-actuacion-stat {
+
+        min-height: 70px;
+
+        padding: 12px;
+
+    }
+
+    .expediente-caratula {
+
+        padding: 15px;
+
+    }
+
+    .expediente-caratula-header {
+
+        align-items: flex-start;
+
+    }
+
+    .expediente-caratula-grid,
+    .expediente-demanda-info {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .expediente-caratula-identidad h2 {
+
+        font-size: 22px;
+
+    }
+
+    .expediente-caratula-icon {
+
+        width: 42px;
+        height: 42px;
+
+        font-size: 18px;
+
+    }
+
+    .expediente-breadcrumb {
+
+        display: none;
+
+    }
+
+    .expediente-detalle-tabs {
+
+        gap: 10px;
+
+        padding: 0 10px;
+
+    }
+
+    .expediente-detalle-tab {
+
+        font-size: 11px;
+
+    }
+
+    .expediente-detalle-content {
+
+        padding: 13px;
+
+    }
+
+    .expediente-panel-header {
+
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+
+    }
+
+    .expediente-audiencia-card {
+
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+
+        gap: 12px;
+
+        padding: 12px;
+
+    }
+
+    .expediente-audiencia-status {
+
+        width: 100%;
+
+        padding-left: 77px;
+
+    }
+
+    .expediente-documento-card {
+
+        flex-wrap: wrap;
+
+    }
+
+    .expediente-documento-card button {
+
+        width: 100%;
+
+    }
+
+    .expediente-timeline-item {
+
+        gap: 8px;
+
+    }
+
+    .expediente-timeline-content {
+
+        padding: 12px;
+
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .expedientes-consulta,
+    .expediente-detalle,
+    .expediente-tab-panel {
+
+        animation: none;
+
+    }
+
+}

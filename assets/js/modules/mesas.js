@@ -60,6 +60,9 @@ import {
 import { renderAudiencia } from "./mesas/audiencia.js";
 import { renderDemanda } from "./mesas/demanda.js";
 import { renderPromociones } from "./mesas/promociones.js";
+import {
+  renderConsultaExpedientes,
+} from "./mesas/expedientes.js";
 import { renderCalificacion } from "./mesas/calificacion.js";
 import { renderConsultas } from "./mesas/consultas.js";
 import { renderIntersindicales } from "./mesas/intersindicales.js";
@@ -96,7 +99,10 @@ const KEY = "mesasSeguimiento";
 registrarSeccion("plantillas", renderPlantillas);
 registrarSeccion("exhortos", renderExhortosMesa);
 registrarSeccion("agenda", renderAgendaCombinada);
-
+registrarSeccion(
+  "expedientes",
+  renderConsultaExpedientes,
+);
 registrarSeccion("audiencia", renderAudiencia);
 registrarSeccion("demanda", renderDemanda);
 registrarSeccion("promociones", renderPromociones);
