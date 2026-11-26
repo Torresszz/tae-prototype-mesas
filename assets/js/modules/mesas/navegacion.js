@@ -214,7 +214,16 @@ export function renderSeccionActiva() {
 
   renderers[seccionActiva]?.();
 
-  montarSlotsPlantillas();
+  // Estos apartados cargan sus propias plantillas.
+  const cargaPlantillasPropias = [
+    "demanda",
+    "promociones",
+    "calificacion",
+  ].includes(seccionActiva);
+
+  if (!cargaPlantillasPropias) {
+    montarSlotsPlantillas();
+  }
 
 }
 

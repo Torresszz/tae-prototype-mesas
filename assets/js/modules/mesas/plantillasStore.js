@@ -5,10 +5,10 @@
 // Único lugar que conoce DÓNDE se guardan las plantillas.
 // Hoy es localStorage (llave "mesasPlantillas"); cuando exista un
 // servidor, solo hay que reescribir estas funciones y mantener las
-// firmas: listar, obtener, guardar, borrar.
+// firmas: listar, obtener, guardar, actualizar, borrar.
 //
-// Registro: { id, nombre, categoria, tipoArchivo, nombreArchivo,
-//             tamano, dataUrl, subidoPor, fecha }
+// Registro: { id, nombre, categoria, subcategoria, tipoArchivo,
+//             nombreArchivo, tamano, dataUrl, subidoPor, fecha }
 // ============================================================
 
 import { getData, saveData } from "../../storage.js";
@@ -69,24 +69,47 @@ export function leerComoDataUrl(archivo) {
 // Cada ámbito (Mesas de Secretaría de Acuerdos, Amparos Directos...)
 // guarda sus plantillas en su propia llave de localStorage.
 // ------------------------------------------------------------
+
 export function crearAlmacenPlantillas(KEY) {
-  // ------------------------------------------------------------
+
+  // ----------------------------------------------------------
   // LECTURA
-  // ------------------------------------------------------------
+  // ----------------------------------------------------------
 
   // Más recientes primero. Todas las mesas comparten las plantillas.
-  function listar({ categoria = "" } = {}) {
+  function listar({
+    categoria = "",
+    subcategoria = "",
+  } = {}) {
+
     const lista = getData(KEY, []);
 
     return (Array.isArray(lista) ? lista : [])
-      .filter((item) => !categoria || item.categoria === categoria)
-      .filter((item) => !subcategoria || item.subcategoria === subcategoria)
-      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+
+      .filter(
+        (item) =>
+          !categoria ||
+          item.categoria === categoria,
+      )
+
+      .filter(
+        (item) =>
+          !subcategoria ||
+          item.subcategoria === subcategoria,
+      )
+
+      .sort(
+        (a, b) =>
+          String(b.fecha).localeCompare(String(a.fecha)),
+      );
+
   }
+
 
   function obtener(id) {
     return getData(KEY, []).find((item) => item.id === id) || null;
   }
+
 
   // Aproximado: caracteres guardados por las plantillas.
   function espacioUsadoBytes() {
@@ -96,9 +119,10 @@ export function crearAlmacenPlantillas(KEY) {
     );
   }
 
-  // ------------------------------------------------------------
+
+  // ----------------------------------------------------------
   // ESCRITURA
-  // ------------------------------------------------------------
+  // ----------------------------------------------------------
 
   // Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
   function guardar({
@@ -109,10 +133,12 @@ export function crearAlmacenPlantillas(KEY) {
     dataUrl,
     subidoPor,
   }) {
+
     const plantilla = {
       id: createId(),
       nombre: String(nombre || "").trim(),
       categoria,
+      subcategoria,
       tipoArchivo: extensionDe(archivo.name),
       nombreArchivo: archivo.name,
       tamano: archivo.size,
@@ -125,7 +151,9 @@ export function crearAlmacenPlantillas(KEY) {
       saveData(KEY, [...getData(KEY, []), plantilla]);
 
       return { ok: true, plantilla };
+
     } catch (error) {
+
       console.error("No se pudo guardar la plantilla:", error);
 
       const cuota =
@@ -134,23 +162,56 @@ export function crearAlmacenPlantillas(KEY) {
         error?.code === 22 ||
         error?.code === 1014;
 
-      return { ok: false, error: cuota ? "cuota" : "otro" };
+      return {
+        ok: false,
+        error: cuota ? "cuota" : "otro",
+      };
+
     }
+
   }
 
-  // Edita nombre y categoría; si llega `archivo` + `dataUrl`, reemplaza el archivo.
-  // Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
-  function actualizar(id, { nombre, categoria, archivo, dataUrl }) {
-    const lista = getData(KEY, []);
-    const actual = lista.find((item) => item.id === id);
 
-    if (!actual) return { ok: false, error: "otro" };
+  // Edita nombre, categoría y subcategoría.
+  // Si llega archivo + dataUrl, reemplaza el archivo.
+  // Si no se indica subcategoría, conserva la existente.
+  function actualizar(
+    id,
+    {
+      nombre,
+      categoria,
+      subcategoria,
+      archivo,
+      dataUrl,
+    },
+  ) {
+
+    const lista = getData(KEY, []);
+
+    const actual = lista.find(
+      (item) => item.id === id,
+    );
+
+    if (!actual) {
+      return { ok: false, error: "otro" };
+    }
+
 
     const plantilla = {
+
       ...actual,
+
       nombre: String(nombre || "").trim(),
+
       categoria,
+
+      subcategoria:
+        subcategoria !== undefined
+          ? subcategoria
+          : actual.subcategoria || "",
+
       ...(archivo && dataUrl
+
         ? {
             tipoArchivo: extensionDe(archivo.name),
             nombreArchivo: archivo.name,
@@ -158,25 +219,47 @@ export function crearAlmacenPlantillas(KEY) {
             dataUrl,
             fecha: todayISO(),
           }
+
         : {}),
+
     };
 
+
     try {
+
       saveData(
         KEY,
-        lista.map((item) => (item.id === id ? plantilla : item)),
+        lista.map(
+          (item) => item.id === id ? plantilla : item,
+        ),
       );
-      return { ok: true, plantilla };
+
+      return {
+        ok: true,
+        plantilla,
+      };
+
     } catch (error) {
+
       console.error("No se pudo actualizar la plantilla:", error);
-      return { ok: false, error: "cuota" };
+
+      return {
+        ok: false,
+        error: "cuota",
+      };
+
     }
+
   }
 
+
   function borrar(id) {
+
     const lista = getData(KEY, []);
 
-    const restantes = lista.filter((item) => item.id !== id);
+    const restantes = lista.filter(
+      (item) => item.id !== id,
+    );
 
     if (restantes.length === lista.length) {
       return false;
@@ -185,12 +268,26 @@ export function crearAlmacenPlantillas(KEY) {
     saveData(KEY, restantes);
 
     return true;
+
   }
 
-  return { listar, obtener, espacioUsadoBytes, guardar, actualizar, borrar };
+
+  return {
+    listar,
+    obtener,
+    espacioUsadoBytes,
+    guardar,
+    actualizar,
+    borrar,
+  };
+
 }
 
-// Almacén de las Mesas (Secretaría de Acuerdos): mismas funciones de siempre.
+
+// ============================================================
+// ALMACÉN DE LAS MESAS (SECRETARÍA DE ACUERDOS)
+// ============================================================
+
 export const {
   listar,
   obtener,

@@ -31,6 +31,8 @@ import {
   getNumeroExpediente,
 } from "./mesaUtils.js";
 
+import { montarPlantillasEn } from "./plantillas.js";
+
 import {
   aplicarAccion,
   accionDeBoton,
@@ -38,6 +40,9 @@ import {
   renderEstadoBadge,
 } from "./flujoEstados.js";
 import { abrirEnvioFirma } from "./documentosFirma.js";
+import {
+  renderSeccionActiva,
+} from "./navegacion.js";
 import {
   getSession,
 } from "../../auth.js";
@@ -270,12 +275,23 @@ export function renderCalificacion() {
   `;
 
 
-  actualizarListado();
+     actualizarListado();
 
   configurarEventosCalificacion(
     vista,
   );
+
+  // Cargar las plantillas de Calificación.
+  const slotPlantillas =
+    vista.querySelector("[data-plantillas-slot]");
+
+  if (slotPlantillas) {
+    montarPlantillasEn(slotPlantillas, {
+      categoria: "calificacion",
+    });
+  }
 }
+
 
 // ============================================================
 // PREPARAR DATOS
@@ -761,12 +777,12 @@ function configurarEventosCalificacion(
 
       switch (action) {
         case "resultado":
-          resultadoActivo =
-            button.dataset.resultado ||
-            "todas";
+  resultadoActivo =
+    button.dataset.resultado ||
+    "todas";
 
-          renderCalificacion();
-          break;
+  renderSeccionActiva();
+  break;
 
 
         case "flujo":
@@ -840,7 +856,7 @@ function ejecutarAccionCalificacion(id, accion) {
 
         return enviado;
       },
-      alTerminar: renderCalificacion,
+      alTerminar: renderSeccionActiva,
     });
 
     return;
@@ -860,7 +876,7 @@ function ejecutarAccionCalificacion(id, accion) {
   }
 
   saveData(KEY_CALIFICACIONES, calificaciones);
-  renderCalificacion();
+renderSeccionActiva();
 }
 
 
