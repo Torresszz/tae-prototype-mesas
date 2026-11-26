@@ -5,49 +5,75 @@
 
 import { escapeHTML } from "../../utils.js";
 
-import {
-  showModal,
-  closeForm,
-} from "../../forms/formHelper.js";
+import { showModal, closeForm } from "../../forms/formHelper.js";
 
-import {
-  renderEstadoBadge,
-} from "./flujoEstados.js";
+import { renderEstadoBadge } from "./flujoEstados.js";
 
 import {
   htmlVistaPreviaDocumento,
   activarVistasPreviasDocumento,
 } from "./documentosFirma.js";
 
+import { etiquetaEstado } from "./estados.js";
 
 // ============================================================
 // RENDER PRINCIPAL
 // ============================================================
 
 export function renderExpedienteDemanda(expediente) {
-
   const demanda = expediente.demanda;
 
   if (!demanda) {
-
     return `
       <div class="expediente-detalle-empty">
         <i class="fa-regular fa-folder-open"></i>
         <strong>No hay una demanda registrada.</strong>
       </div>
     `;
-
   }
-
 
   const calificacion = demanda.calificacion || {};
 
+  const calificacionTramite = demanda.calificacionTramite || {};
+
   const acuerdo = demanda.acuerdo;
 
-  const resultado = obtenerCalificacion(
-    calificacion.resultado || calificacion,
-  );
+  const resultado = obtenerCalificacion(calificacion.resultado || calificacion);
 
+  // ============================================================
+  // ESTADO DE LA CALIFICACIÓN
+  // ============================================================
+
+  const estadoCalificacion = calificacionTramite.estado
+    ? etiquetaEstado(calificacionTramite.estado)
+    : "";
+
+  // ============================================================
+  // FECHAS DE CALIFICACIÓN
+  // ============================================================
+
+  const fechas = [];
+
+  if (calificacion.fecha) {
+    fechas.push(`Registrada: ${formatFecha(calificacion.fecha)}`);
+  }
+
+  if (
+    Array.isArray(demanda.fechasCalificacion) &&
+    demanda.fechasCalificacion.length
+  ) {
+    fechas.push(
+      `Agendada: ${demanda.fechasCalificacion.map(formatFecha).join(", ")}`,
+    );
+  }
+
+  if (calificacionTramite.concluidaEn) {
+    fechas.push(`Concluida: ${formatFecha(calificacionTramite.concluidaEn)}`);
+  }
+
+  const fechaCalificacion = fechas.length
+    ? fechas.join(" · ")
+    : "Sin registrar";
 
   return `
 
@@ -77,26 +103,21 @@ export function renderExpedienteDemanda(expediente) {
 
       <div class="expediente-demanda-info">
 
-        ${renderCampo(
-          "Fecha de presentación",
-          formatFecha(demanda.fecha),
-        )}
+        ${renderCampo("Fecha de presentación", formatFecha(demanda.fecha))}
 
         ${renderCampo(
           "Calificación registrada",
-          resultado,
+
+          estadoCalificacion
+            ? `${resultado} · Trámite: ${estadoCalificacion}`
+            : resultado,
         )}
 
-        ${renderCampo(
-          "Fecha de calificación",
-          formatFecha(calificacion.fecha),
-        )}
+        ${renderCampo("Fecha de calificación", fechaCalificacion)}
 
         ${renderCampo(
           "Categoría",
-          demanda.categoria === "radicado"
-            ? "Radicada"
-            : "Por radicar",
+          demanda.categoria === "radicado" ? "Radicada" : "Por radicar",
         )}
 
       </div>
@@ -109,9 +130,7 @@ export function renderExpedienteDemanda(expediente) {
         <span>Resumen de la demanda</span>
 
         <p>
-          ${escapeHTML(
-            demanda.resumen || "Sin resumen registrado.",
-          )}
+          ${escapeHTML(demanda.resumen || "Sin resumen registrado.")}
         </p>
 
       </section>
@@ -121,7 +140,6 @@ export function renderExpedienteDemanda(expediente) {
 
       ${
         calificacion.notas
-
           ? `
             <section class="expediente-resumen-card">
 
@@ -135,11 +153,29 @@ export function renderExpedienteDemanda(expediente) {
 
             </section>
           `
-
           : ""
       }
 
+      ${
+  calificacionTramite.notas &&
+  calificacionTramite.notas !== calificacion.notas
 
+    ? `
+      <section class="expediente-resumen-card">
+
+        <span>
+          Notas de calificación
+        </span>
+
+        <p>
+          ${escapeHTML(calificacionTramite.notas)}
+        </p>
+
+      </section>
+    `
+
+    : ""
+}
       <!-- DOCUMENTOS -->
 
       <section class="expediente-documentos-section">
@@ -181,7 +217,6 @@ export function renderExpedienteDemanda(expediente) {
 
       ${
         acuerdo?.extracto
-
           ? `
             <section class="expediente-resumen-card">
 
@@ -193,7 +228,6 @@ export function renderExpedienteDemanda(expediente) {
 
             </section>
           `
-
           : ""
       }
 
@@ -201,16 +235,13 @@ export function renderExpedienteDemanda(expediente) {
     </div>
 
   `;
-
 }
-
 
 // ============================================================
 // CAMPO DE INFORMACIÓN
 // ============================================================
 
 function renderCampo(titulo, valor) {
-
   return `
 
     <div class="expediente-demanda-field">
@@ -226,18 +257,14 @@ function renderCampo(titulo, valor) {
     </div>
 
   `;
-
 }
-
 
 // ============================================================
 // CALIFICACIÓN DE LA DEMANDA
 // ============================================================
 
 function obtenerCalificacion(resultado) {
-
   const etiquetas = {
-
     radicar: "Radicar",
     admitida: "Admitida",
     admitir: "Admitida",
@@ -256,35 +283,21 @@ function obtenerCalificacion(resultado) {
     incompetencia: "Incompetencia",
 
     otro: "Otra determinación",
-
   };
 
-
   if (typeof resultado !== "string" || !resultado.trim()) {
-
     return "Pendiente de calificar";
-
   }
 
-
   return etiquetas[resultado.toLowerCase()] || resultado;
-
 }
-
 
 // ============================================================
 // TARJETA DE DOCUMENTO
 // ============================================================
 
-function renderDocumentoCard({
-  tipo,
-  titulo,
-  descripcion,
-  documento,
-}) {
-
+function renderDocumentoCard({ tipo, titulo, descripcion, documento }) {
   const disponible = tieneContenido(documento);
-
 
   return `
 
@@ -308,15 +321,9 @@ function renderDocumentoCard({
           ${escapeHTML(descripcion)}
         </span>
 
-        <small class="${
-          disponible ? "disponible" : "pendiente"
-        }">
+        <small class="${disponible ? "disponible" : "pendiente"}">
 
-          ${
-            disponible
-              ? "Contenido disponible"
-              : "Sin documento adjunto"
-          }
+          ${disponible ? "Contenido disponible" : "Sin documento adjunto"}
 
         </small>
 
@@ -340,74 +347,49 @@ function renderDocumentoCard({
     </article>
 
   `;
-
 }
-
 
 // ============================================================
 // EVENTOS DE CONSULTA
 // ============================================================
 
-export function activarConsultaDemanda(
-  contenedor,
-  expediente,
-) {
-
+export function activarConsultaDemanda(contenedor, expediente) {
   if (!contenedor || !expediente.demanda) {
     return;
   }
 
+  contenedor.querySelectorAll("[data-consulta-demanda]").forEach((button) => {
+    button.onclick = () => {
+      const tipo = button.dataset.consultaDemanda;
 
-  contenedor
-    .querySelectorAll("[data-consulta-demanda]")
-    .forEach((button) => {
+      const esAcuerdo = tipo === "acuerdo";
 
-      button.onclick = () => {
+      abrirDocumentoExpediente({
+        titulo: esAcuerdo
+          ? "Acuerdo inicial / Radicación"
+          : "Escrito de demanda inicial",
 
-        const tipo = button.dataset.consultaDemanda;
+        numero: expediente.numero,
 
-        const esAcuerdo = tipo === "acuerdo";
-
-
-        abrirDocumentoExpediente({
-
-          titulo: esAcuerdo
-            ? "Acuerdo inicial / Radicación"
-            : "Escrito de demanda inicial",
-
-          numero: expediente.numero,
-
-          documento: esAcuerdo
-            ? expediente.demanda.acuerdo
-            : expediente.demanda.documento,
-
-        });
-
-      };
-
-    });
-
+        documento: esAcuerdo
+          ? expediente.demanda.acuerdo
+          : expediente.demanda.documento,
+      });
+    };
+  });
 }
-
 
 // ============================================================
 // MODAL DE CONSULTA DE DOCUMENTOS
 // Reutilizable desde la pestaña Promociones.
 // ============================================================
 
-export function abrirDocumentoExpediente({
-  titulo,
-  numero,
-  documento,
-}) {
-
+export function abrirDocumentoExpediente({ titulo, numero, documento }) {
   if (!tieneContenido(documento)) {
     return;
   }
 
-
   const texto = obtenerTexto(documento);
-
 
   showModal(`
 
@@ -442,7 +424,6 @@ export function abrirDocumentoExpediente({
 
         ${
           texto
-
             ? `
               <div class="expediente-documento-texto">
 
@@ -450,7 +431,6 @@ export function abrirDocumentoExpediente({
 
               </div>
             `
-
             : ""
         }
 
@@ -479,69 +459,48 @@ export function abrirDocumentoExpediente({
 
   `);
 
-
   // Compatibilidad con los documentos guardados
   // mediante documentosFirma.js.
 
   if (documento?.documentoId) {
-
-    activarVistasPreviasDocumento(
-      document.getElementById("modalContent"),
-    );
-
+    activarVistasPreviasDocumento(document.getElementById("modalContent"));
   }
-
 
   document
     .getElementById("cerrarConsultaDocumento")
     ?.addEventListener("click", closeForm);
-
 }
-
 
 // ============================================================
 // VISTA PREVIA DEL DOCUMENTO
 // ============================================================
 
 function renderVistaDocumento(documento) {
-
   // Documento registrado mediante el módulo de firma.
 
   if (documento?.documentoId) {
-
     return htmlVistaPreviaDocumento(documento);
-
   }
-
 
   // Documento guardado directamente en localStorage.
 
   const archivo = normalizarArchivo(documento);
 
-
   if (!archivo) {
-
     return obtenerTexto(documento)
-
       ? ""
-
       : `
         <div class="expediente-detalle-empty">
           No hay un archivo digital disponible.
         </div>
       `;
-
   }
-
 
   const url = escapeHTML(archivo.dataUrl);
 
   const nombre = escapeHTML(archivo.nombre);
 
-
-  const esPDF =
-    archivo.dataUrl.startsWith("data:application/pdf;");
-
+  const esPDF = archivo.dataUrl.startsWith("data:application/pdf;");
 
   return `
 
@@ -576,7 +535,6 @@ function renderVistaDocumento(documento) {
 
       ${
         esPDF
-
           ? `
             <iframe
               src="${url}"
@@ -584,7 +542,6 @@ function renderVistaDocumento(documento) {
               class="expediente-preview-frame"
             ></iframe>
           `
-
           : `
             <div class="expediente-detalle-empty">
 
@@ -604,34 +561,21 @@ function renderVistaDocumento(documento) {
     </div>
 
   `;
-
 }
-
 
 // ============================================================
 // NORMALIZAR ARCHIVO
 // ============================================================
 
 function normalizarArchivo(documento) {
-
   if (!documento) {
     return null;
   }
 
-
-  const archivo =
-    documento.archivo ||
-    documento.documento ||
-    documento;
-
+  const archivo = documento.archivo || documento.documento || documento;
 
   const dataUrl =
-    typeof archivo === "string"
-
-      ? archivo
-
-      : archivo?.dataUrl || "";
-
+    typeof archivo === "string" ? archivo : archivo?.dataUrl || "";
 
   // Solo aceptar archivos PDF, DOC y DOCX
   // almacenados como datos base64.
@@ -639,11 +583,9 @@ function normalizarArchivo(documento) {
   const formatoValido =
     /^data:(application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document);base64,[A-Za-z0-9+/=\s]+$/i;
 
-
   if (!formatoValido.test(dataUrl)) {
     return null;
   }
-
 
   const extension = dataUrl.startsWith("data:application/pdf;")
     ? "pdf"
@@ -651,90 +593,54 @@ function normalizarArchivo(documento) {
       ? "doc"
       : "docx";
 
-
   return {
-
-    nombre:
-      archivo.nombre ||
-      archivo.nombreArchivo ||
-      `Documento.${extension}`,
+    nombre: archivo.nombre || archivo.nombreArchivo || `Documento.${extension}`,
 
     dataUrl,
-
   };
-
 }
-
 
 // ============================================================
 // OBTENER TEXTO DEL ACUERDO
 // ============================================================
 
 function obtenerTexto(documento) {
-
   if (typeof documento === "string") {
-
-    return documento.startsWith("data:")
-      ? ""
-      : documento.trim();
-
+    return documento.startsWith("data:") ? "" : documento.trim();
   }
 
-
   const texto =
-    documento?.texto ||
-    documento?.contenido ||
-    documento?.extracto ||
-    "";
-
+    documento?.texto || documento?.contenido || documento?.extracto || "";
 
   return typeof texto === "string" ? texto.trim() : "";
-
 }
-
 
 // ============================================================
 // VALIDAR DISPONIBILIDAD
 // ============================================================
 
 export function tieneContenido(documento) {
-
   return Boolean(
-
     documento?.documentoId ||
-
     normalizarArchivo(documento) ||
-
-    obtenerTexto(documento)
-
+    obtenerTexto(documento),
   );
-
 }
-
 
 // ============================================================
 // FORMATO DE FECHA
 // ============================================================
 
 function formatFecha(value) {
-
   if (!value) {
     return "Sin registrar";
   }
 
-
-  const parts = String(value)
-    .slice(0, 10)
-    .split("-");
-
+  const parts = String(value).slice(0, 10).split("-");
 
   if (parts.length === 3) {
-
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
-
   }
 
-
   return String(value);
-
 }

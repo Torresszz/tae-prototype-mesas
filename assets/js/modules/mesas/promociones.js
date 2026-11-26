@@ -27,6 +27,8 @@ import { openAgendarAudienciaPromocion } from "./promocionAgenda.js";
 
 import { openAcordarPromocion } from "./promocionAcordar.js";
 
+import { montarPlantillasEn } from "./plantillas.js";
+
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
@@ -306,10 +308,23 @@ export function renderPromociones() {
     </section>
   `;
 
-  actualizarListado();
+    actualizarListado();
 
-  configurarEventosPromociones(vista);
+  configurarEventosPromociones(
+    vista,
+  );
+
+  // Cargar las plantillas de Promociones.
+  const slotPlantillas =
+    vista.querySelector("[data-plantillas-slot]");
+
+  if (slotPlantillas) {
+    montarPlantillasEn(slotPlantillas, {
+      categoria: "promociones",
+    });
+  }
 }
+
 
 // ============================================================
 // NORMALIZAR PROMOCIONES

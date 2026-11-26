@@ -23,6 +23,7 @@ const KEYS = {
   promociones: "promociones",
   seguimiento: "mesasSeguimiento",
   agenda: "mesasAgenda",
+  calificaciones: "mesasCalificaciones",
 };
 
 
@@ -140,10 +141,11 @@ export function getExpedienteConsulta(
 // ============================================================
 // DEMANDA INICIAL
 // ============================================================
+// ============================================================
+// DEMANDA INICIAL
+// ============================================================
 
-export function getDemandaExpediente(
-  numero,
-) {
+export function getDemandaExpediente(numero) {
 
   const registro =
     getExpedienteConsulta(numero);
@@ -160,6 +162,55 @@ export function getDemandaExpediente(
 
   const expediente =
     registro.expediente;
+
+
+  // ==========================================================
+  // RECUPERAR CALIFICACIÓN
+  // ==========================================================
+
+  const calificaciones =
+    getData(KEYS.calificaciones, []);
+
+  const calificacionTramite =
+    Array.isArray(calificaciones)
+
+      ? calificaciones.find(
+          (item) =>
+            String(item.expediente || "") ===
+            registro.numero,
+        ) || null
+
+      : null;
+
+
+  // ==========================================================
+  // RECUPERAR FECHAS DE CALIFICACIÓN DE LA AGENDA
+  // ==========================================================
+
+  const agenda =
+    getData(KEYS.agenda, []);
+
+  const fechasCalificacion =
+    Array.isArray(agenda)
+
+      ? [...new Set(
+          agenda
+
+            .filter(
+              (evento) =>
+                evento.tipo === "calificacion" &&
+                String(evento.expediente || "") ===
+                  registro.numero &&
+                evento.fecha,
+            )
+
+            .map(
+              (evento) => evento.fecha,
+            ),
+
+        )].sort()
+
+      : [];
 
 
   return {
@@ -193,6 +244,10 @@ export function getDemandaExpediente(
     calificacion:
       demanda.calificacion ||
       null,
+
+    calificacionTramite,
+
+    fechasCalificacion,
 
     acuerdo:
       demanda.acuerdo ||

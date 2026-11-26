@@ -3,28 +3,17 @@
 // assets/js/modules/mesas/demanda.js
 // ============================================================
 
-import {
-  getData,
-  saveData,
-} from "../../storage.js";
+import { getData, saveData } from "../../storage.js";
 
-import {
-  escapeHTML,
-  todayISO,
-} from "../../utils.js";
+import { escapeHTML, todayISO } from "../../utils.js";
 
-import {
-  showModal,
-  closeForm,
-} from "../../forms/formHelper.js";
+import { showModal, closeForm } from "../../forms/formHelper.js";
 
-import {
-  aplicarFiltrosGlobales,
-} from "./filtros.js";
+import { aplicarFiltrosGlobales } from "./filtros.js";
 
-import {
-  etiquetaEstado,
-} from "./estados.js";
+import { etiquetaEstado } from "./estados.js";
+
+import { montarPlantillasEn } from "./plantillas.js";
 
 import {
   aplicarAccion,
@@ -33,13 +22,14 @@ import {
   renderEstadoBadge,
 } from "./flujoEstados.js";
 
+import { getSession } from "../../auth.js";
 import {
-  getSession,
-} from "../../auth.js";
-
-import {
-  etiquetaCategoriaDemanda,
-} from "./catalogos.js";
+  guardarDocumento,
+  obtenerDocumento,
+  borrarDocumento,
+  validarArchivoDocumento,
+} from "./documentosFirma.js";
+import { etiquetaCategoriaDemanda } from "./catalogos.js";
 
 import {
   getExpedientesMesaActual,
@@ -47,39 +37,26 @@ import {
   buscarExpedienteExacto,
 } from "./mesaUtils.js";
 
-
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
 
-const KEY_DEMANDAS =
-  "mesasDemandas";
+const KEY_DEMANDAS = "mesasDemandas";
 
-const MAX_ACUERDO_MB =
-  2;
+const MAX_ACUERDO_MB = 2;
 
-const MAX_ACUERDO_BYTES =
-  MAX_ACUERDO_MB *
-  1024 *
-  1024;
+const MAX_ACUERDO_BYTES = MAX_ACUERDO_MB * 1024 * 1024;
 
-let busquedaGeneral =
-  "";
+let busquedaGeneral = "";
 
-let categoriaActiva =
-  "todas";
-
+let categoriaActiva = "todas";
 
 // ============================================================
 // RENDER PRINCIPAL
 // ============================================================
 
 export function renderDemanda() {
-
-  const vista =
-    document.querySelector(
-      '[data-mesas-vista="demanda"]',
-    );
+  const vista = document.querySelector('[data-mesas-vista="demanda"]');
 
   if (!vista) {
     return;
@@ -87,22 +64,15 @@ export function renderDemanda() {
 
   prepararDemandas();
 
-  const registros =
-    getRegistrosDemanda();
+  const registros = getRegistrosDemanda();
 
-  const porRadicar =
-    registros.filter(
-      item =>
-        item.demanda.categoria ===
-        "por-radicar",
-    );
+  const porRadicar = registros.filter(
+    (item) => item.demanda.categoria === "por-radicar",
+  );
 
-  const radicados =
-    registros.filter(
-      item =>
-        item.demanda.categoria ===
-        "radicado",
-    );
+  const radicados = registros.filter(
+    (item) => item.demanda.categoria === "radicado",
+  );
 
   vista.innerHTML = `
     <section class="mesas-fase4-section">
@@ -134,9 +104,7 @@ export function renderDemanda() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            categoriaActiva === "todas"
-              ? "active"
-              : ""
+            categoriaActiva === "todas" ? "active" : ""
           }"
           data-demanda-action="categoria"
           data-categoria="todas"
@@ -149,9 +117,7 @@ export function renderDemanda() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            categoriaActiva === "por-radicar"
-              ? "active"
-              : ""
+            categoriaActiva === "por-radicar" ? "active" : ""
           }"
           data-demanda-action="categoria"
           data-categoria="por-radicar"
@@ -164,9 +130,7 @@ export function renderDemanda() {
         <button
           type="button"
           class="mesas-fase4-counter ${
-            categoriaActiva === "radicado"
-              ? "active"
-              : ""
+            categoriaActiva === "radicado" ? "active" : ""
           }"
           data-demanda-action="categoria"
           data-categoria="radicado"
@@ -304,11 +268,21 @@ export function renderDemanda() {
     </section>
   `;
 
-  renderListadoDemanda();
+    renderListadoDemanda();
 
   configurarEventosDemanda(
     vista,
   );
+
+  // Cargar las plantillas de Demanda.
+  const slotPlantillas =
+    vista.querySelector("[data-plantillas-slot]");
+
+  if (slotPlantillas) {
+    montarPlantillasEn(slotPlantillas, {
+      categoria: "demanda",
+    });
+  }
 }
 
 
@@ -317,206 +291,123 @@ export function renderDemanda() {
 // ============================================================
 
 function prepararDemandas() {
+  const expedientes = getExpedientesMesaActual();
 
-  const expedientes =
-    getExpedientesMesaActual();
+  const demandas = getData(KEY_DEMANDAS, {});
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
+  let changed = false;
 
-  let changed =
-    false;
+  expedientes.forEach((expediente) => {
+    const numero = getNumeroExpediente(expediente);
 
-  expedientes.forEach(
-    expediente => {
+    if (!numero) {
+      return;
+    }
 
-      const numero =
-        getNumeroExpediente(
-          expediente,
-        );
+    if (demandas[numero]) {
+      return;
+    }
 
-      if (!numero) {
-        return;
-      }
+    demandas[numero] = {
+      radicacion: "en-proceso",
 
-      if (
-        demandas[numero]
-      ) {
-        return;
-      }
+      categoria: "por-radicar",
 
-      demandas[numero] = {
+      calificacion: null,
 
-        radicacion:
-          "en-proceso",
+      acuerdo: null,
 
-        categoria:
-          "por-radicar",
+      historialRadicacion: [],
+    };
 
-        calificacion:
-          null,
-
-        acuerdo:
-          null,
-
-        historialRadicacion:
-          [],
-
-      };
-
-      changed =
-        true;
-    },
-  );
+    changed = true;
+  });
 
   if (changed) {
-
-    saveData(
-      KEY_DEMANDAS,
-      demandas,
-    );
+    saveData(KEY_DEMANDAS, demandas);
   }
 }
-
 
 // ============================================================
 // REGISTROS
 // ============================================================
 
 function getRegistrosDemanda() {
+  const expedientes = getExpedientesMesaActual();
 
-  const expedientes =
-    getExpedientesMesaActual();
+  const demandas = getData(KEY_DEMANDAS, {});
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
+  return expedientes.map((expediente) => {
+    const numero = getNumeroExpediente(expediente);
 
-  return expedientes.map(
-    expediente => {
+    return {
+      expediente,
 
-      const numero =
-        getNumeroExpediente(
-          expediente,
-        );
+      numero,
 
-      return {
+      fecha:
+        expediente.fechaRecepcion ||
+        expediente.fecha ||
+        expediente.creadoEn ||
+        "",
 
-        expediente,
+      actor: expediente.actor || expediente.promovente || "—",
 
-        numero,
+      demandado: expediente.demandado || "—",
 
-        fecha:
-          expediente.fechaRecepcion ||
-          expediente.fecha ||
-          expediente.creadoEn ||
-          "",
+      asunto:
+        expediente.actoDemandado ||
+        expediente.asunto ||
+        expediente.accion ||
+        "—",
 
-        actor:
-          expediente.actor ||
-          expediente.promovente ||
-          "—",
+      demanda: demandas[numero] || {
+        radicacion: "en-proceso",
 
-        demandado:
-          expediente.demandado ||
-          "—",
+        categoria: "por-radicar",
 
-        asunto:
-          expediente.actoDemandado ||
-          expediente.asunto ||
-          expediente.accion ||
-          "—",
+        calificacion: null,
 
-        demanda:
-          demandas[numero] || {
-
-            radicacion:
-              "en-proceso",
-
-            categoria:
-              "por-radicar",
-
-            calificacion:
-              null,
-
-            acuerdo:
-              null,
-          },
-      };
-    },
-  );
+        acuerdo: null,
+      },
+    };
+  });
 }
-
 
 // ============================================================
 // FILTRADO
 // ============================================================
 
 function getRegistrosVisibles() {
+  let registros = getRegistrosDemanda();
 
-  let registros =
-    getRegistrosDemanda();
+  registros = aplicarFiltrosGlobales(registros, {
+    numero: (item) => item.numero,
 
-  registros =
-    aplicarFiltrosGlobales(
-      registros,
-      {
+    fecha: (item) => item.fecha,
 
-        numero:
-          item =>
-            item.numero,
+    estado: (item) => item.demanda.radicacion,
+  });
 
-        fecha:
-          item =>
-            item.fecha,
-
-        estado:
-          item =>
-            item.demanda.radicacion,
-      },
-    );
-
-  const texto =
-    busquedaGeneral
-      .trim()
-      .toLowerCase();
+  const texto = busquedaGeneral.trim().toLowerCase();
 
   if (texto) {
-
-    registros =
-      registros.filter(
-        item => {
-
-          const contenido = `
+    registros = registros.filter((item) => {
+      const contenido = `
             ${item.numero}
             ${item.actor}
             ${item.demandado}
             ${item.asunto}
           `.toLowerCase();
 
-          return contenido.includes(
-            texto,
-          );
-        },
-      );
+      return contenido.includes(texto);
+    });
   }
 
-  if (
-    categoriaActiva !==
-    "todas"
-  ) {
-
-    registros =
-      registros.filter(
-        item =>
-          item.demanda.categoria ===
-          categoriaActiva,
-      );
+  if (categoriaActiva !== "todas") {
+    registros = registros.filter(
+      (item) => item.demanda.categoria === categoriaActiva,
+    );
   }
 
   return registros;
@@ -526,37 +417,24 @@ function getRegistrosVisibles() {
 // ============================================================
 
 function renderListadoDemanda() {
-
-  const vista =
-    document.querySelector(
-      '[data-mesas-vista="demanda"]',
-    );
+  const vista = document.querySelector('[data-mesas-vista="demanda"]');
 
   if (!vista) {
     return;
   }
 
-  const tbody =
-    vista.querySelector(
-      ".mesas-demanda-table tbody",
-    );
+  const tbody = vista.querySelector(".mesas-demanda-table tbody");
 
-  const empty =
-    vista.querySelector(
-      "#demandaEmpty",
-    );
+  const empty = vista.querySelector("#demandaEmpty");
 
   if (!tbody) {
     return;
   }
 
-  const registros =
-    getRegistrosVisibles();
+  const registros = getRegistrosVisibles();
 
   if (!registros.length) {
-
-    tbody.innerHTML =
-      "";
+    tbody.innerHTML = "";
 
     if (empty) {
       empty.hidden = false;
@@ -569,30 +447,19 @@ function renderListadoDemanda() {
     empty.hidden = true;
   }
 
-  tbody.innerHTML =
-    renderFilasDemanda(
-      registros,
-    );
+  tbody.innerHTML = renderFilasDemanda(registros);
 }
-
 
 // ============================================================
 // FILAS
 // ============================================================
 
-function renderFilasDemanda(
-  registros,
-) {
-
+function renderFilasDemanda(registros) {
   return registros
-    .map(
-      item => {
+    .map((item) => {
+      const radicado = item.demanda.categoria === "radicado";
 
-        const radicado =
-          item.demanda.categoria ===
-          "radicado";
-
-        return `
+      return `
           <tr>
 
             <td>
@@ -603,32 +470,22 @@ function renderFilasDemanda(
 
 
             <td>
-              ${escapeHTML(
-                formatFecha(
-                  item.fecha,
-                ),
-              )}
+              ${escapeHTML(formatFecha(item.fecha))}
             </td>
 
 
             <td>
-              ${escapeHTML(
-                item.actor,
-              )}
+              ${escapeHTML(item.actor)}
             </td>
 
 
             <td>
-              ${escapeHTML(
-                item.demandado,
-              )}
+              ${escapeHTML(item.demandado)}
             </td>
 
 
             <td>
-              ${renderEstadoBadge(
-                item.demanda.radicacion,
-              )}
+              ${renderEstadoBadge(item.demanda.radicacion)}
             </td>
 
 
@@ -636,17 +493,11 @@ function renderFilasDemanda(
 
               <span
                 class="mesas-fase4-category-badge ${
-                  radicado
-                    ? "done"
-                    : "pending"
+                  radicado ? "done" : "pending"
                 }"
               >
 
-                ${escapeHTML(
-                  etiquetaCategoriaDemanda(
-                    item.demanda.categoria,
-                  ),
-                )}
+                ${escapeHTML(etiquetaCategoriaDemanda(item.demanda.categoria))}
 
               </span>
 
@@ -654,50 +505,29 @@ function renderFilasDemanda(
 
 
             <td>
-              ${renderAccionesDemanda(
-                item,
-              )}
+              ${renderAccionesDemanda(item)}
             </td>
 
           </tr>
         `;
-      },
-    )
+    })
     .join("");
 }
-
 
 // ============================================================
 // ACCIONES
 // ============================================================
 
-function renderAccionesDemanda(
-  item,
-) {
+function renderAccionesDemanda(item) {
+  const numero = escapeHTML(item.numero);
 
-  const numero =
-    escapeHTML(
-      item.numero,
-    );
+  const registro = item.demanda;
 
-  const registro =
-    item.demanda;
+  const acuerdoListo = tieneAcuerdoGuardado(registro);
 
-  const acuerdoListo =
-    tieneAcuerdoGuardado(
-      registro,
-    );
+  const estado = registro.radicacion || "en-proceso";
 
-  const estado =
-    registro.radicacion ||
-    "en-proceso";
-
-
-  if (
-    estado ===
-    "en-proceso"
-  ) {
-
+  if (estado === "en-proceso") {
     return `
       <div class="mesas-actions">
 
@@ -720,11 +550,7 @@ function renderAccionesDemanda(
         >
           <i class="fa-solid fa-file-circle-check"></i>
 
-          ${
-            acuerdoListo
-              ? "Editar atención"
-              : "Atender / Calificar"
-          }
+          ${acuerdoListo ? "Editar atención" : "Atender / Calificar"}
 
         </button>
 
@@ -751,7 +577,6 @@ function renderAccionesDemanda(
     `;
   }
 
-
   return `
     <div class="mesas-actions">
 
@@ -766,210 +591,149 @@ function renderAccionesDemanda(
       </button>
 
 
-      ${renderBotonesFlujo(
-        estado,
-        {
+      ${renderBotonesFlujo(estado, {
+        actionAttr: "data-demanda-action",
 
-          actionAttr:
-            "data-demanda-action",
+        attrs: `data-expediente="${numero}"`,
 
-          attrs:
-            `data-expediente="${numero}"`,
-
-          acuerdo:
-            registro.acuerdo,
-        },
-      )}
+        acuerdo: registro.acuerdo,
+      })}
 
     </div>
   `;
 }
 
-
 // ============================================================
 // ACUERDO LISTO
 // ============================================================
 
-function tieneAcuerdoGuardado(
-  registro,
-) {
-
-  const acuerdo =
-    registro?.acuerdo;
-
-  if (
-    !acuerdo ||
-    typeof acuerdo !==
-    "object"
-  ) {
-    return false;
+function obtenerArchivoAcuerdo(acuerdo) {
+  if (!acuerdo || typeof acuerdo !== "object") {
+    return null;
   }
 
-  const archivo =
-    acuerdo.archivo;
+  // Archivo guardado directamente en el borrador.
+  if (
+    acuerdo.archivo &&
+    typeof acuerdo.archivo === "object" &&
+    acuerdo.archivo.dataUrl
+  ) {
+    return acuerdo.archivo;
+  }
 
-  return Boolean(
-    acuerdo.titulo &&
-    archivo &&
-    archivo.nombre &&
-    archivo.dataUrl,
-  );
+  // Archivo registrado en el almacén de documentos.
+  const documento = obtenerDocumento(acuerdo.documentoId);
+
+  if (!documento?.dataUrl) {
+    return null;
+  }
+
+  return {
+    nombre: documento.nombre,
+    tipo: documento.tipoArchivo,
+    tamano: documento.tamano,
+    dataUrl: documento.dataUrl,
+  };
 }
 
+function tieneAcuerdoGuardado(registro) {
+  const acuerdo = registro?.acuerdo;
+
+  const archivo = obtenerArchivoAcuerdo(acuerdo);
+
+  return Boolean(acuerdo?.titulo && archivo?.nombre && archivo?.dataUrl);
+}
 
 // ============================================================
 // EVENTOS
 // ============================================================
 
-function configurarEventosDemanda(
-  vista,
-) {
-
-  const general =
-    vista.querySelector(
-      "#demandaBusquedaGeneral",
-    );
+function configurarEventosDemanda(vista) {
+  const general = vista.querySelector("#demandaBusquedaGeneral");
 
   if (general) {
+    general.oninput = (event) => {
+      busquedaGeneral = event.target.value;
 
-    general.oninput =
-      event => {
-
-        busquedaGeneral =
-          event.target.value;
-
-        renderListadoDemanda();
-      };
+      renderListadoDemanda();
+    };
   }
 
+  vista.onclick = (event) => {
+    const button = event.target.closest("[data-demanda-action]");
 
-  vista.onclick =
-    event => {
+    if (!button) {
+      return;
+    }
 
-      const button =
-        event.target.closest(
-          "[data-demanda-action]",
-        );
+    if (button.disabled) {
+      return;
+    }
 
-      if (!button) {
-        return;
-      }
+    const action = button.dataset.demandaAction;
 
-      if (button.disabled) {
-        return;
-      }
+    const numero = button.dataset.expediente;
 
-      const action =
-        button.dataset.demandaAction;
+    switch (action) {
+      case "categoria":
+        categoriaActiva = button.dataset.categoria || "todas";
 
-      const numero =
-        button.dataset.expediente;
+        renderDemanda();
 
+        break;
 
-      switch (action) {
+      case "buscar-exacto":
+        buscarExacto();
 
-        case "categoria":
+        break;
 
-          categoriaActiva =
-            button.dataset.categoria ||
-            "todas";
+      case "ver":
+        openDetalleDemanda(numero);
 
-          renderDemanda();
+        break;
 
-          break;
+      case "atender":
+        openAtenderCalificar(numero);
 
+        break;
 
-        case "buscar-exacto":
+      case "enviar-firma":
+        openConfirmarEnvioFirma(numero);
 
-          buscarExacto();
+        break;
 
-          break;
+      case "flujo":
+        ejecutarAccionDemanda(numero, accionDeBoton(button));
 
-
-        case "ver":
-
-          openDetalleDemanda(
-            numero,
-          );
-
-          break;
-
-
-        case "atender":
-
-          openAtenderCalificar(
-            numero,
-          );
-
-          break;
-
-
-        case "enviar-firma":
-
-          openConfirmarEnvioFirma(
-            numero,
-          );
-
-          break;
-
-
-        case "flujo":
-
-          ejecutarAccionDemanda(
-            numero,
-            accionDeBoton(
-              button,
-            ),
-          );
-
-          break;
-      }
-    };
+        break;
+    }
+  };
 }
 // ============================================================
 // ATENDER / CALIFICAR
 // ============================================================
 
-function openAtenderCalificar(
-  numero,
-) {
-
-  const item =
-    getRegistrosDemanda()
-      .find(
-        registro =>
-          registro.numero ===
-          numero,
-      );
+function openAtenderCalificar(numero) {
+  const item = getRegistrosDemanda().find(
+    (registro) => registro.numero === numero,
+  );
 
   if (!item) {
     return;
   }
 
-  const demanda =
-    item.demanda;
+  const demanda = item.demanda;
 
   const acuerdo =
-    typeof demanda.acuerdo ===
-      "object" &&
-    demanda.acuerdo
-
+    typeof demanda.acuerdo === "object" && demanda.acuerdo
       ? demanda.acuerdo
-
       : {};
 
-  const calificacion =
-    demanda.calificacion ||
-    {};
+  const calificacion = demanda.calificacion || {};
 
-  const resultado =
-    calificacion.resultado ||
-    "radicar";
+  const resultado = calificacion.resultado || "radicar";
 
-  const archivoActual =
-    acuerdo.archivo ||
-    null;
-
+  const archivoActual = obtenerArchivoAcuerdo(acuerdo);
 
   showModal(`
     <div class="mesas-modal-shell">
@@ -1094,10 +858,7 @@ function openAtenderCalificar(
             type="text"
             id="demandaAcuerdoTitulo"
             class="mesas-input"
-            value="${escapeHTML(
-              acuerdo.titulo ||
-              "Auto de radicación",
-            )}"
+            value="${escapeHTML(acuerdo.titulo || "Auto de radicación")}"
             placeholder="Ej. Auto de radicación"
           >
 
@@ -1146,7 +907,6 @@ function openAtenderCalificar(
 
             ${
               archivoActual
-
                 ? `
                   <div
                     style="
@@ -1168,15 +928,11 @@ function openAtenderCalificar(
                         Archivo actual:
                       </strong>
 
-                      ${escapeHTML(
-                        archivoActual.nombre ||
-                        "Documento",
-                      )}
+                      ${escapeHTML(archivoActual.nombre || "Documento")}
                     </div>
 
                   </div>
                 `
-
                 : ""
             }
 
@@ -1212,10 +968,7 @@ function openAtenderCalificar(
             class="mesas-textarea"
             rows="4"
             placeholder="Opcional. Obligatorio únicamente para Rechazar u Otro."
-          >${escapeHTML(
-            calificacion.notas ||
-            "",
-          )}</textarea>
+          >${escapeHTML(calificacion.notas || "")}</textarea>
 
 
           <small
@@ -1269,47 +1022,24 @@ function openAtenderCalificar(
     </div>
   `);
 
-
   configurarValidacionObservaciones();
 
+  document
+    .getElementById("cancelarCalificacionDemanda")
+    ?.addEventListener("click", closeForm);
 
   document
-    .getElementById(
-      "cancelarCalificacionDemanda",
-    )
-    ?.addEventListener(
-      "click",
-      closeForm,
-    );
-
-
-  document
-    .getElementById(
-      "guardarCalificacionDemanda",
-    )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        guardarAtencionDemanda(
-          numero,
-        );
-      },
-    );
+    .getElementById("guardarCalificacionDemanda")
+    ?.addEventListener("click", () => {
+      guardarAtencionDemanda(numero);
+    });
 }
-
 
 // ============================================================
 // OPCIÓN CALIFICACIÓN
 // ============================================================
 
-function renderOpcionCalificacion(
-  value,
-  titulo,
-  descripcion,
-  seleccionado,
-) {
-
+function renderOpcionCalificacion(value, titulo, descripcion, seleccionado) {
   return `
     <label
       style="
@@ -1328,11 +1058,7 @@ function renderOpcionCalificacion(
         type="radio"
         name="demandaResultadoCalificacion"
         value="${escapeHTML(value)}"
-        ${
-          seleccionado === value
-            ? "checked"
-            : ""
-        }
+        ${seleccionado === value ? "checked" : ""}
         style="margin-top:3px;"
       >
 
@@ -1365,176 +1091,91 @@ function renderOpcionCalificacion(
   `;
 }
 
-
 // ============================================================
 // VALIDAR OBSERVACIONES
 // ============================================================
 
 function configurarValidacionObservaciones() {
-
-  const radios =
-    document.querySelectorAll(
-      'input[name="demandaResultadoCalificacion"]',
-    );
-
-
-  const actualizar =
-    () => {
-
-      const resultado =
-        getResultadoCalificacion();
-
-      const obligatorio =
-        resultado === "rechazar" ||
-        resultado === "otro";
-
-      const required =
-        document.getElementById(
-          "demandaNotasRequired",
-        );
-
-      const help =
-        document.getElementById(
-          "demandaNotasHelp",
-        );
-
-
-      if (required) {
-
-        required.style.display =
-          obligatorio
-            ? "inline"
-            : "none";
-      }
-
-
-      if (help) {
-
-        help.textContent =
-          obligatorio
-
-            ? "Debes indicar el motivo de esta determinación."
-
-            : "Las observaciones son opcionales.";
-      }
-    };
-
-
-  radios.forEach(
-    radio => {
-
-      radio.addEventListener(
-        "change",
-        actualizar,
-      );
-    },
+  const radios = document.querySelectorAll(
+    'input[name="demandaResultadoCalificacion"]',
   );
 
+  const actualizar = () => {
+    const resultado = getResultadoCalificacion();
+
+    const obligatorio = resultado === "rechazar" || resultado === "otro";
+
+    const required = document.getElementById("demandaNotasRequired");
+
+    const help = document.getElementById("demandaNotasHelp");
+
+    if (required) {
+      required.style.display = obligatorio ? "inline" : "none";
+    }
+
+    if (help) {
+      help.textContent = obligatorio
+        ? "Debes indicar el motivo de esta determinación."
+        : "Las observaciones son opcionales.";
+    }
+  };
+
+  radios.forEach((radio) => {
+    radio.addEventListener("change", actualizar);
+  });
 
   actualizar();
 }
-
 
 // ============================================================
 // RESULTADO
 // ============================================================
 
 function getResultadoCalificacion() {
-
   return (
-    document.querySelector(
-      'input[name="demandaResultadoCalificacion"]:checked',
-    )?.value ||
-    ""
+    document.querySelector('input[name="demandaResultadoCalificacion"]:checked')
+      ?.value || ""
   );
 }
-
 
 // ============================================================
 // GUARDAR ATENCIÓN
 // ============================================================
 
-async function guardarAtencionDemanda(
-  numero,
-) {
+async function guardarAtencionDemanda(numero) {
+  const demandas = getData(KEY_DEMANDAS, {});
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
-
-  const registro =
-    demandas[numero];
+  const registro = demandas[numero];
 
   if (!registro) {
     return;
   }
 
-
-  const resultado =
-    getResultadoCalificacion();
-
+  const resultado = getResultadoCalificacion();
 
   const titulo =
-    document
-      .getElementById(
-        "demandaAcuerdoTitulo",
-      )
-      ?.value
-      .trim() ||
-    "";
-
+    document.getElementById("demandaAcuerdoTitulo")?.value.trim() || "";
 
   const notas =
-    document
-      .getElementById(
-        "demandaCalificacionNotas",
-      )
-      ?.value
-      .trim() ||
-    "";
+    document.getElementById("demandaCalificacionNotas")?.value.trim() || "";
 
+  const inputArchivo = document.getElementById("demandaAcuerdoArchivo");
 
-  const inputArchivo =
-    document.getElementById(
-      "demandaAcuerdoArchivo",
-    );
-
-
-  const nuevoArchivo =
-    inputArchivo?.files?.[0] ||
-    null;
-
+  const nuevoArchivo = inputArchivo?.files?.[0] || null;
 
   if (!resultado) {
-
-    mostrarErrorCalificacion(
-      "Selecciona el resultado de la calificación.",
-    );
+    mostrarErrorCalificacion("Selecciona el resultado de la calificación.");
 
     return;
   }
-
 
   if (!titulo) {
-
-    mostrarErrorCalificacion(
-      "Escribe el título del acuerdo o auto.",
-    );
+    mostrarErrorCalificacion("Escribe el título del acuerdo o auto.");
 
     return;
   }
 
-
-  if (
-    (
-      resultado === "rechazar" ||
-      resultado === "otro"
-    ) &&
-    !notas
-  ) {
-
+  if ((resultado === "rechazar" || resultado === "otro") && !notas) {
     mostrarErrorCalificacion(
       "Las observaciones son obligatorias cuando seleccionas Rechazar u Otro.",
     );
@@ -1542,301 +1183,162 @@ async function guardarAtencionDemanda(
     return;
   }
 
-
-  let archivo =
-    registro.acuerdo?.archivo ||
-    null;
-
+  let archivo = obtenerArchivoAcuerdo(registro.acuerdo);
 
   if (nuevoArchivo) {
-
-    const validacion =
-      validarArchivoAcuerdo(
-        nuevoArchivo,
-      );
-
+    const validacion = validarArchivoAcuerdo(nuevoArchivo);
 
     if (!validacion.ok) {
-
-      mostrarErrorCalificacion(
-        validacion.error,
-      );
+      mostrarErrorCalificacion(validacion.error);
 
       return;
     }
 
-
     archivo = {
+      nombre: nuevoArchivo.name,
 
-      nombre:
-        nuevoArchivo.name,
+      tipo: nuevoArchivo.type,
 
-      tipo:
-        nuevoArchivo.type,
+      tamano: nuevoArchivo.size,
 
-      tamano:
-        nuevoArchivo.size,
-
-      dataUrl:
-        await fileToDataUrl(
-          nuevoArchivo,
-        ),
+      dataUrl: await fileToDataUrl(nuevoArchivo),
     };
   }
 
-
   if (!archivo) {
-
-    mostrarErrorCalificacion(
-      "Debes subir el documento del acuerdo o auto.",
-    );
+    mostrarErrorCalificacion("Debes subir el documento del acuerdo o auto.");
 
     return;
   }
 
-
-  const ahora =
-    new Date()
-      .toISOString();
-
+  const ahora = new Date().toISOString();
 
   const usuario =
-    getSession()?.nombre ||
-    getSession()?.email ||
-    "Secretaría de Acuerdos";
-
+    getSession()?.nombre || getSession()?.email || "Secretaría de Acuerdos";
 
   registro.calificacion = {
-
     resultado,
 
     notas,
 
-    fecha:
-      ahora,
+    fecha: ahora,
 
     usuario,
   };
 
-
   registro.acuerdo = {
+    ...(registro.acuerdo || {}),
 
-    ...(
-      registro.acuerdo ||
-      {}
-    ),
-
-    concepto:
-      "Acuerdo",
+    concepto: "Acuerdo",
 
     titulo,
 
     archivo,
 
-    estado:
-      "borrador",
+    documentoId: nuevoArchivo ? null : registro.acuerdo?.documentoId || null,
 
-    guardadoEn:
-      ahora,
+    estado: "borrador",
 
-    guardadoPor:
-      usuario,
+    guardadoEn: ahora,
+
+    guardadoPor: usuario,
   };
 
-
-  registro.historialRadicacion =
-    Array.isArray(
-      registro.historialRadicacion,
-    )
-      ? registro.historialRadicacion
-      : [];
-
+  registro.historialRadicacion = Array.isArray(registro.historialRadicacion)
+    ? registro.historialRadicacion
+    : [];
 
   registro.historialRadicacion.push({
+    fecha: ahora,
 
-    fecha:
-      ahora,
-
-    movimiento:
-      "Demanda calificada y acuerdo cargado en borrador",
+    movimiento: "Demanda calificada y acuerdo cargado en borrador",
 
     usuario,
   });
 
-
-  saveData(
-    KEY_DEMANDAS,
-    demandas,
-  );
-
+  saveData(KEY_DEMANDAS, demandas);
 
   closeForm();
 
   renderDemanda();
 }
 
-
 // ============================================================
 // ARCHIVOS
 // ============================================================
 
-function validarArchivoAcuerdo(
-  file,
-) {
+function validarArchivoAcuerdo(file) {
+  const extension = file.name.split(".").pop()?.toLowerCase();
 
-  const extension =
-    file.name
-      .split(".")
-      .pop()
-      ?.toLowerCase();
-
-
-  if (
-    ![
-      "pdf",
-      "doc",
-      "docx",
-    ].includes(
-      extension,
-    )
-  ) {
-
+  if (!["pdf", "doc", "docx"].includes(extension)) {
     return {
+      ok: false,
 
-      ok:
-        false,
-
-      error:
-        "El acuerdo debe ser PDF, DOC o DOCX.",
+      error: "El acuerdo debe ser PDF, DOC o DOCX.",
     };
   }
 
-
-  if (
-    file.size >
-    MAX_ACUERDO_BYTES
-  ) {
-
+  if (file.size > MAX_ACUERDO_BYTES) {
     return {
+      ok: false,
 
-      ok:
-        false,
-
-      error:
-        `El archivo no puede superar ${MAX_ACUERDO_MB} MB.`,
+      error: `El archivo no puede superar ${MAX_ACUERDO_MB} MB.`,
     };
   }
-
 
   return {
-    ok:
-      true,
+    ok: true,
   };
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-function fileToDataUrl(
-  file,
-) {
+    reader.onload = () => resolve(reader.result);
 
-  return new Promise(
-    (
-      resolve,
-      reject,
-    ) => {
+    reader.onerror = () => reject(reader.error);
 
-      const reader =
-        new FileReader();
-
-
-      reader.onload =
-        () =>
-          resolve(
-            reader.result,
-          );
-
-
-      reader.onerror =
-        () =>
-          reject(
-            reader.error,
-          );
-
-
-      reader.readAsDataURL(
-        file,
-      );
-    },
-  );
+    reader.readAsDataURL(file);
+  });
 }
 
-
-function mostrarErrorCalificacion(
-  mensaje,
-) {
-
-  const error =
-    document.getElementById(
-      "demandaCalificacionError",
-    );
+function mostrarErrorCalificacion(mensaje) {
+  const error = document.getElementById("demandaCalificacionError");
 
   if (!error) {
     return;
   }
 
-  error.textContent =
-    mensaje;
+  error.textContent = mensaje;
 
-  error.hidden =
-    false;
+  error.hidden = false;
 }
 // ============================================================
 // MODAL ENVIAR A FIRMA
 // ============================================================
 
-function openConfirmarEnvioFirma(
-  numero,
-) {
+function openConfirmarEnvioFirma(numero) {
+  const demandas = getData(KEY_DEMANDAS, {});
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
+  const registro = demandas[numero];
 
-
-  const registro =
-    demandas[numero];
-
-
-  if (
-    !registro ||
-    !tieneAcuerdoGuardado(
-      registro,
-    )
-  ) {
-
-    window.alert(
-      "Primero debes atender la demanda y subir el acuerdo.",
-    );
+  if (!registro || !tieneAcuerdoGuardado(registro)) {
+    window.alert("Primero debes atender la demanda y subir el acuerdo.");
 
     return;
   }
 
+  const acuerdo = {
+  ...registro.acuerdo,
+  archivo: obtenerArchivoAcuerdo(
+    registro.acuerdo,
+  ),
+};
 
-  const acuerdo =
-    registro.acuerdo;
+  const comentarios = registro.calificacion?.notas || "";
 
-
-  const comentarios =
-    registro.calificacion?.notas ||
-    "";
-
-
-  const resultado =
-    registro.calificacion?.resultado ||
-    "";
-
+  const resultado = registro.calificacion?.resultado || "";
 
   showModal(`
     <div class="mesas-modal-shell">
@@ -1882,10 +1384,7 @@ function openConfirmarEnvioFirma(
             </span>
 
             <strong>
-              ${escapeHTML(
-                acuerdo.titulo ||
-                "Acuerdo",
-              )}
+              ${escapeHTML(acuerdo.titulo || "Acuerdo")}
             </strong>
 
           </div>
@@ -1898,10 +1397,7 @@ function openConfirmarEnvioFirma(
             </span>
 
             <strong>
-              ${escapeHTML(
-                acuerdo.archivo.nombre ||
-                "Documento",
-              )}
+              ${escapeHTML(acuerdo.archivo.nombre || "Documento")}
             </strong>
 
           </div>
@@ -1914,11 +1410,7 @@ function openConfirmarEnvioFirma(
             </span>
 
             <strong>
-              ${escapeHTML(
-                etiquetaCalificacion(
-                  resultado,
-                ),
-              )}
+              ${escapeHTML(etiquetaCalificacion(resultado))}
             </strong>
 
           </div>
@@ -1950,9 +1442,7 @@ function openConfirmarEnvioFirma(
           </span>
 
 
-          ${renderVistaPreviaArchivo(
-            acuerdo.archivo,
-          )}
+          ${renderVistaPreviaArchivo(acuerdo.archivo)}
 
         </div>
 
@@ -1963,7 +1453,6 @@ function openConfirmarEnvioFirma(
 
         ${
           comentarios
-
             ? `
               <div
                 style="
@@ -1997,14 +1486,11 @@ function openConfirmarEnvioFirma(
                     white-space:pre-wrap;
                   "
                 >
-                  ${escapeHTML(
-                    comentarios,
-                  )}
+                  ${escapeHTML(comentarios)}
                 </p>
 
               </div>
             `
-
             : ""
         }
 
@@ -2035,10 +1521,7 @@ function openConfirmarEnvioFirma(
             class="mesas-textarea"
             rows="5"
             placeholder="Escribe el extracto que acompañará el acuerdo para firma..."
-          >${escapeHTML(
-            acuerdo.extracto ||
-            "",
-          )}</textarea>
+          >${escapeHTML(acuerdo.extracto || "")}</textarea>
 
 
           <small
@@ -2109,46 +1592,23 @@ function openConfirmarEnvioFirma(
     </div>
   `);
 
+  document
+    .getElementById("cancelarEnvioFirmaDemanda")
+    ?.addEventListener("click", closeForm);
 
   document
-    .getElementById(
-      "cancelarEnvioFirmaDemanda",
-    )
-    ?.addEventListener(
-      "click",
-      closeForm,
-    );
-
-
-  document
-    .getElementById(
-      "confirmarEnvioFirmaDemanda",
-    )
-    ?.addEventListener(
-      "click",
-      () => {
-
-        enviarDemandaAFirma(
-          numero,
-        );
-      },
-    );
+    .getElementById("confirmarEnvioFirmaDemanda")
+    ?.addEventListener("click", () => {
+      enviarDemandaAFirma(numero);
+    });
 }
-
 
 // ============================================================
 // VISTA PREVIA
 // ============================================================
 
-function renderVistaPreviaArchivo(
-  archivo,
-) {
-
-  if (
-    !archivo ||
-    !archivo.dataUrl
-  ) {
-
+function renderVistaPreviaArchivo(archivo) {
+  if (!archivo || !archivo.dataUrl) {
     return `
       <div
         style="
@@ -2165,28 +1625,15 @@ function renderVistaPreviaArchivo(
     `;
   }
 
+  const nombre = archivo.nombre || "Documento";
 
-  const nombre =
-    archivo.nombre ||
-    "Documento";
-
-
-  const extension =
-    nombre
-      .split(".")
-      .pop()
-      ?.toLowerCase();
-
+  const extension = nombre.split(".").pop()?.toLowerCase();
 
   // ==========================================================
   // PDF
   // ==========================================================
 
-  if (
-    extension ===
-    "pdf"
-  ) {
-
+  if (extension === "pdf") {
     return `
       <div
         style="
@@ -2212,7 +1659,6 @@ function renderVistaPreviaArchivo(
       </div>
     `;
   }
-
 
   // ==========================================================
   // WORD
@@ -2272,11 +1718,7 @@ function renderVistaPreviaArchivo(
           Documento de Word
           ${
             archivo.tamano
-              ? ` · ${escapeHTML(
-                  formatFileSize(
-                    archivo.tamano,
-                  ),
-                )}`
+              ? ` · ${escapeHTML(formatFileSize(archivo.tamano))}`
               : ""
           }
         </span>
@@ -2317,114 +1759,71 @@ function renderVistaPreviaArchivo(
   `;
 }
 
-
 // ============================================================
 // TAMAÑO DE ARCHIVO
 // ============================================================
 
-function formatFileSize(
-  bytes,
-) {
-
+function formatFileSize(bytes) {
   if (!bytes) {
     return "";
   }
 
-
-  if (
-    bytes <
-    1024
-  ) {
-
+  if (bytes < 1024) {
     return `${bytes} B`;
   }
 
-
-  if (
-    bytes <
-    1024 * 1024
-  ) {
-
-    return `${(
-      bytes /
-      1024
-    ).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
   }
 
-
-  return `${(
-    bytes /
-    1024 /
-    1024
-  ).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
-
 
 // ============================================================
 // ERROR ENVÍO
 // ============================================================
 
-function mostrarErrorFirma(
-  mensaje,
-) {
-
-  const error =
-    document.getElementById(
-      "demandaFirmaError",
-    );
-
+function mostrarErrorFirma(mensaje) {
+  const error = document.getElementById("demandaFirmaError");
 
   if (!error) {
     return;
   }
 
+  error.textContent = mensaje;
 
-  error.textContent =
-    mensaje;
-
-  error.hidden =
-    false;
+  error.hidden = false;
 }
-
 
 // ============================================================
 // ENVIAR A FIRMA
 // ============================================================
 
-function enviarDemandaAFirma(
-  numero,
-) {
+// ============================================================
+// ENVIAR A FIRMA
+// ============================================================
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
+function enviarDemandaAFirma(numero) {
 
+  const demandas = getData(
+    KEY_DEMANDAS,
+    {},
+  );
 
-  const registro =
-    demandas[numero];
-
+  const registro = demandas[numero];
 
   if (
     !registro ||
-    !tieneAcuerdoGuardado(
-      registro,
-    )
+    !tieneAcuerdoGuardado(registro)
   ) {
-
     return;
   }
 
 
   const extracto =
     document
-      .getElementById(
-        "demandaFirmaExtracto",
-      )
-      ?.value
-      .trim() ||
-    "";
+      .getElementById("demandaFirmaExtracto")
+      ?.value.trim() || "";
 
 
   if (!extracto) {
@@ -2434,309 +1833,333 @@ function enviarDemandaAFirma(
     );
 
     return;
+
   }
 
 
-  const ahora =
-    new Date()
-      .toISOString();
+  // Recuperar el documento previamente guardado.
+
+  const archivo = obtenerArchivoAcuerdo(
+    registro.acuerdo,
+  );
+
+
+  if (!archivo?.nombre || !archivo?.dataUrl) {
+
+    mostrarErrorFirma(
+      "No se encontró el documento guardado en el borrador.",
+    );
+
+    return;
+
+  }
+
+
+  // Validar con los requisitos existentes del módulo de firma.
+
+  const problema = validarArchivoDocumento({
+    name: archivo.nombre,
+    size: archivo.tamano || 0,
+  });
+
+
+  if (problema) {
+
+    mostrarErrorFirma(problema);
+
+    return;
+
+  }
+
+
+  // Comprobar si el archivo ya está registrado.
+
+  let documento = obtenerDocumento(
+    registro.acuerdo.documentoId,
+  );
+
+  let documentoNuevo = false;
+
+
+  // Registrar el archivo existente sin pedir
+  // que el usuario vuelva a seleccionarlo.
+
+  if (
+    !documento ||
+    documento.dataUrl !== archivo.dataUrl ||
+    documento.nombre !== archivo.nombre
+  ) {
+
+    const guardado = guardarDocumento({
+
+      archivo: {
+        name: archivo.nombre,
+        size: archivo.tamano || 0,
+      },
+
+      dataUrl: archivo.dataUrl,
+
+    });
+
+
+    if (!guardado.ok) {
+
+      mostrarErrorFirma(
+
+        guardado.error === "cuota"
+
+          ? "No hay espacio suficiente en el navegador para registrar el documento."
+
+          : "No fue posible registrar el documento para firma.",
+
+      );
+
+      return;
+
+    }
+
+
+    documento = guardado.documento;
+
+    documentoNuevo = true;
+
+  }
+
+
+  const ahora = new Date().toISOString();
 
 
   const acuerdo = {
 
     ...registro.acuerdo,
 
+    archivo: documento.nombre,
+
+    documentoId: documento.id,
+
+    concepto: registro.acuerdo.concepto || "Acuerdo",
+
     extracto,
 
-    estado:
-      "en-firma",
+    estado: "en-firma",
 
-    enviadoFirmaEn:
-      ahora,
+    enviadoFirmaEn: ahora,
 
     enviadoFirmaPor:
       getSession()?.nombre ||
       getSession()?.email ||
       "Secretaría de Acuerdos",
+
   };
 
 
-  const resultado =
-    aplicarAccion(
+  try {
+
+    // Utilizar el formato que requiere el flujo de firma.
+
+    registro.acuerdo = acuerdo;
+
+
+    const resultado = aplicarAccion(
+
       registro,
+
       "enviar-firma",
+
       {
 
-        campo:
-          "radicacion",
+        campo: "radicacion",
 
-        campoHistorial:
-          "historialRadicacion",
+        campoHistorial: "historialRadicacion",
 
         extra: {
           acuerdo,
         },
 
         usuario:
-          getSession()?.nombre ||
-          "",
+          getSession()?.nombre || "",
+
       },
+
     );
 
 
-  if (
-    !resultado.ok
-  ) {
+    if (!resultado.ok) {
 
-    window.alert(
-      resultado.error,
+      if (documentoNuevo) {
+        borrarDocumento(documento.id);
+      }
+
+      mostrarErrorFirma(
+        resultado.error ||
+        "No fue posible enviar el acuerdo a firma.",
+      );
+
+      return;
+
+    }
+
+
+    saveData(
+      KEY_DEMANDAS,
+      demandas,
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error al enviar la demanda a firma:",
+      error,
+    );
+
+    if (documentoNuevo) {
+
+      try {
+        borrarDocumento(documento.id);
+      } catch (errorLimpieza) {
+        console.error(errorLimpieza);
+      }
+
+    }
+
+    mostrarErrorFirma(
+      "No fue posible guardar el envío a firma.",
     );
 
     return;
+
   }
-
-
-  saveData(
-    KEY_DEMANDAS,
-    demandas,
-  );
 
 
   closeForm();
 
   renderDemanda();
-}
 
+}
 
 // ============================================================
 // FLUJO POSTERIOR
 // ============================================================
 
-function ejecutarAccionDemanda(
-  numero,
-  accion,
-) {
-
+function ejecutarAccionDemanda(numero, accion) {
   if (!accion) {
     return;
   }
 
+  const demandas = getData(KEY_DEMANDAS, {});
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {},
-    );
-
-
-  const registro =
-    demandas[numero];
-
+  const registro = demandas[numero];
 
   if (!registro) {
     return;
   }
 
-
-  if (
-    accion ===
-    "enviar-firma"
-  ) {
-
-    openConfirmarEnvioFirma(
-      numero,
-    );
+  if (accion === "enviar-firma") {
+    openConfirmarEnvioFirma(numero);
 
     return;
   }
 
+  const resultado = aplicarAccion(registro, accion, {
+    campo: "radicacion",
 
-  const resultado =
-    aplicarAccion(
-      registro,
-      accion,
-      {
+    campoHistorial: "historialRadicacion",
 
-        campo:
-          "radicacion",
+    extra:
+      accion === "firmar"
+        ? {
+            categoria: "radicado",
 
-        campoHistorial:
-          "historialRadicacion",
+            radicadoEn: todayISO(),
+          }
+        : {},
 
-        extra:
-          accion ===
-          "firmar"
+    usuario: getSession()?.nombre || "",
+  });
 
-            ? {
-
-                categoria:
-                  "radicado",
-
-                radicadoEn:
-                  todayISO(),
-              }
-
-            : {},
-
-        usuario:
-          getSession()?.nombre ||
-          "",
-      },
-    );
-
-
-  if (
-    !resultado.ok
-  ) {
-
-    window.alert(
-      resultado.error,
-    );
+  if (!resultado.ok) {
+    window.alert(resultado.error);
 
     return;
   }
 
-
-  saveData(
-    KEY_DEMANDAS,
-    demandas,
-  );
-
+  saveData(KEY_DEMANDAS, demandas);
 
   renderDemanda();
 }
-
 
 // ============================================================
 // BÚSQUEDA EXACTA
 // ============================================================
 
 function buscarExacto() {
+  const input = document.getElementById("demandaBusquedaExacta");
 
-  const input =
-    document.getElementById(
-      "demandaBusquedaExacta",
-    );
+  const error = document.getElementById("demandaSearchError");
 
-
-  const error =
-    document.getElementById(
-      "demandaSearchError",
-    );
-
-
-  const numero =
-    input?.value
-      .trim() ||
-    "";
-
+  const numero = input?.value.trim() || "";
 
   if (error) {
+    error.hidden = true;
 
-    error.hidden =
-      true;
-
-    error.textContent =
-      "";
+    error.textContent = "";
   }
-
 
   if (!numero) {
-
-    mostrarErrorBusqueda(
-      "Escribe el número exacto del expediente.",
-    );
+    mostrarErrorBusqueda("Escribe el número exacto del expediente.");
 
     return;
   }
 
-
-  const expediente =
-    buscarExpedienteExacto(
-      numero,
-    );
-
+  const expediente = buscarExpedienteExacto(numero);
 
   if (!expediente) {
-
-    mostrarErrorBusqueda(
-      "No se encontró ese expediente en la mesa actual.",
-    );
+    mostrarErrorBusqueda("No se encontró ese expediente en la mesa actual.");
 
     return;
   }
 
-
-  openDetalleDemanda(
-    getNumeroExpediente(
-      expediente,
-    ),
-  );
+  openDetalleDemanda(getNumeroExpediente(expediente));
 }
-
 
 // ============================================================
 // ERROR BÚSQUEDA
 // ============================================================
 
-function mostrarErrorBusqueda(
-  mensaje,
-) {
-
-  const error =
-    document.getElementById(
-      "demandaSearchError",
-    );
-
+function mostrarErrorBusqueda(mensaje) {
+  const error = document.getElementById("demandaSearchError");
 
   if (!error) {
     return;
   }
 
+  error.textContent = mensaje;
 
-  error.textContent =
-    mensaje;
-
-  error.hidden =
-    false;
+  error.hidden = false;
 }
-
 
 // ============================================================
 // DETALLE
 // ============================================================
-
-function openDetalleDemanda(
-  numero,
-) {
-
-  const item =
-    getRegistrosDemanda()
-      .find(
-        registro =>
-          registro.numero ===
-          numero,
-      );
-
+function openDetalleDemanda(numero) {
+  const item = getRegistrosDemanda().find(
+    (registro) => registro.numero === numero,
+  );
 
   if (!item) {
     return;
   }
 
-
   const acuerdo =
-    typeof item.demanda.acuerdo ===
-      "object"
-
+    typeof item.demanda.acuerdo === "object"
       ? item.demanda.acuerdo
-
       : null;
 
+  const calificacion = item.demanda.calificacion || null;
 
-  const calificacion =
-    item.demanda.calificacion ||
-    null;
-
+  // Recuperar el archivo desde el borrador
+  // o desde el almacén de documentos para firma.
+  const archivo = obtenerArchivoAcuerdo(acuerdo);
 
   showModal(`
     <div class="mesas-modal-shell">
@@ -2801,11 +2224,7 @@ function openDetalleDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                etiquetaEstado(
-                  item.demanda.radicacion,
-                ),
-              )}
+              ${escapeHTML(etiquetaEstado(item.demanda.radicacion))}
             </strong>
 
           </div>
@@ -2818,11 +2237,7 @@ function openDetalleDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                etiquetaCategoriaDemanda(
-                  item.demanda.categoria,
-                ),
-              )}
+              ${escapeHTML(etiquetaCategoriaDemanda(item.demanda.categoria))}
             </strong>
 
           </div>
@@ -2837,9 +2252,7 @@ function openDetalleDemanda(
           </span>
 
           <strong>
-            ${escapeHTML(
-              item.asunto,
-            )}
+            ${escapeHTML(item.asunto)}
           </strong>
 
         </div>
@@ -2847,7 +2260,6 @@ function openDetalleDemanda(
 
         ${
           calificacion
-
             ? `
               <div
                 style="
@@ -2869,38 +2281,28 @@ function openDetalleDemanda(
                     margin-top:5px;
                   "
                 >
-                  ${escapeHTML(
-                    etiquetaCalificacion(
-                      calificacion.resultado,
-                    ),
-                  )}
+                  ${escapeHTML(etiquetaCalificacion(calificacion.resultado))}
                 </strong>
 
 
                 ${
                   calificacion.notas
-
                     ? `
                       <p>
-                        ${escapeHTML(
-                          calificacion.notas,
-                        )}
+                        ${escapeHTML(calificacion.notas)}
                       </p>
                     `
-
                     : ""
                 }
 
               </div>
             `
-
             : ""
         }
 
 
         ${
           acuerdo
-
             ? `
               <div
                 style="
@@ -2922,16 +2324,12 @@ function openDetalleDemanda(
                     margin-top:5px;
                   "
                 >
-                  ${escapeHTML(
-                    acuerdo.titulo ||
-                    "Acuerdo",
-                  )}
+                  ${escapeHTML(acuerdo.titulo || "Acuerdo")}
                 </strong>
 
 
                 ${
-                  acuerdo.archivo
-
+                  archivo
                     ? `
                       <div
                         style="
@@ -2944,21 +2342,16 @@ function openDetalleDemanda(
 
                         <i class="fa-regular fa-file"></i>
 
-                        ${escapeHTML(
-                          acuerdo.archivo.nombre ||
-                          "Documento",
-                        )}
+                        ${escapeHTML(archivo.nombre || "Documento")}
 
                       </div>
                     `
-
                     : ""
                 }
 
 
                 ${
                   acuerdo.extracto
-
                     ? `
                       <div
                         style="
@@ -2975,20 +2368,16 @@ function openDetalleDemanda(
                             white-space:pre-wrap;
                           "
                         >
-                          ${escapeHTML(
-                            acuerdo.extracto,
-                          )}
+                          ${escapeHTML(acuerdo.extracto)}
                         </p>
 
                       </div>
                     `
-
                     : ""
                 }
 
               </div>
             `
-
             : ""
         }
 
@@ -3010,81 +2399,43 @@ function openDetalleDemanda(
     </div>
   `);
 
-
   document
-    .getElementById(
-      "closeDetalleDemanda",
-    )
-    ?.addEventListener(
-      "click",
-      closeForm,
-    );
+    .getElementById("closeDetalleDemanda")
+    ?.addEventListener("click", closeForm);
 }
-
 
 // ============================================================
 // CALIFICACIÓN
 // ============================================================
 
-function etiquetaCalificacion(
-  value,
-) {
-
+function etiquetaCalificacion(value) {
   const etiquetas = {
+    radicar: "Radicar",
 
-    radicar:
-      "Radicar",
+    prevenir: "Prevenir",
 
-    prevenir:
-      "Prevenir",
+    rechazar: "Rechazar",
 
-    rechazar:
-      "Rechazar",
-
-    otro:
-      "Otro",
+    otro: "Otro",
   };
 
-
-  return (
-    etiquetas[value] ||
-    value ||
-    "—"
-  );
+  return etiquetas[value] || value || "—";
 }
-
 
 // ============================================================
 // FECHA
 // ============================================================
 
-function formatFecha(
-  value,
-) {
-
+function formatFecha(value) {
   if (!value) {
     return "—";
   }
 
+  const parts = String(value).slice(0, 10).split("-");
 
-  const parts =
-    String(value)
-      .slice(0, 10)
-      .split("-");
-
-
-  if (
-    parts.length ===
-    3
-  ) {
-
-    return (
-      `${parts[2]}/` +
-      `${parts[1]}/` +
-      `${parts[0]}`
-    );
+  if (parts.length === 3) {
+    return `${parts[2]}/` + `${parts[1]}/` + `${parts[0]}`;
   }
-
 
   return String(value);
 }

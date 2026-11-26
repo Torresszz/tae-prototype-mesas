@@ -397,14 +397,15 @@ function renderDiasMes(
       >
 
         <button
-          type="button"
-          class="mesas-agenda-day-number"
-          data-agenda-action="nuevo-dia"
-          data-agenda-fecha="${fecha}"
-          aria-label="Crear evento el ${dia} de ${MESES[mes]}"
-        >
-          ${dia}
-        </button>
+  type="button"
+  class="mesas-agenda-day-number"
+  data-agenda-action="nuevo-dia"
+  data-agenda-fecha="${fecha}"
+  aria-label="Crear evento el ${dia} de ${MESES[mes]}"
+  ${fecha < hoyISO() ? "disabled" : ""}
+>
+  ${dia}
+</button>
 
 
         <div class="mesas-agenda-day-events">
@@ -633,10 +634,15 @@ function openEventoForm({
           tipoInicial,
         );
 
-  const fechaActual =
-    evento?.fecha ||
-    fechaInicial ||
-    hoyISO();
+ const hoy = hoyISO();
+
+const fechaActual =
+  evento?.fecha ||
+  (
+    fechaInicial && fechaInicial >= hoy
+      ? fechaInicial
+      : hoy
+  );
 
   const horaActual =
     evento?.hora || "";
@@ -779,13 +785,15 @@ function openEventoForm({
               </span>
 
               <input
-                id="agendaFecha"
-                type="date"
-                required
-                min="${anioActual()}-01-01"
-                max="${anioActual()}-12-31"
-                value="${escapeHTML(fechaActual)}"
-              >
+  id="agendaFecha"
+  type="date"
+  required
+  min="${evento?.fecha && evento.fecha < hoyISO()
+    ? escapeHTML(evento.fecha)
+    : hoyISO()}"
+  max="${anioActual()}-12-31"
+  value="${escapeHTML(fechaActual)}"
+>
 
             </label>
 
@@ -984,12 +992,13 @@ function guardarEventoDesdeForm(
 
 
   const error =
-    validarEvento({
-      tipo,
-      expediente,
-      fecha,
-      hora,
-    });
+  validarEvento({
+    tipo,
+    expediente,
+    fecha,
+    hora,
+    eventoAnterior,
+  });
 
 
   if (error) {
@@ -1489,6 +1498,7 @@ function validarEvento({
   expediente,
   fecha,
   hora,
+  eventoAnterior = null,
 }) {
   const tipoValido =
     TIPOS_EVENTO_AGENDA.some(
@@ -1528,9 +1538,30 @@ function validarEvento({
   }
 
 
+  // Permitir conservar la fecha de un evento histórico
+  // siempre que no cambie de expediente ni de tipo.
+
+  const conservaFechaHistorica =
+    eventoAnterior?.fecha === fecha &&
+    eventoAnterior?.expediente === expediente &&
+    eventoAnterior?.tipo === tipo;
+
+
+  // Impedir agendar eventos en fechas anteriores a hoy.
+
   if (
-    obtenerAnio(fecha) !==
-    anioActual()
+    fecha < hoyISO() &&
+    !conservaFechaHistorica
+  ) {
+    return "No puedes agendar eventos en fechas anteriores a la fecha actual.";
+  }
+
+
+  // Conservar la validación del año vigente.
+
+  if (
+    obtenerAnio(fecha) !== anioActual() &&
+    !conservaFechaHistorica
   ) {
     return `La agenda corresponde al año vigente (${anioActual()}).`;
   }
