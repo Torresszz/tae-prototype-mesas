@@ -6,12 +6,16 @@
 // lugar del botón "Amparos Directos") pero siguen siendo vistas internas
 // de la página "mesas-amparos-directos": no son rutas nuevas, así que
 // los permisos de auth.js no cambian.
-//   Amparos · Cuadernillos · Plantillas · Listas
+//   Pendientes de realizar · Amparos · Cuadernillos · Plantillas · Listas
 // El apartado "Amparos" es la tabla de siempre (en mesasAmparos.js);
 // los otros tres los dibujan los módulos de esta carpeta.
 // ============================================================
 
 import { renderCuadernillos } from "./cuadernillo.js";
+
+import { renderPendientesDirectos } from "./pendientes.js";
+
+import { renderTccDirectos, totalAlertasTcc } from "./tcc.js";
 
 import { renderPlantillasDirectos } from "./plantillasDirectos.js";
 
@@ -20,13 +24,23 @@ import { renderListasDirectos, iniciarListasAutomaticas } from "./listas.js";
 const PAGINA = "mesas-amparos-directos";
 
 export const SECCIONES_DIRECTOS = [
+  {
+    id: "pendientes",
+    etiqueta: "Amparos pendientes de realizar",
+    icono: "fa-clipboard-list",
+  },
+  {
+    id: "tcc",
+    etiqueta: "Pendiente de enviar al TCC",
+    icono: "fa-building-columns",
+  },
   { id: "amparos", etiqueta: "Amparos", icono: "fa-scale-balanced" },
   { id: "cuadernillos", etiqueta: "Cuadernillos", icono: "fa-folder-open" },
   { id: "plantillas", etiqueta: "Plantillas", icono: "fa-file-lines" },
   { id: "listas", etiqueta: "Listas", icono: "fa-list-check" },
 ];
 
-let seccionActiva = "amparos";
+let seccionActiva = "pendientes";
 
 // Últimas dependencias recibidas (para repintar desde la barra lateral)
 let depsActuales = {};
@@ -86,6 +100,31 @@ function initSidebarDirectos() {
   });
 }
 
+// Globo con las alertas de informe (3 días) sin atender en el botón del TCC.
+function marcarAlertasTcc() {
+  const total = totalAlertasTcc();
+
+  document.querySelectorAll('[data-mampd-seccion="tcc"]').forEach((boton) => {
+    let globo = boton.querySelector(".mampd-nav-badge");
+
+    if (!total) {
+      globo?.remove();
+
+      return;
+    }
+
+    if (!globo) {
+      globo = document.createElement("span");
+
+      globo.className = "mampd-nav-badge";
+
+      boton.appendChild(globo);
+    }
+
+    globo.textContent = String(total);
+  });
+}
+
 function marcarSeccionActiva() {
   document.querySelectorAll("[data-mampd-seccion]").forEach((boton) => {
     const activa = boton.dataset.mampdSeccion === seccionActiva;
@@ -100,13 +139,16 @@ function marcarSeccionActiva() {
   });
 }
 
-// deps: { nombreEtapa(seg), alCambiar() }
+// deps: { nombreEtapa(seg), alCambiar(), deOficialia(), recibir(id, categoria),
+//         abrirAmparo(id), regresarDeActuaria(id) }
 export function renderSeccionesDirectos(deps = {}) {
   depsActuales = deps;
 
   initSidebarDirectos();
 
   marcarSeccionActiva();
+
+  marcarAlertasTcc();
 
   document.querySelectorAll("[data-mamp-vista]").forEach((vista) => {
     vista.hidden = vista.dataset.mampVista !== seccionActiva;
@@ -124,6 +166,16 @@ export function renderSeccionesDirectos(deps = {}) {
   const host = (id) => document.getElementById(id);
 
   switch (seccionActiva) {
+    case "pendientes":
+      renderPendientesDirectos(host("mampdPendientesHost"), deps);
+
+      break;
+
+    case "tcc":
+      renderTccDirectos(host("mampdTccHost"), deps);
+
+      break;
+
     case "cuadernillos":
       renderCuadernillos(host("mampdCuadernillosHost"), deps);
 

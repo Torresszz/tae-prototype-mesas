@@ -341,17 +341,9 @@ export function renderListasDirectos(host, deps = {}) {
           <h2>Listas de amparos directos</h2>
           <p>
             Incluye solo los amparos en la etapa de ${escapeHTML(CATEGORIA_LISTA)} cuyo documento ya firmó la Magistrada.
-            Si no se crea a mano, se genera sola a las ${hora}:00 de lunes a viernes.
+            Se crean desde «Amparos pendientes de realizar»; si no se crea a mano, se genera sola a las ${hora}:00 de lunes a viernes.
           </p>
         </div>
-        ${
-          puedeCrear
-            ? `<button type="button" class="mesas-primary-btn" data-listas-action="crear"
-                 ${pendientes.length ? "" : "disabled"}>
-                 <i class="fa-solid fa-list-check"></i> Crear lista
-               </button>`
-            : ""
-        }
       </div>
 
       ${

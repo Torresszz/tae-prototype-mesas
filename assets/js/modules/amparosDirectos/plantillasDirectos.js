@@ -21,10 +21,14 @@ import {
   etiquetaCategoriaPlantillaAmparos,
 } from "../mesas/catalogos.js";
 
+export const storePlantillasDirectos = crearAlmacenPlantillas(
+  "mesasAmparosPlantillas",
+);
+
 const contexto = {
   categorias: PLANTILLA_CATEGORIAS_AMPAROS,
   etiquetaCategoria: etiquetaCategoriaPlantillaAmparos,
-  store: crearAlmacenPlantillas("mesasAmparosPlantillas"),
+  store: storePlantillasDirectos,
   puedeGestionar: () => canManageTemplatesAmparosDirectos(),
   // La barra de filtros global es de la página de Mesas
   filtrosGlobales: false,
