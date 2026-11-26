@@ -26,7 +26,9 @@ export const EXTENSIONES_PERMITIDAS = ["docx", "pdf"];
 // ------------------------------------------------------------
 
 export function extensionDe(nombreArchivo) {
-  const partes = String(nombreArchivo || "").toLowerCase().split(".");
+  const partes = String(nombreArchivo || "")
+    .toLowerCase()
+    .split(".");
 
   return partes.length > 1 ? partes.pop() : "";
 }
@@ -78,6 +80,7 @@ export function crearAlmacenPlantillas(KEY) {
 
     return (Array.isArray(lista) ? lista : [])
       .filter((item) => !categoria || item.categoria === categoria)
+      .filter((item) => !subcategoria || item.subcategoria === subcategoria)
       .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
   }
 
@@ -98,7 +101,14 @@ export function crearAlmacenPlantillas(KEY) {
   // ------------------------------------------------------------
 
   // Devuelve { ok: true, plantilla } o { ok: false, error: "cuota" | "otro" }.
-  function guardar({ nombre, categoria, archivo, dataUrl, subidoPor }) {
+  function guardar({
+    nombre,
+    categoria,
+    subcategoria = "",
+    archivo,
+    dataUrl,
+    subidoPor,
+  }) {
     const plantilla = {
       id: createId(),
       nombre: String(nombre || "").trim(),
@@ -189,4 +199,3 @@ export const {
   actualizar,
   borrar,
 } = crearAlmacenPlantillas(KEY);
-

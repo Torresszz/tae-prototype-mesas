@@ -3,7 +3,6 @@
 // assets/js/modules/mesas/catalogos.js
 // ============================================================
 
-
 // ============================================================
 // PLANTILLAS
 // FASE 2
@@ -25,7 +24,7 @@ export const PLANTILLA_CATEGORIAS = [
     etiqueta: "Calificación",
     icono: "fa-scale-balanced",
   },
-    {
+  {
     clave: "audiencia",
     etiqueta: "Audiencia",
     icono: "fa-gavel",
@@ -44,10 +43,8 @@ export const PLANTILLA_CATEGORIAS = [
 
 export function etiquetaCategoriaPlantilla(clave) {
   return (
-    PLANTILLA_CATEGORIAS.find(
-      (categoria) =>
-        categoria.clave === clave,
-    )?.etiqueta ||
+    PLANTILLA_CATEGORIAS.find((categoria) => categoria.clave === clave)
+      ?.etiqueta ||
     clave ||
     "—"
   );
@@ -97,6 +94,16 @@ export function etiquetaCategoriaPlantillaAmparos(clave) {
   );
 }
 
+export const SUBCATEGORIAS_PLANTILLA_AMPAROS = {
+  radicaciones: [
+    { clave: "admision", etiqueta: "Admisión" },
+    // ← pon aquí los tipos de radicación reales
+  ],
+};
+
+export function subcategoriasPlantillaAmparos(categoria) {
+  return SUBCATEGORIAS_PLANTILLA_AMPAROS[categoria] || [];
+}
 
 // ============================================================
 // AGENDA
@@ -109,7 +116,7 @@ export const TIPOS_EVENTO_AGENDA = [
     etiqueta: "Audiencia",
     icono: "fa-gavel",
   },
-    {
+  {
     clave: "calificacion",
     etiqueta: "Calificación",
     icono: "fa-scale-balanced",
@@ -138,11 +145,7 @@ export const TIPOS_AGENDA_PROMOCIONES = [
 ];
 
 // Los eventos de exhorto se crean solo desde el apartado Exhortos.
-export const TIPOS_AGENDA_MANUALES = [
-  "audiencia",
-  "calificacion",
-  "promocion",
-];
+export const TIPOS_AGENDA_MANUALES = ["audiencia", "calificacion", "promocion"];
 
 // Agenda de Promociones / Calificaciones / Exhortos: dos agendas, y cada
 // una contiene los tres tipos de evento.
@@ -163,15 +166,14 @@ export function agendaDeEvento(evento) {
 }
 
 export function etiquetaAgenda(clave) {
-  return AGENDAS.find((agenda) => agenda.clave === clave)?.etiqueta || clave || "—";
+  return (
+    AGENDAS.find((agenda) => agenda.clave === clave)?.etiqueta || clave || "—"
+  );
 }
 
 export function etiquetaTipoEventoAgenda(clave) {
   return (
-    TIPOS_EVENTO_AGENDA.find(
-      (tipo) =>
-        tipo.clave === clave,
-    )?.etiqueta ||
+    TIPOS_EVENTO_AGENDA.find((tipo) => tipo.clave === clave)?.etiqueta ||
     clave ||
     "—"
   );
@@ -179,14 +181,10 @@ export function etiquetaTipoEventoAgenda(clave) {
 
 export function iconoTipoEventoAgenda(clave) {
   return (
-    TIPOS_EVENTO_AGENDA.find(
-      (tipo) =>
-        tipo.clave === clave,
-    )?.icono ||
+    TIPOS_EVENTO_AGENDA.find((tipo) => tipo.clave === clave)?.icono ||
     "fa-calendar-day"
   );
 }
-
 
 // ============================================================
 // DESTINATARIOS DE AGENDA
@@ -210,15 +208,12 @@ export const DESTINATARIOS_AGENDA = [
 
 export function etiquetaDestinatarioAgenda(clave) {
   return (
-    DESTINATARIOS_AGENDA.find(
-      (destinatario) =>
-        destinatario.clave === clave,
-    )?.etiqueta ||
+    DESTINATARIOS_AGENDA.find((destinatario) => destinatario.clave === clave)
+      ?.etiqueta ||
     clave ||
     "—"
   );
 }
-
 
 // ============================================================
 // DEMANDA
@@ -238,15 +233,12 @@ export const CATEGORIAS_DEMANDA = [
 
 export function etiquetaCategoriaDemanda(clave) {
   return (
-    CATEGORIAS_DEMANDA.find(
-      (categoria) =>
-        categoria.clave === clave,
-    )?.etiqueta ||
+    CATEGORIAS_DEMANDA.find((categoria) => categoria.clave === clave)
+      ?.etiqueta ||
     clave ||
     "—"
   );
 }
-
 
 // ============================================================
 // PROMOCIONES Y CALIFICACIÓN
@@ -266,10 +258,7 @@ export const ESTADOS_ACUERDO = [
 
 export function etiquetaEstadoAcuerdo(clave) {
   return (
-    ESTADOS_ACUERDO.find(
-      (estado) =>
-        estado.clave === clave,
-    )?.etiqueta ||
+    ESTADOS_ACUERDO.find((estado) => estado.clave === clave)?.etiqueta ||
     clave ||
     "—"
   );
@@ -291,7 +280,6 @@ export const TIPOS_AUDIENCIA = [
   "Incidental",
 ];
 
-
 // ============================================================
 // ESTADOS DE AUDIENCIA
 // ============================================================
@@ -309,10 +297,7 @@ export const ESTADOS_AUDIENCIA = [
 
 export function etiquetaEstadoAudiencia(clave) {
   return (
-    ESTADOS_AUDIENCIA.find(
-      (estado) =>
-        estado.clave === clave,
-    )?.etiqueta ||
+    ESTADOS_AUDIENCIA.find((estado) => estado.clave === clave)?.etiqueta ||
     clave ||
     "—"
   );
@@ -337,10 +322,7 @@ export const ACCIONES_CONSULTA = [
 
 export function etiquetaAccionConsulta(clave) {
   return (
-    ACCIONES_CONSULTA.find(
-      (accion) =>
-        accion.clave === clave,
-    )?.pasado ||
+    ACCIONES_CONSULTA.find((accion) => accion.clave === clave)?.pasado ||
     clave ||
     "—"
   );

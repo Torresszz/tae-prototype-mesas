@@ -266,3 +266,141 @@
         width: 100%;
     }
 }
+
+/* ---------- Amparos pendientes de realizar ---------- */
+.mampd-pend-sub {
+    display: block;
+    margin-top: 2px;
+    color: #5b7189;
+    font-size: 10px;
+}
+
+.mampd-pend-actions {
+    flex-wrap: wrap;
+}
+
+.mampd-pend-count {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    font-size: 11px;
+}
+
+.mampd-rad-titulo {
+    margin: 0 0 8px;
+    color: #102b45;
+    font-weight: 700;
+}
+
+.mampd-rad-opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.mampd-rad-opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #d6e2f0;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.mampd-rad-opcion:has(input:checked) {
+    border-color: #1f6feb;
+    background: #eef5ff;
+}
+
+.mampd-rad-seccion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px dashed #b9cde3;
+    border-radius: 8px;
+    background: #fbfdff;
+}
+
+.mampd-rad-seccion[hidden] {
+    display: none;
+}
+
+.mampd-rad-plantilla {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.mampd-rad-plantilla small {
+    display: block;
+    color: #5b7189;
+    font-size: 10px;
+}
+
+/* ---------- Pendiente de enviar al TCC ---------- */
+.mampd-tcc-alerta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 10px;
+    padding: 12px 14px;
+    border: 1px solid #f3d27a;
+    border-radius: 8px;
+    background: #fff8e1;
+}
+
+.mampd-tcc-alerta.vencida {
+    border-color: #f0a4a4;
+    background: #fdeeee;
+}
+
+.mampd-tcc-alerta-texto {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.mampd-tcc-alerta-texto > i {
+    margin-top: 2px;
+    color: #b7791f;
+}
+
+.mampd-tcc-alerta.vencida .mampd-tcc-alerta-texto > i {
+    color: #c53030;
+}
+
+.mampd-tcc-alerta-texto strong,
+.mampd-tcc-alerta-texto span {
+    display: block;
+}
+
+.mampd-tcc-alerta-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+
+.mampd-nav-badge {
+    margin-left: auto;
+    min-width: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #d9534f;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+}

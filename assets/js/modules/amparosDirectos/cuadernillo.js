@@ -152,6 +152,9 @@ export function htmlResumenCuadernillo(seg, { conBoton = true } = {}) {
 // MODAL DEL CUADERNILLO
 // opciones: { alCambiar } se llama tras cada cambio para repintar
 // la página de fondo.
+//           { soloSeccion } (opcional) id de una sección: el modal muestra
+// solo esa (p. ej. "informe-justificado" desde "Pendiente de enviar al
+// TCC"). Es el mismo dato del cuadernillo: lo subido aquí cuenta allá.
 // ------------------------------------------------------------
 export function abrirCuadernillo(id, opciones = {}) {
   const datos = obtenerAmparo(id);
@@ -166,7 +169,15 @@ export function abrirCuadernillo(id, opciones = {}) {
 
   const porcentaje = Math.round((progreso.cargados / progreso.total) * 100);
 
-  const filas = DOCS_CUADERNILLO.map((doc, indice) => {
+  const solo = opciones.soloSeccion || "";
+
+  const secciones = solo
+    ? DOCS_CUADERNILLO.filter((doc) => doc.id === solo)
+    : DOCS_CUADERNILLO;
+
+  const filas = secciones.map((doc) => {
+    const indice = DOCS_CUADERNILLO.indexOf(doc);
+
     const registro = cuad.docs[doc.id];
 
     const cumplida = seccionCumplida(seg, doc.id);
@@ -178,7 +189,7 @@ export function abrirCuadernillo(id, opciones = {}) {
             <i class="fa-solid ${cumplida ? "fa-check" : "fa-minus"}"></i>
           </span>
           <div>
-            <strong>${indice + 1}. ${escapeHTML(doc.texto)}</strong>
+            <strong>${solo ? "" : `${indice + 1}. `}${escapeHTML(doc.texto)}</strong>
             <small>
               ${
                 cumplida
@@ -218,28 +229,39 @@ export function abrirCuadernillo(id, opciones = {}) {
       <header class="mesas-modal-header">
         <div class="mesas-modal-step"><i class="fa-solid fa-folder-open"></i></div>
         <div class="mesas-modal-header-text">
-          <h2>Cuadernillo · Amparo ${escapeHTML(amparo.id)}</h2>
+          <h2>${solo ? escapeHTML(secciones[0]?.texto || "Sección") : "Cuadernillo"} · Amparo ${escapeHTML(amparo.id)}</h2>
           <p>Expediente ${escapeHTML(amparo.expediente || "—")} · ${escapeHTML(quejosoDe(amparo, seg))}</p>
         </div>
       </header>
 
       <div class="mesas-modal-body">
         <p class="mamp-note">
-          Sube un documento en cada sección (.pdf o .docx, máx. ${DOCUMENTO_MAX_MB} MB).
-          Una sección se marca como cumplida solo cuando tiene su archivo.
+          ${
+            solo
+              ? `Sube el documento (.pdf o .docx, máx. ${DOCUMENTO_MAX_MB} MB). También se cuenta en el cuadernillo del amparo.`
+              : `Sube un documento en cada sección (.pdf o .docx, máx. ${DOCUMENTO_MAX_MB} MB).
+          Una sección se marca como cumplida solo cuando tiene su archivo.`
+          }
         </p>
 
-        <div class="mampd-progreso" aria-label="Avance del cuadernillo">
+        ${
+          solo
+            ? ""
+            : `<div class="mampd-progreso" aria-label="Avance del cuadernillo">
           <div class="mampd-progreso-texto">
             <strong>${progreso.cargados} de ${progreso.total}</strong> documentos cargados
             ${progreso.completo ? " · <b>cuadernillo completo</b>" : ""}
           </div>
           <div class="mampd-progreso-barra"><span style="width:${porcentaje}%"></span></div>
-        </div>
+        </div>`
+        }
 
         <ul class="mampd-cuad-docs">${filas}</ul>
 
-        <section class="mampd-obs">
+        ${
+          solo
+            ? ""
+            : `        <section class="mampd-obs">
           <label for="mampdCuadObs">
             <strong>Observaciones</strong>
             <small>Solo para uso del usuario: no forman parte del cuadernillo.</small>
@@ -251,7 +273,8 @@ export function abrirCuadernillo(id, opciones = {}) {
             </button>
             <span class="mampd-obs-ok" id="mampdObsOk" hidden>Observaciones guardadas.</span>
           </div>
-        </section>
+        </section>`
+        }
 
         <p class="mesas-form-error" id="mampdCuadError" hidden></p>
       </div>

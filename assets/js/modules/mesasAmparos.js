@@ -177,6 +177,14 @@ export function renderMesasAmparos() {
     renderSeccionesDirectos({
       nombreEtapa: (seg) => getEtapa(seg.tipo, seg.etapa).nombre,
       alCambiar: renderMesasAmparos,
+      // Documentos de Oficialía que la Mesa aún no recibe
+      deOficialia: () =>
+        pendientesPorRecibir()
+          .filter((item) => item.origen === "Oficialía de Partes")
+          .map((item) => item.amparo),
+      recibir: recibirDeOficialia,
+      // Regreso de Actuaría (pasa a Informe Justificado)
+      regresarDeActuaria: aplicarRegresoActuaria,
     });
   }
 
