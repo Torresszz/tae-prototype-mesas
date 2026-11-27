@@ -67,6 +67,9 @@ const KEY_REVISION_AUTO = "mesasAmparosListasRevisionAuto";
 // ⚠️ Solo los amparos de esta categoría entran a la lista.
 export const CATEGORIA_LISTA = "Radicación";
 
+// Identificador del renglón de lista que viene de «Ampara y Protege» (cumplido)
+export const FIRMA_AMPARA_PROTEGE = "ampara-protege";
+
 // ⚠️ PENDIENTE: el ejemplo recibido llega a la lista 102.
 export const CONSECUTIVO_INICIAL = 103;
 
@@ -104,13 +107,11 @@ function siguienteNumero() {
 // PENDIENTES DE LISTAR
 // Devuelve [{ amparoId, firmaId, expediente, actor, demandado,
 //             estado, fojas, firmadoEn }]
-// ------------------------------------------------------------
 export function pendientesDeLista() {
-  return amparosDirectos()
+  const deFirmas = amparosDirectos()
     .filter(({ seg }) => seg.categoria === CATEGORIA_LISTA)
     .flatMap(({ amparo, seg }) => {
       const { actor, demandado } = actorDemandadoDe(amparo);
-
       return firmasDe(seg)
         .filter((firma) => firma.estado === ESTADO_FIRMADO && !firma.listaId)
         .map((firma) => ({
@@ -123,8 +124,30 @@ export function pendientesDeLista() {
           fojas: firma.fojas,
           firmadoEn: firma.firmadoEn || "",
         }));
-    })
-    .sort((a, b) => String(a.firmadoEn).localeCompare(String(b.firmadoEn)));
+    });
+
+  // Amparos concedidos marcados como «Cumplido» (cualquier categoría)
+  const deAmparaProtege = amparosDirectos()
+    .filter(
+      ({ seg }) => seg.amparaProtege?.cumplido && !seg.amparaProtege.listaId,
+    )
+    .map(({ amparo, seg }) => {
+      const { actor, demandado } = actorDemandadoDe(amparo);
+      return {
+        amparoId: String(amparo.id),
+        firmaId: FIRMA_AMPARA_PROTEGE,
+        expediente: String(amparo.expediente || "—"),
+        actor,
+        demandado,
+        estado: seg.amparaProtege.estadoProcesal || "",
+        fojas: seg.amparaProtege.fojas,
+        firmadoEn: seg.amparaProtege.cumplidoEn || "",
+      };
+    });
+
+  return [...deFirmas, ...deAmparaProtege].sort((a, b) =>
+    String(a.firmadoEn).localeCompare(String(b.firmadoEn)),
+  );
 }
 
 // Agrupa por expediente conservando el orden en que se firmó.
@@ -161,6 +184,14 @@ function marcarListados(pendientes, lista) {
   const seguimiento = getData("mesasAmparosSeguimiento", {}) || {};
 
   pendientes.forEach((p) => {
+    if (p.firmaId === FIRMA_AMPARA_PROTEGE) {
+      const ap = seguimiento[p.amparoId]?.amparaProtege;
+      if (ap) {
+        ap.listaId = lista.id;
+        ap.listaNumero = lista.numero;
+      }
+      return;
+    }
     const firma = firmasDe(seguimiento[p.amparoId]).find(
       (f) => f.id === p.firmaId,
     );
@@ -179,7 +210,10 @@ function marcarListados(pendientes, lista) {
 // ------------------------------------------------------------
 export function crearLista({ origen = "manual", ahora = new Date() } = {}) {
   if (!puedeCrearListas()) {
-    return { ok: false, error: "Solo el usuario de Amparos Directos genera listas." };
+    return {
+      ok: false,
+      error: "Solo el usuario de Amparos Directos genera listas.",
+    };
   }
 
   const pendientes = pendientesDeLista();
@@ -302,11 +336,16 @@ async function verLista(id) {
   `);
 
   document.getElementById("mampdListaCerrar").onclick = closeForm;
-  document.getElementById("mampdListaDescargar").onclick = () => descargarLista(id);
+  document.getElementById("mampdListaDescargar").onclick = () =>
+    descargarLista(id);
 
   await renderVistaPrevia(
     document.getElementById("mampdListaPreview"),
-    { nombre: tituloListaAmparos(lista), nombreArchivo: archivo, tipoArchivo: "pdf" },
+    {
+      nombre: tituloListaAmparos(lista),
+      nombreArchivo: archivo,
+      tipoArchivo: "pdf",
+    },
     generarPdfListaAmparos(lista),
   );
 }
@@ -331,7 +370,9 @@ export function renderListasDirectos(host, deps = {}) {
 
   const hora = String(MESAS_CONFIG.LISTA_HORA_AUTOMATICA).padStart(2, "0");
 
-  const listas = leerListas().sort((a, b) => Number(b.numero) - Number(a.numero));
+  const listas = leerListas().sort(
+    (a, b) => Number(b.numero) - Number(a.numero),
+  );
 
   host.innerHTML = `
     <section class="mesas-fase4-section">
@@ -448,7 +489,10 @@ export function renderListasDirectos(host, deps = {}) {
         const resultado = crearLista();
 
         aviso = resultado.ok
-          ? { tipo: "ok", texto: `Se generó la lista #${resultado.lista.numero}.` }
+          ? {
+              tipo: "ok",
+              texto: `Se generó la lista #${resultado.lista.numero}.`,
+            }
           : { tipo: "error", texto: resultado.error };
 
         renderListasDirectos(host, deps);

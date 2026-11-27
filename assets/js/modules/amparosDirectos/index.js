@@ -25,6 +25,8 @@ import { renderEnviosTcc } from "./enviosTcc.js";
 
 import { renderNiegaAmparo } from "./niegaAmparo.js";
 
+import { renderAmparaProtege } from "./amparaProtege.js";
+
 const PAGINA = "mesas-amparos-directos";
 
 export const SECCIONES_DIRECTOS = [
@@ -40,6 +42,11 @@ export const SECCIONES_DIRECTOS = [
   },
   { id: "envios-tcc", etiqueta: "Envíos del TCC", icono: "fa-inbox" },
   { id: "niega-amparo", etiqueta: "Niega Amparo", icono: "fa-ban" },
+  {
+    id: "ampara-protege",
+    etiqueta: "Ampara y Protege",
+    icono: "fa-shield-halved",
+  },
   { id: "cuadernillos", etiqueta: "Cuadernillos", icono: "fa-folder-open" },
   { id: "listas", etiqueta: "Listas", icono: "fa-list-check" },
   { id: "plantillas", etiqueta: "Plantillas", icono: "fa-file-lines" },
@@ -173,6 +180,10 @@ export function renderSeccionesDirectos(deps = {}) {
   const host = (id) => document.getElementById(id);
 
   switch (seccionActiva) {
+    case "ampara-protege":
+      renderAmparaProtege(host("mampdAmparaProtegeHost"), deps);
+      break;
+
     case "pendientes":
       renderPendientesDirectos(host("mampdPendientesHost"), deps);
 

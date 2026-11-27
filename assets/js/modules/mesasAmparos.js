@@ -42,6 +42,12 @@ import {
   sembrarFirmaDemo,
 } from "./amparosDirectos/firma.js";
 
+import { cargarDatosPruebaPendientes } from "./amparosDirectos/pendientes.js";
+import { cargarDatosPruebaTcc } from "./amparosDirectos/tcc.js";
+import {
+  sembrarEnviosTccDemo,
+  sembrarPlantillasDirectosDemo,
+} from "./amparosDirectos/demoDirectos.js";
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
@@ -1597,6 +1603,8 @@ function enActuaria(seg) {
 }
 
 function ubicacionDe(seg) {
+  if (seg.amparaProtege?.destino) return seg.amparaProtege.destino;
+
   if (seg.etapa === ETAPA_FINAL[seg.tipo]) {
     return "Archivo";
   }
@@ -2350,6 +2358,19 @@ function cargarDemo() {
   renderMesasAmparos();
 }
 
+// Carga TODO lo de Amparos Directos, en el orden que necesitan los datos.
+export function cargarDemoDirectosCompleto() {
+  const deps = {
+    recibir: recibirDeOficialia,
+    regresarDeActuaria: aplicarRegresoActuaria,
+  };
+
+  cargarDemo();
+  cargarDatosPruebaPendientes(deps);
+  cargarDatosPruebaTcc(deps);
+  sembrarEnviosTccDemo();
+  sembrarPlantillasDirectosDemo();
+}
 // ============================================================
 // HELPERS
 // ============================================================

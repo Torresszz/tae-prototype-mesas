@@ -21,6 +21,7 @@ import {
   eliminarUsuario,
   restablecerUsuariosDemo,
 } from "../auth.js";
+import { cargarTodosLosDatosDemo } from "./demoGlobal.js";
 
 export const ROLES = {
   admin: "Administrador",
@@ -53,15 +54,42 @@ export function renderAdminDashboard() {
   const entes = getData("entes", []);
   const actos = getData("actosDemandados", []);
   const activos = (lista) =>
-    Array.isArray(lista) ? lista.filter((item) => item.activo !== false).length : 0;
+    Array.isArray(lista)
+      ? lista.filter((item) => item.activo !== false).length
+      : 0;
 
   const tarjetas = [
     ["fa-users", "Usuarios", usuarios.length, "Cuentas registradas"],
-    ["fa-building-columns", "Entes públicos", Array.isArray(entes) ? entes.length : 0, `${activos(entes)} activos`],
-    ["fa-list", "Actos demandados", Array.isArray(actos) ? actos.length : 0, `${activos(actos)} activos`],
-    ["fa-folder-open", "Expedientes", contar("expedientes"), "Registrados en el sistema"],
-    ["fa-file-lines", "Promociones", contar("promociones"), "Registradas en el sistema"],
-    ["fa-list-check", "Listas de acuerdos", contar("mesasListas"), "Generadas por las mesas"],
+    [
+      "fa-building-columns",
+      "Entes públicos",
+      Array.isArray(entes) ? entes.length : 0,
+      `${activos(entes)} activos`,
+    ],
+    [
+      "fa-list",
+      "Actos demandados",
+      Array.isArray(actos) ? actos.length : 0,
+      `${activos(actos)} activos`,
+    ],
+    [
+      "fa-folder-open",
+      "Expedientes",
+      contar("expedientes"),
+      "Registrados en el sistema",
+    ],
+    [
+      "fa-file-lines",
+      "Promociones",
+      contar("promociones"),
+      "Registradas en el sistema",
+    ],
+    [
+      "fa-list-check",
+      "Listas de acuerdos",
+      contar("mesasListas"),
+      "Generadas por las mesas",
+    ],
   ];
 
   const porRol = Object.keys(ROLES)
@@ -70,7 +98,9 @@ export function renderAdminDashboard() {
 
   const accesos = usuarios
     .filter((u) => u.ultimoAcceso)
-    .sort((a, b) => String(b.ultimoAcceso).localeCompare(String(a.ultimoAcceso)))
+    .sort((a, b) =>
+      String(b.ultimoAcceso).localeCompare(String(a.ultimoAcceso)),
+    )
     .slice(0, 6);
 
   contenedor.innerHTML = `
@@ -110,6 +140,10 @@ export function renderAdminDashboard() {
           <button type="button" class="admin-action nav-item-link" data-admin-ir="perfil">
             <i class="fa-solid fa-id-badge"></i>
             <span><strong>Mi perfil</strong>Datos de tu cuenta y de tu sesión</span>
+          </button>
+          <button type="button" class="admin-action" data-admin-demo>
+            <i class="fa-solid fa-flask"></i>
+            <span><strong>Cargar datos de prueba</strong>Genera datos de demostración para todas las secciones del sistema</span>
           </button>
         </div>
       </div>
@@ -165,6 +199,12 @@ export function renderAdminDashboard() {
   `;
 
   contenedor.onclick = (event) => {
+    if (event.target.closest("[data-admin-demo]")) {
+      abrirDatosDemo();
+
+      return;
+    }
+
     const boton = event.target.closest("[data-admin-ir]");
 
     if (boton) window.irAPagina?.(boton.dataset.adminIr);
@@ -370,6 +410,57 @@ function abrirEliminar(email) {
     }
 
     terminar(`Se eliminó el usuario ${usuario.nombre}.`);
+  };
+}
+
+function abrirDatosDemo() {
+  showModal(`
+    <div class="form-header">
+      <span>Datos de prueba</span>
+      <h2>Cargar datos de prueba en todo el sistema</h2>
+    </div>
+    <div class="form-body" id="demoCuerpo">
+      <p>
+        Genera datos de demostración para Oficialía, Secretaría de Acuerdos y
+        Amparos Directos e Indirectos, con documentos y plantillas de ejemplo.
+        Está pensado para repetirse sin duplicar registros de demostración.
+      </p>
+      <div class="form-actions" style="margin-top: 20px;">
+        <button type="button" class="secondary-btn" id="demoCancelar">Cancelar</button>
+        <button type="button" class="primary-btn" id="demoConfirmar">Cargar datos</button>
+      </div>
+    </div>
+  `);
+
+  document.getElementById("demoCancelar").onclick = closeForm;
+
+  document.getElementById("demoConfirmar").onclick = async (evento) => {
+    evento.target.disabled = true;
+    evento.target.textContent = "Cargando...";
+
+    const resultados = await cargarTodosLosDatosDemo();
+
+    document.getElementById("demoCuerpo").innerHTML = `
+      <ul style="list-style:none;padding:0;margin:0 0 16px;">
+        ${resultados
+          .map(
+            (r) => `<li style="margin-bottom:8px;">
+              <i class="fa-solid ${r.ok ? "fa-circle-check" : "fa-circle-xmark"}"
+                 style="color:${r.ok ? "#1f9d55" : "#c0392b"};"></i>
+              ${escapeHTML(r.nombre)}
+              ${r.ok ? "" : `<br><small>${escapeHTML(r.error)}</small>`}
+            </li>`,
+          )
+          .join("")}
+      </ul>
+      <div class="form-actions">
+        <button type="button" class="primary-btn" id="demoCerrar">Cerrar</button>
+      </div>`;
+
+    document.getElementById("demoCerrar").onclick = () => {
+      closeForm();
+      renderAdminDashboard();
+    };
   };
 }
 

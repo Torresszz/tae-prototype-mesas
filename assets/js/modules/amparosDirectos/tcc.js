@@ -280,7 +280,7 @@ export function renderTccDirectos(host, deps = {}) {
         break;
 
       case "demo":
-        cargarDatosPrueba(deps);
+        cargarDatosPruebaTcc(deps);
 
         aviso = {
           tipo: "ok",
@@ -531,7 +531,7 @@ const PARTES_TCC = [
   ["C. GUADALUPE ARREOLA PÉREZ", "H. AYTO. TECOMÁN, COLIMA"],
 ];
 
-function cargarDatosPrueba(deps) {
+export function cargarDatosPruebaTcc(deps) {
   const amparos = getData("amparos", []);
 
   const lista = Array.isArray(amparos) ? amparos : [];

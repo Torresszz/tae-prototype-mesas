@@ -230,6 +230,19 @@ function abrirCategorizar({ amparo, seg, oficio }, resultado, refrescar) {
         categorizadoPor: nombreUsuario(),
       };
       if (resultado === "negado") s.niega = { notas: "", ...(s.niega || {}) };
+      if (resultado === "concedido") {
+        s.amparaProtege = { notas: "", ...(s.amparaProtege || {}) };
+        // Terminó la reposición: vuelve a Ampara y Protege listo para un nuevo efecto
+        if (s.amparaProtege.enReposicion) {
+          s.amparaProtege.enReposicion = false;
+          s.amparaProtege.fase = "";
+          s.amparaProtege.efecto = "";
+          logSeg(
+            s,
+            "Reposición concluida: el amparo regresa a Ampara y Protege",
+          );
+        }
+      }
       logSeg(s, `Envío del TCC: ${etiqueta}. No. de Amparo Directo ${numero}`);
     });
 

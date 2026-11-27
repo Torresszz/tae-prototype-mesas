@@ -50,6 +50,8 @@ import {
 
 import { storePlantillasDirectos } from "./plantillasDirectos.js";
 
+import { sembrarDocumentoDemo } from "../mesas/documentosFirma.js";
+
 import {
   amparosDirectos,
   actualizarSeg,
@@ -73,6 +75,26 @@ import {
 } from "./listas.js";
 
 import { getData, saveData } from "../../storage.js";
+
+let buscador = null;
+
+const pintarPlantillas = () => {
+  $("mampdRadSubir").hidden = !tipoElegido;
+
+  const sugerida = {
+    categoria: CATEGORIA_PLANTILLA_RADICACION,
+    subcategoria: tipoElegido,
+  };
+
+  if (!buscador) {
+    buscador = montarBuscadorPlantillas($("mampdRadPlantillas"), {
+      contexto: "directos",
+      ...sugerida,
+    });
+  } else {
+    buscador.definir(sugerida);
+  }
+};
 
 // Categoría de las plantillas de radicación (catalogos.js)
 const CATEGORIA_PLANTILLA_RADICACION = "radicaciones";
@@ -260,7 +282,7 @@ export function renderPendientesDirectos(host, deps = {}) {
       }
 
       case "demo":
-        cargarDatosPrueba(deps);
+        cargarDatosPruebaPendientes(deps);
 
         aviso = { tipo: "ok", texto: "Se cargaron datos de prueba." };
 
@@ -361,6 +383,7 @@ function abrirRadicacion({ id, filas, deps, refrescar }) {
   const tipos = tiposRadicacion();
 
   let tipoElegido = previa?.tipo || "";
+  const bloqueado = Boolean(previa?.tipo);
 
   showModal(`
     <div class="mesas-modal-shell mampd-rad-modal">
@@ -381,14 +404,33 @@ function abrirRadicacion({ id, filas, deps, refrescar }) {
               (tipo) => `
             <label class="mampd-rad-opcion">
               <input type="radio" name="mampdRadTipo" value="${escapeHTML(tipo.clave)}"
-                ${tipo.clave === tipoElegido ? "checked" : ""}>
+                ${tipo.clave === tipoElegido ? "checked" : ""} ${bloqueado ? "disabled" : ""}>
               <span>${escapeHTML(tipo.etiqueta)}</span>
             </label>`,
             )
             .join("")}
         </div>
+        ${
+          bloqueado
+            ? `<section class="mampd-rad-seccion">
+          <p class="mamp-note">
+            <i class="fa-solid fa-lock"></i>
+            El tipo de radicación ya fue seleccionado (<strong>${escapeHTML(previa.tipoEtiqueta || previa.tipo)}</strong>)
+            y no puede cambiarse sin justificar el motivo.
+          </p>
+          <button type="button" class="mesas-secondary-btn" id="mampdRadDesbloquear">
+            <i class="fa-solid fa-pen"></i> Cambiar tipo de radicación
+          </button>
+          <div id="mampdRadMotivoBox" hidden>
+            <label for="mampdRadMotivo"><strong>Motivo del cambio</strong> (obligatorio)</label>
+            <textarea id="mampdRadMotivo" class="mampd-notas" rows="3"
+              placeholder="Explica por qué se cambia el tipo de radicación..."></textarea>
+          </div>
+        </section>`
+            : ""
+        }        
 
-        <section class="mampd-rad-seccion" id="mampdRadPlantillas" hidden></section>
+        <section class="mampd-rad-seccion" id="mampdRadPlantillas"></section>
 
         <section class="mampd-rad-seccion" id="mampdRadSubir" hidden>
           <strong>Documento de la radicación</strong>
@@ -500,6 +542,20 @@ function abrirRadicacion({ id, filas, deps, refrescar }) {
     };
   });
 
+  const desbloquear = $("mampdRadDesbloquear");
+
+  if (desbloquear) {
+    desbloquear.onclick = () => {
+      document
+        .querySelectorAll("input[name='mampdRadTipo']")
+        .forEach((radio) => (radio.disabled = false));
+
+      $("mampdRadMotivoBox").hidden = false;
+      desbloquear.hidden = true;
+      $("mampdRadMotivo").focus();
+    };
+  }
+
   pintarPlantillas();
 
   $("mampdRadCancelar").onclick = closeForm;
@@ -507,6 +563,15 @@ function abrirRadicacion({ id, filas, deps, refrescar }) {
   $("mampdRadGuardar").onclick = async () => {
     if (!tipoElegido) {
       error("Selecciona una de las tres opciones de radicación.");
+
+      return;
+    }
+
+    const cambiaTipo = Boolean(previa?.tipo) && tipoElegido !== previa.tipo;
+    const motivoCambio = ($("mampdRadMotivo")?.value || "").trim();
+
+    if (cambiaTipo && motivoCambio.length < 5) {
+      error("Para cambiar el tipo de radicación indica el motivo del cambio.");
 
       return;
     }
@@ -558,6 +623,20 @@ function abrirRadicacion({ id, filas, deps, refrescar }) {
 
     const guardado = actualizarSeg(amparo.id, (s) => {
       const antes = s.radicacion || {};
+      if (cambiaTipo) {
+        s.radicacion.cambios = [
+          ...(antes.cambios || []),
+          {
+            de: antes.tipo,
+            deEtiqueta: antes.tipoEtiqueta || antes.tipo,
+            a: tipoElegido,
+            aEtiqueta: etiqueta,
+            motivo: motivoCambio,
+            en: ahora,
+            por: nombreUsuario(),
+          },
+        ];
+      }
 
       const ahora = new Date().toISOString();
 
@@ -588,6 +667,9 @@ function abrirRadicacion({ id, filas, deps, refrescar }) {
       logSeg(
         s,
         `${antes.tipo ? "Radicación actualizada" : "Radicación generada"}: ${etiqueta}` +
+          (cambiaTipo
+            ? ` (cambio desde «${antes.tipoEtiqueta || antes.tipo}»; motivo: ${motivoCambio})`
+            : "") +
           (documento ? ` (documento ${documento.nombre})` : ""),
       );
     });
@@ -710,7 +792,7 @@ const DEMANDADOS_DEMO = [
   "H. AYTO. TECOMÁN",
 ];
 
-function cargarDatosPrueba(deps) {
+export function cargarDatosPruebaPendientes(deps) {
   const tipos = tiposRadicacion();
 
   const amparos = getData("amparos", []);
