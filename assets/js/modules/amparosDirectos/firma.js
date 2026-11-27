@@ -115,7 +115,9 @@ export function verDocumentoFirma(documentoId) {
 // ------------------------------------------------------------
 // ENVIAR A FIRMA
 // ------------------------------------------------------------
-export function enviarAFirma(id, { alTerminar } = {}) {
+// `documento` (opcional) = { documentoId, archivo }: documento ya subido
+// (p. ej. el de la radicación) que el modal usa sin volver a pedirlo.
+export function enviarAFirma(id, { alTerminar, documento = null } = {}) {
   const datos = obtenerAmparo(id);
 
   if (!datos) return;
@@ -123,7 +125,9 @@ export function enviarAFirma(id, { alTerminar } = {}) {
   abrirEnvioFirma({
     modo: "amparo",
     referencia: `Amparo directo ${datos.amparo.id} · Expediente ${datos.amparo.expediente || "—"}`,
-    acuerdo: null,
+    acuerdo: documento?.documentoId
+      ? { documentoId: documento.documentoId, archivo: documento.archivo }
+      : null,
     aplicar: (envio) => {
       const guardado = actualizarSeg(id, (seg) => {
         seg.firmas = firmasDe(seg);
@@ -138,6 +142,18 @@ export function enviarAFirma(id, { alTerminar } = {}) {
           enviadoEn: new Date().toISOString(),
           enviadoPor: nombreUsuario(),
         });
+
+        // Si en el modal se cambió el archivo de la radicación, la
+        // radicación queda apuntando al nuevo (el anterior se borra).
+        if (
+          documento?.documentoId &&
+          seg.radicacion?.documentoId === documento.documentoId &&
+          envio.documentoId !== documento.documentoId
+        ) {
+          seg.radicacion.documentoId = envio.documentoId;
+
+          seg.radicacion.archivo = envio.archivo;
+        }
 
         logSeg(
           seg,
@@ -294,7 +310,10 @@ export function firmarAmparo(amparoId, firmaId) {
     firma.firmadoEn = new Date().toISOString();
     firma.firmadoPor = nombreUsuario();
 
-    logSeg(seg, `Documento firmado por la Magistrada: «${firma.estadoProcesal}»`);
+    logSeg(
+      seg,
+      `Documento firmado por la Magistrada: «${firma.estadoProcesal}»`,
+    );
   });
 
   renderAmparosPorFirmar();
@@ -311,7 +330,11 @@ export function firmarAmparo(amparoId, firmaId) {
 // DEMOSTRACIÓN
 // Agrega un envío a firma de ejemplo (con archivo de muestra).
 // ------------------------------------------------------------
-export function sembrarFirmaDemo(seg, amparoId, { estado, estadoProcesal, fojas }) {
+export function sembrarFirmaDemo(
+  seg,
+  amparoId,
+  { estado, estadoProcesal, fojas },
+) {
   seg.firmas = firmasDe(seg);
 
   const idFirma = `demo-firma-${amparoId}-${seg.firmas.length + 1}`;

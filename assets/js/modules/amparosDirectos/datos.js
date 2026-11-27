@@ -104,3 +104,13 @@ export function formatFecha(valor) {
     year: "numeric",
   });
 }
+
+// No. de Amparo Directo asignado en "Envíos del TCC"
+export function numeroAmparoDirecto(seg) {
+  return seg?.envioTcc?.numeroAD || "";
+}
+
+// Identificador del amparo: el No. de Amparo Directo; si aún no hay, el id interno.
+export function identificadorAmparo(amparo, seg) {
+  return numeroAmparoDirecto(seg) || String(amparo.id);
+}

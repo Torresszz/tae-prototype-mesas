@@ -31,7 +31,7 @@ import {
 import {
   listar,
   obtener,
-    guardar,
+  guardar,
   actualizar,
   borrar,
   validarArchivo,
@@ -100,12 +100,21 @@ export function montarPlantillasEn(
 
   // En la pestaña, el texto de la barra global busca por nombre y las
   // fechas filtran por fecha de subida. En los apartados no se aplican.
-  const lista = ctx.store.listar({ categoria: activa }).filter(
-    (item) =>
-      !pestana ||
-      !ctx.filtrosGlobales ||
-      (coincideExpediente(item.nombre) && coincideFecha(item.fecha)),
-  );
+  const subs = subsDe(ctx, activa);
+
+  const subActiva =
+    pestana && subs.some((s) => s.clave === ctx.subcategoriaFiltro)
+      ? ctx.subcategoriaFiltro
+      : "";
+
+  const lista = ctx.store
+    .listar({ categoria: activa, subcategoria: subActiva })
+    .filter(
+      (item) =>
+        !pestana ||
+        !ctx.filtrosGlobales ||
+        (coincideExpediente(item.nombre) && coincideFecha(item.fecha)),
+    );
 
   const puedeGestionar = ctx.puedeGestionar();
 
@@ -144,6 +153,24 @@ export function montarPlantillasEn(
           }
 
           ${
+            pestana && subs.length
+              ? `
+            <label class="mesas-plantillas-filter">
+              <span>Subcategoría</span>
+              <select data-plantilla-subcategoria aria-label="Filtrar por subcategoría">
+                <option value="">Todas</option>
+                ${subs
+                  .map(
+                    (s) =>
+                      `<option value="${s.clave}" ${s.clave === subActiva ? "selected" : ""}>${escapeHTML(s.etiqueta)}</option>`,
+                  )
+                  .join("")}
+              </select>
+            </label>`
+              : ""
+          }
+
+          ${
             puedeGestionar
               ? `
             <button type="button" class="mesas-primary-btn" data-plantilla-action="subir">
@@ -171,6 +198,18 @@ export function montarPlantillasEn(
     selector.onchange = (event) => {
       ctx.categoriaFiltro = event.target.value;
 
+      ctx.subcategoriaFiltro = "";
+
+      refrescar();
+    };
+  }
+
+  const selectorSub = contenedor.querySelector("[data-plantilla-subcategoria]");
+
+  if (selectorSub) {
+    selectorSub.onchange = (event) => {
+      ctx.subcategoriaFiltro = event.target.value;
+
       refrescar();
     };
   }
@@ -183,7 +222,7 @@ export function montarPlantillasEn(
     const id = boton.dataset.id;
 
     switch (boton.dataset.plantillaAction) {
-            case "descargar":
+      case "descargar":
         descargarPlantilla(id, ctx);
 
         break;
@@ -222,12 +261,24 @@ function renderTabla(lista, { mostrarCategoria, puedeGestionar, ctx }) {
               <div>
                 <strong>${escapeHTML(item.nombre)}</strong>
                 <span>${escapeHTML(item.nombreArchivo)}</span>
+                ${
+                  !mostrarCategoria && item.subcategoria
+                    ? `<span class="mesas-plantilla-categoria">${escapeHTML(ctx.etiquetaSubcategoria?.(item.categoria, item.subcategoria) || item.subcategoria)}</span>`
+                    : ""
+                }                
               </div>
             </div>
           </td>
           ${
             mostrarCategoria
-              ? `<td><span class="mesas-plantilla-categoria">${escapeHTML(ctx.etiquetaCategoria(item.categoria))}</span></td>`
+              ? `<td>
+                  <span class="mesas-plantilla-categoria">${escapeHTML(ctx.etiquetaCategoria(item.categoria))}</span>
+                  ${
+                    item.subcategoria
+                      ? `<br><span class="mesas-plantilla-categoria mesas-plantilla-subcategoria">${escapeHTML(ctx.etiquetaSubcategoria?.(item.categoria, item.subcategoria) || item.subcategoria)}</span>`
+                      : ""
+                  }
+                </td>`
               : ""
           }
           <td>${escapeHTML(String(item.tipoArchivo || "").toUpperCase())}</td>
@@ -298,7 +349,7 @@ function renderVacio(pestana, ctx) {
     <div class="mesas-empty-state">
       <div class="mesas-empty-icon"><i class="fa-regular fa-folder-open"></i></div>
       <strong>No hay plantillas${pestana ? " con estos filtros" : " en esta categoría"}</strong>
-      <span>${ctx.puedeGestionar() ? "Usa \"Subir plantilla\" para agregar la primera." : "Un usuario autorizado puede subir plantillas."}</span>
+      <span>${ctx.puedeGestionar() ? 'Usa "Subir plantilla" para agregar la primera.' : "Un usuario autorizado puede subir plantillas."}</span>
     </div>
   `;
 }
@@ -326,7 +377,8 @@ function descargarPlantilla(id, ctx) {
 
   enlace.href = url;
 
-  enlace.download = plantilla.nombreArchivo || `${plantilla.nombre}.${plantilla.tipoArchivo}`;
+  enlace.download =
+    plantilla.nombreArchivo || `${plantilla.nombre}.${plantilla.tipoArchivo}`;
 
   document.body.appendChild(enlace);
 
@@ -342,7 +394,8 @@ function dataUrlABlob(dataUrl) {
   try {
     const [cabecera, base64] = String(dataUrl).split(",");
 
-    const tipo = cabecera.match(/data:([^;]+)/)?.[1] || "application/octet-stream";
+    const tipo =
+      cabecera.match(/data:([^;]+)/)?.[1] || "application/octet-stream";
 
     const binario = atob(base64);
 
@@ -404,6 +457,11 @@ function abrirSubirPlantilla({ categoria = "", onGuardado, ctx }) {
           </select>
         </label>
 
+        <label class="mesas-plantillas-field" id="plantillaSubWrap" hidden>
+          <span>Subcategoría${ctx.subcategoriaObligatoria ? "" : " (opcional)"}</span>
+          <select id="plantillaSubcategoria"></select>
+        </label>
+
         <label class="mesas-upload-area" for="plantillaArchivo">
           <i class="fa-solid fa-cloud-arrow-up"></i>
           <strong>Selecciona un archivo</strong>
@@ -440,6 +498,18 @@ function abrirSubirPlantilla({ categoria = "", onGuardado, ctx }) {
 
   $("plantillaCancelar").onclick = closeForm;
 
+  // La subcategoría aparece solo si la categoría elegida tiene
+  const sincronizarSub = () =>
+    sincronizarSubcategoria(ctx, {
+      categoria: fija ? categoria : $("plantillaCategoria").value,
+      envoltura: $("plantillaSubWrap"),
+      select: $("plantillaSubcategoria"),
+    });
+
+  sincronizarSub();
+
+  if (!fija) $("plantillaCategoria").onchange = sincronizarSub;
+
   $("plantillaArchivo").onchange = (event) => {
     const archivo = event.target.files?.[0];
 
@@ -466,6 +536,14 @@ function abrirSubirPlantilla({ categoria = "", onGuardado, ctx }) {
 
     if (!categoriaElegida) return mostrarError("Selecciona una categoría.");
 
+    if (
+      ctx.subcategoriaObligatoria &&
+      !$("plantillaSubWrap").hidden &&
+      !$("plantillaSubcategoria").value
+    ) {
+      return mostrarError("Selecciona una subcategoría.");
+    }
+
     const errorArchivo = validarArchivo(archivo);
 
     if (errorArchivo) return mostrarError(errorArchivo);
@@ -482,6 +560,9 @@ function abrirSubirPlantilla({ categoria = "", onGuardado, ctx }) {
       const resultado = ctx.store.guardar({
         nombre,
         categoria: categoriaElegida,
+        subcategoria: $("plantillaSubWrap").hidden
+          ? ""
+          : $("plantillaSubcategoria").value,
         archivo,
         dataUrl,
         subidoPor: getSession()?.nombre,
@@ -551,6 +632,11 @@ function abrirEditarPlantilla(id, onGuardado, ctx) {
           </select>
         </label>
 
+        <label class="mesas-plantillas-field" id="plantillaEditSubWrap" hidden>
+          <span>Subcategoría${ctx.subcategoriaObligatoria ? "" : " (opcional)"}</span>
+          <select id="plantillaEditSubcategoria"></select>
+        </label>        
+
         <label class="mesas-upload-area" for="plantillaEditArchivo">
           <i class="fa-solid fa-cloud-arrow-up"></i>
           <strong>Reemplazar archivo (opcional)</strong>
@@ -585,6 +671,18 @@ function abrirEditarPlantilla(id, onGuardado, ctx) {
 
   $("plantillaEditCancelar").onclick = closeForm;
 
+  const sincronizarSubEdit = () =>
+    sincronizarSubcategoria(ctx, {
+      categoria: $("plantillaEditCategoria").value,
+      envoltura: $("plantillaEditSubWrap"),
+      select: $("plantillaEditSubcategoria"),
+      actual: plantilla.subcategoria,
+    });
+
+  sincronizarSubEdit();
+
+  $("plantillaEditCategoria").onchange = sincronizarSubEdit;
+
   $("plantillaEditArchivo").onchange = (event) => {
     const archivo = event.target.files?.[0];
 
@@ -610,6 +708,14 @@ function abrirEditarPlantilla(id, onGuardado, ctx) {
 
     const boton = $("plantillaEditGuardar");
 
+    if (
+      ctx.subcategoriaObligatoria &&
+      !$("plantillaEditSubWrap").hidden &&
+      !$("plantillaEditSubcategoria").value
+    ) {
+      return mostrarError("Selecciona una subcategoría.");
+    }
+
     boton.disabled = true;
 
     try {
@@ -618,6 +724,9 @@ function abrirEditarPlantilla(id, onGuardado, ctx) {
       const resultado = ctx.store.actualizar(id, {
         nombre,
         categoria: $("plantillaEditCategoria").value,
+        subcategoria: $("plantillaEditSubWrap").hidden
+          ? ""
+          : $("plantillaEditSubcategoria").value,
         archivo,
         dataUrl,
       });
@@ -756,4 +865,27 @@ function formatoTamano(bytes) {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
 
   return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+// Subcategorías disponibles para una categoría ([] si el contexto no usa).
+function subsDe(ctx, categoria) {
+  return categoria ? ctx.subcategoriasDe?.(categoria) || [] : [];
+}
+
+// Llena el select de subcategoría y lo muestra u oculta según la categoría.
+function sincronizarSubcategoria(
+  ctx,
+  { categoria, envoltura, select, actual = "" },
+) {
+  const subs = subsDe(ctx, categoria);
+
+  envoltura.hidden = !subs.length;
+
+  select.innerHTML = [
+    `<option value="">${ctx.subcategoriaObligatoria ? "Selecciona una subcategoría..." : "Sin subcategoría"}</option>`,
+    ...subs.map(
+      (s) =>
+        `<option value="${s.clave}" ${s.clave === actual ? "selected" : ""}>${escapeHTML(s.etiqueta)}</option>`,
+    ),
+  ].join("");
 }

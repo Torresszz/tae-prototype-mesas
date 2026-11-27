@@ -19,6 +19,8 @@ import { crearAlmacenPlantillas } from "../mesas/plantillasStore.js";
 import {
   PLANTILLA_CATEGORIAS_AMPAROS,
   etiquetaCategoriaPlantillaAmparos,
+  subcategoriasPlantillaAmparos,
+  etiquetaSubcategoriaPlantillaAmparos,
 } from "../mesas/catalogos.js";
 
 export const storePlantillasDirectos = crearAlmacenPlantillas(
@@ -37,6 +39,13 @@ const contexto = {
     "Solo el usuario de Amparos Directos puede subir o borrar plantillas.",
   textoBorrar: "Dejará de estar disponible en Amparos Directos.",
   categoriaFiltro: "",
+  subcategoriaFiltro: "",
+  // Si la categoría tiene subcategorías, hay que elegir una al subir/editar
+  subcategoriaObligatoria: true,
+  subcategoriasDe: subcategoriasPlantillaAmparos,
+  etiquetaSubcategoria: etiquetaSubcategoriaPlantillaAmparos,
+  subcategoriaFiltro: "",
+  subcategoriaObligatoria: true,
 };
 
 export function renderPlantillasDirectos(host) {

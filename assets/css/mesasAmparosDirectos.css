@@ -7,400 +7,597 @@
 
 /* [hidden] debe ganar a display:grid de .mesas-secretaria-layout */
 [data-mamp-vista][hidden] {
-    display: none !important;
+  display: none !important;
 }
 
 /* ---------- Avance del cuadernillo ---------- */
 .mampd-progreso {
-    margin: 0 0 12px;
+  margin: 0 0 12px;
 }
 
 .mampd-progreso-texto {
-    margin-bottom: 5px;
-    color: #102b45;
-    font-size: 10px;
+  margin-bottom: 5px;
+  color: #102b45;
+  font-size: 10px;
 }
 
 .mampd-progreso-barra {
-    height: 7px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: #e8f1ff;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8f1ff;
 }
 
 .mampd-progreso-barra > span {
-    display: block;
-    height: 100%;
-    border-radius: 999px;
-    background: #2b72d6;
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #2b72d6;
 }
 
 .mampd-mini-progreso {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 110px;
-    font-size: 10px;
-    font-weight: 600;
-    color: #102b45;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 110px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #102b45;
 }
 
 .mampd-mini-progreso .mampd-progreso-barra {
-    flex: 1;
+  flex: 1;
 }
 
 /* ---------- Resumen del cuadernillo dentro del modal del amparo ---------- */
 .mampd-cuad-resumen {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 0 0 12px;
-    padding: 10px 12px;
-    border: 1px solid #dce6ef;
-    border-radius: 8px;
-    background: #f7faff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #dce6ef;
+  border-radius: 8px;
+  background: #f7faff;
 }
 
 .mampd-cuad-resumen > div {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    color: #102b45;
-    font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #102b45;
+  font-size: 10px;
 }
 
 .mampd-cuad-resumen span {
-    color: #5b7088;
+  color: #5b7088;
 }
 
 /* ---------- Modal del cuadernillo ---------- */
 .mampd-cuad-docs {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 0 0 14px;
-    padding: 0;
-    list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
 }
 
 .mampd-cuad-doc {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    padding: 10px 12px;
-    border: 1px solid #dce3ea;
-    border-radius: 8px;
-    background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid #dce3ea;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .mampd-cuad-doc.ok {
-    border-color: #bfe3c9;
-    background: #f6fcf8;
+  border-color: #bfe3c9;
+  background: #f6fcf8;
 }
 
 .mampd-cuad-doc-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1 1 260px;
-    min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 260px;
+  min-width: 0;
 }
 
 .mampd-cuad-doc-main strong {
-    display: block;
-    color: #102b45;
-    font-size: 10.5px;
+  display: block;
+  color: #102b45;
+  font-size: 10.5px;
 }
 
 .mampd-cuad-doc-main small {
-    display: block;
-    margin-top: 2px;
-    color: #7b8fa2;
-    font-size: 9px;
-    overflow-wrap: anywhere;
+  display: block;
+  margin-top: 2px;
+  color: #7b8fa2;
+  font-size: 9px;
+  overflow-wrap: anywhere;
 }
 
 .mampd-cuad-check {
-    flex: 0 0 22px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border: 1px solid #dce3ea;
-    border-radius: 50%;
-    background: #f5f7fa;
-    color: #9aaabb;
-    font-size: 9px;
+  flex: 0 0 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #dce3ea;
+  border-radius: 50%;
+  background: #f5f7fa;
+  color: #9aaabb;
+  font-size: 9px;
 }
 
 .mampd-cuad-check.ok {
-    border-color: #14833b;
-    background: #14833b;
-    color: #ffffff;
+  border-color: #14833b;
+  background: #14833b;
+  color: #ffffff;
 }
 
 .mampd-cuad-doc-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .mampd-upload-btn {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .mampd-obs {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
-    padding: 12px;
-    border: 1px dashed #b9cde3;
-    border-radius: 8px;
-    background: #fbfdff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 12px;
+  border: 1px dashed #b9cde3;
+  border-radius: 8px;
+  background: #fbfdff;
 }
 
 .mampd-obs label {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    color: #102b45;
-    font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #102b45;
+  font-size: 10px;
 }
 
 .mampd-obs label small {
-    color: #7b8fa2;
-    font-size: 9px;
+  color: #7b8fa2;
+  font-size: 9px;
 }
 
 .mampd-obs textarea {
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 70px;
-    padding: 8px 10px;
-    border: 1px solid #dce3ea;
-    border-radius: 7px;
-    font: inherit;
-    font-size: 10.5px;
-    resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 70px;
+  padding: 8px 10px;
+  border: 1px solid #dce3ea;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 10.5px;
+  resize: vertical;
 }
 
 .mampd-obs-acciones {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .mampd-obs-ok {
-    color: #14833b;
-    font-size: 9.5px;
+  color: #14833b;
+  font-size: 9.5px;
 }
 
 /* ---------- Firma de Presidencia dentro del modal del amparo ---------- */
 .mampd-firma-box {
-    margin: 0 0 12px;
-    padding: 10px 12px;
-    border: 1px solid #dce6ef;
-    border-radius: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #dce6ef;
+  border-radius: 8px;
 }
 
 .mampd-firma-box > header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 8px;
-    color: #102b45;
-    font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: #102b45;
+  font-size: 10px;
 }
 
 .mampd-firma-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .mampd-firma-list li {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    padding: 8px 10px;
-    border: 1px solid #eef2f6;
-    border-radius: 7px;
-    background: #fbfcfe;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 10px;
+  border: 1px solid #eef2f6;
+  border-radius: 7px;
+  background: #fbfcfe;
 }
 
 .mampd-firma-list li > div {
-    flex: 1 1 200px;
-    min-width: 0;
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
 .mampd-firma-list strong {
-    display: block;
-    color: #102b45;
-    font-size: 10px;
+  display: block;
+  color: #102b45;
+  font-size: 10px;
 }
 
 .mampd-firma-list small {
-    display: block;
-    color: #7b8fa2;
-    font-size: 9px;
-    overflow-wrap: anywhere;
+  display: block;
+  color: #7b8fa2;
+  font-size: 9px;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 720px) {
-    .mampd-cuad-resumen {
-        flex-direction: column;
-        align-items: stretch;
-    }
+  .mampd-cuad-resumen {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-    .mampd-cuad-doc-actions {
-        width: 100%;
-    }
+  .mampd-cuad-doc-actions {
+    width: 100%;
+  }
 }
 
 /* ---------- Amparos pendientes de realizar ---------- */
 .mampd-pend-sub {
-    display: block;
-    margin-top: 2px;
-    color: #5b7189;
-    font-size: 10px;
+  display: block;
+  margin-top: 2px;
+  color: #5b7189;
+  font-size: 10px;
 }
 
 .mampd-pend-actions {
-    flex-wrap: wrap;
+  flex-wrap: wrap;
 }
 
 .mampd-pend-count {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 0 7px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.25);
-    font-size: 11px;
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 11px;
 }
 
 .mampd-rad-titulo {
-    margin: 0 0 8px;
-    color: #102b45;
-    font-weight: 700;
+  margin: 0 0 8px;
+  color: #102b45;
+  font-weight: 700;
 }
 
 .mampd-rad-opciones {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .mampd-rad-opcion {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border: 1px solid #d6e2f0;
-    border-radius: 8px;
-    background: #fff;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d6e2f0;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
 }
 
 .mampd-rad-opcion:has(input:checked) {
-    border-color: #1f6feb;
-    background: #eef5ff;
+  border-color: #1f6feb;
+  background: #eef5ff;
 }
 
 .mampd-rad-seccion {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding: 12px;
-    border: 1px dashed #b9cde3;
-    border-radius: 8px;
-    background: #fbfdff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px dashed #b9cde3;
+  border-radius: 8px;
+  background: #fbfdff;
 }
 
 .mampd-rad-seccion[hidden] {
-    display: none;
+  display: none;
 }
 
 .mampd-rad-plantilla {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .mampd-rad-plantilla small {
-    display: block;
-    color: #5b7189;
-    font-size: 10px;
+  display: block;
+  color: #5b7189;
+  font-size: 10px;
 }
 
 /* ---------- Pendiente de enviar al TCC ---------- */
+.mampd-tcc-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.mampd-tcc-layout > .mesas-secretaria-table-card {
+  min-width: 0;
+}
+
+.mampd-tcc-panel {
+  position: sticky;
+  top: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 40px);
+  border: 1px solid #d6e2f0;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+.mampd-tcc-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e3ecf5;
+  background: #f5f9fd;
+  color: #102b45;
+}
+.mampd-tcc-panel-count {
+  min-width: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #d9534f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+.mampd-tcc-panel-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  overflow-y: auto;
+}
+.mampd-tcc-panel-vacio {
+  margin: 8px 4px;
+  color: #5b7189;
+  font-size: 12px;
+  text-align: center;
+}
+
 .mampd-tcc-alerta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 0 0 10px;
-    padding: 12px 14px;
-    border: 1px solid #f3d27a;
-    border-radius: 8px;
-    background: #fff8e1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #f3d27a;
+  border-left: 4px solid #e0a630;
+  border-radius: 8px;
+  background: #fff8e1;
 }
-
 .mampd-tcc-alerta.vencida {
-    border-color: #f0a4a4;
-    background: #fdeeee;
+  border-color: #f0a4a4;
+  border-left-color: #d9534f;
+  background: #fdeeee;
 }
-
+.mampd-tcc-alerta-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mampd-tcc-alerta-cabecera > i {
+  color: #b7791f;
+}
+.mampd-tcc-alerta.vencida .mampd-tcc-alerta-cabecera > i {
+  color: #c53030;
+}
+.mampd-tcc-alerta-cabecera strong,
+.mampd-tcc-alerta-cabecera small {
+  display: block;
+}
+.mampd-tcc-alerta-cabecera small {
+  color: #5b7189;
+  font-size: 11px;
+}
 .mampd-tcc-alerta-texto {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
 }
-
-.mampd-tcc-alerta-texto > i {
-    margin-top: 2px;
-    color: #b7791f;
+.mampd-tcc-alerta-fecha {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7a5a12;
 }
-
-.mampd-tcc-alerta.vencida .mampd-tcc-alerta-texto > i {
-    color: #c53030;
+.mampd-tcc-alerta.vencida .mampd-tcc-alerta-fecha {
+  color: #a12626;
 }
-
-.mampd-tcc-alerta-texto strong,
-.mampd-tcc-alerta-texto span {
-    display: block;
-}
-
 .mampd-tcc-alerta-acciones {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: #5b7189;
+}
+.mampd-tcc-alerta-botones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.mampd-tcc-alerta-acciones .mesas-secondary-btn {
+  justify-content: center;
+  padding: 5px 6px;
+  font-size: 11px;
+}
+
+@media (max-width: 1100px) {
+  .mampd-tcc-layout {
+    grid-template-columns: 1fr;
+  }
+  .mampd-tcc-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+/* ---------- Cuadernillos: columna de comentarios ---------- */
+.mampd-cuad-comentario {
+  max-width: 260px;
+  min-width: 160px;
+  font-size: 12px;
+  white-space: pre-line;
+}
+.mampd-cuad-comentario > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.mampd-sin-comentario {
+  color: #8aa0b6;
+  font-style: italic;
 }
 
 .mampd-nav-badge {
-    margin-left: auto;
-    min-width: 18px;
-    padding: 0 6px;
-    border-radius: 999px;
-    background: #d9534f;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 18px;
-    text-align: center;
+  margin-left: auto;
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #d9534f;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.mampd-envio-input {
+  width: 100%;
+  height: 39px;
+  padding: 0 12px;
+  margin: 6px 0 10px;
+  border: 1px solid #dce3ea;
+  border-radius: 7px;
+  font: inherit;
+}
+
+.mampd-notas {
+  width: 100%;
+  min-width: 180px;
+  padding: 6px 8px;
+  border: 1px solid #dce3ea;
+  border-radius: 7px;
+  font: inherit;
+  resize: vertical;
+}
+
+/* ---- Tablas de Amparos Directos: columnas según contenido, sin anchos de Mesas ---- */
+#mampPage[data-tipo="directo"] .mesas-secretaria-table {
+  min-width: 0;
+  width: 100%;
+  table-layout: auto;
+}
+
+#mampPage[data-tipo="directo"] .mesas-secretaria-table th,
+#mampPage[data-tipo="directo"] .mesas-secretaria-table td {
+  width: auto;
+}
+
+#mampPage[data-tipo="directo"] .mesas-secretaria-table th {
+  white-space: nowrap;
+}
+
+/* Los botones pasan a la siguiente línea en vez de salirse de la celda */
+#mampPage[data-tipo="directo"] .mesas-secretaria-table .mesas-actions {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+#mampPage[data-tipo="directo"] .mesas-secretaria-table td:last-child {
+  min-width: 200px;
+}
+
+.mampd-nota-celda {
+  min-width: 190px;
+  max-width: 280px;
+}
+
+.mampd-nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.mampd-nota-texto {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.mampd-nota-editar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #b9cde3;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1768cf;
+  cursor: pointer;
+}
+
+.mampd-nota-editar:hover {
+  background: #e8f1ff;
+}
+
+.mampd-doc-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.mampd-doc-link:hover .mesas-stage-badge {
+  text-decoration: underline;
 }

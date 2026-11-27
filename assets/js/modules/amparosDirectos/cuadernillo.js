@@ -45,6 +45,7 @@ import {
   nombreUsuario,
   quejosoDe,
   formatFecha,
+  identificadorAmparo,
 } from "./datos.js";
 
 // Secciones del cuadernillo (siempre las mismas, en este orden).
@@ -65,6 +66,18 @@ export const DOCS_CUADERNILLO = [
   { id: "copia-demanda", texto: "Copia de la demanda de amparo directo" },
   { id: "copia-radicacion", texto: "Copia de la radicación" },
 ];
+
+// Secciones extra que solo tienen los amparos NEGADOS (se llenan en "Niega Amparo")
+export const DOCS_NIEGA_AMPARO = [
+  { id: "oficio-niega-amparo", texto: "Oficio (amparo negado)" },
+  { id: "acuerdo-niega-amparo", texto: "Acuerdo (amparo negado)" },
+];
+
+export function docsDeCuadernillo(seg) {
+  return seg?.envioTcc?.resultado === "negado"
+    ? [...DOCS_CUADERNILLO, ...DOCS_NIEGA_AMPARO]
+    : DOCS_CUADERNILLO;
+}
 
 // ------------------------------------------------------------
 // DATOS
@@ -91,15 +104,10 @@ export function seccionCumplida(seg, idSeccion) {
 }
 
 export function progresoCuadernillo(seg) {
-  const cargados = DOCS_CUADERNILLO.filter((doc) =>
-    seccionCumplida(seg, doc.id),
-  ).length;
+  const docs = docsDeCuadernillo(seg);
+  const cargados = docs.filter((doc) => seccionCumplida(seg, doc.id)).length;
 
-  return {
-    cargados,
-    total: DOCS_CUADERNILLO.length,
-    completo: cargados === DOCS_CUADERNILLO.length,
-  };
+  return { cargados, total: docs.length, completo: cargados === docs.length };
 }
 
 export function cuadernilloCompleto(seg) {
@@ -165,6 +173,8 @@ export function abrirCuadernillo(id, opciones = {}) {
 
   const cuad = cuadernilloDe(seg);
 
+  const docsAmparo = docsDeCuadernillo(seg);
+
   const progreso = progresoCuadernillo(seg);
 
   const porcentaje = Math.round((progreso.cargados / progreso.total) * 100);
@@ -172,17 +182,18 @@ export function abrirCuadernillo(id, opciones = {}) {
   const solo = opciones.soloSeccion || "";
 
   const secciones = solo
-    ? DOCS_CUADERNILLO.filter((doc) => doc.id === solo)
-    : DOCS_CUADERNILLO;
+    ? docsAmparo.filter((doc) => doc.id === solo)
+    : docsAmparo;
 
-  const filas = secciones.map((doc) => {
-    const indice = DOCS_CUADERNILLO.indexOf(doc);
+  const filas = secciones
+    .map((doc) => {
+      const indice = DOCS_CUADERNILLO.indexOf(doc);
 
-    const registro = cuad.docs[doc.id];
+      const registro = cuad.docs[doc.id];
 
-    const cumplida = seccionCumplida(seg, doc.id);
+      const cumplida = seccionCumplida(seg, doc.id);
 
-    return `
+      return `
       <li class="mampd-cuad-doc ${cumplida ? "ok" : ""}" data-seccion="${doc.id}">
         <div class="mampd-cuad-doc-main">
           <span class="mampd-cuad-check ${cumplida ? "ok" : ""}" aria-hidden="true">
@@ -222,7 +233,8 @@ export function abrirCuadernillo(id, opciones = {}) {
           }
         </div>
       </li>`;
-  }).join("");
+    })
+    .join("");
 
   showModal(`
     <div class="mesas-modal-shell mampd-cuad-modal" id="mampdCuadModal">
@@ -257,6 +269,14 @@ export function abrirCuadernillo(id, opciones = {}) {
         }
 
         <ul class="mampd-cuad-docs">${filas}</ul>
+        ${
+          solo && seccionCumplida(seg, solo)
+            ? `<section class="mampd-cuad-preview">
+          <strong>Vista previa</strong>
+          ${htmlVistaPreviaDocumento({ documentoId: cuad.docs[solo].documentoId })}
+        </section>`
+            : ""
+        }        
 
         ${
           solo
@@ -286,6 +306,8 @@ export function abrirCuadernillo(id, opciones = {}) {
   `);
 
   const modal = document.getElementById("mampdCuadModal");
+  // Vista previa automática (solo si el modal trae una sección con archivo)
+  activarVistasPreviasDocumento(modal);
 
   const mostrarError = (mensaje) => {
     const caja = modal.querySelector("#mampdCuadError");
@@ -365,7 +387,10 @@ export function abrirCuadernillo(id, opciones = {}) {
         subidoPor: nombreUsuario(),
       };
 
-      logSeg(s, `Cuadernillo: documento cargado en «${seccion.texto}» (${archivo.name})`);
+      logSeg(
+        s,
+        `Cuadernillo: documento cargado en «${seccion.texto}» (${archivo.name})`,
+      );
     });
 
     // Reemplazó un archivo anterior: se libera el espacio.
@@ -481,7 +506,9 @@ export function renderCuadernillos(host, deps = {}) {
       .includes(busqueda),
   );
 
-  const completos = registros.filter(({ seg }) => cuadernilloCompleto(seg)).length;
+  const completos = registros.filter(({ seg }) =>
+    cuadernilloCompleto(seg),
+  ).length;
 
   host.innerHTML = `
     <section class="mesas-fase4-section">
@@ -513,14 +540,16 @@ export function renderCuadernillos(host, deps = {}) {
             <thead>
               <tr>
                 <th>Amparo</th><th>Expediente</th><th>Quejoso</th><th>Etapa</th>
-                <th>Documentos</th><th>Estado</th><th>Acciones</th>
+                <th>Documentos</th><th>Estado</th><th>Comentarios</th><th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               ${registros
                 .map(({ amparo, seg }) => {
                   const p = progresoCuadernillo(seg);
-
+                  const comentario = (
+                    seg.cuadernillo?.observaciones || ""
+                  ).trim();
                   return `
                 <tr>
                   <td><span class="mesas-expediente-number">${escapeHTML(amparo.id)}</span></td>
@@ -537,6 +566,13 @@ export function renderCuadernillos(host, deps = {}) {
                     <span class="mesas-stage-badge ${p.completo ? "mamp-ok" : "acuerdo"}">
                       ${p.completo ? "Completo" : "Incompleto"}
                     </span>
+                  </td>
+                  <td class="mampd-cuad-comentario">
+                    ${
+                      comentario
+                        ? `<span title="${escapeHTML(comentario)}">${escapeHTML(comentario)}</span>`
+                        : `<span class="mampd-sin-comentario">Sin comentarios</span>`
+                    }
                   </td>
                   <td>
                     <div class="mesas-actions">

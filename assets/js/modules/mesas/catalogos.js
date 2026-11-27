@@ -96,13 +96,32 @@ export function etiquetaCategoriaPlantillaAmparos(clave) {
 
 export const SUBCATEGORIAS_PLANTILLA_AMPAROS = {
   radicaciones: [
-    { clave: "admision", etiqueta: "Admisión" },
-    // ← pon aquí los tipos de radicación reales
+    {
+      clave: "con-suspension-subsistencia",
+      etiqueta: "Con suspensión y subsistencia",
+    },
+    {
+      clave: "suspension-sin-subsistencia",
+      etiqueta: "Suspensión sin subsistencia",
+    },
+    {
+      clave: "sin-suspension-cosa-juzgada",
+      etiqueta: "Sin suspensión por cosa juzgada",
+    },
   ],
 };
 
 export function subcategoriasPlantillaAmparos(categoria) {
   return SUBCATEGORIAS_PLANTILLA_AMPAROS[categoria] || [];
+}
+
+export function etiquetaSubcategoriaPlantillaAmparos(categoria, clave) {
+  return (
+    subcategoriasPlantillaAmparos(categoria).find((s) => s.clave === clave)
+      ?.etiqueta ||
+    clave ||
+    ""
+  );
 }
 
 // ============================================================

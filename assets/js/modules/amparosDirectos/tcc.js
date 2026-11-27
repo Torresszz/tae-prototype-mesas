@@ -32,7 +32,12 @@ import { showModal, closeForm } from "../../forms/formHelper.js";
 
 import { sembrarDocumentoDemo } from "../mesas/documentosFirma.js";
 
-import { amparosDirectos, actualizarSeg, logSeg } from "./datos.js";
+import {
+  amparosDirectos,
+  obtenerAmparo,
+  actualizarSeg,
+  logSeg,
+} from "./datos.js";
 
 import { abrirCuadernillo, seccionCumplida } from "./cuadernillo.js";
 
@@ -54,6 +59,8 @@ export const OPCIONES_POSPONER = [
 // Sección del cuadernillo donde se sube el informe justificado.
 const SECCION_INFORME = "informe-justificado";
 
+const SECCION_CERTIFICACION = "certificacion";
+
 let aviso = null; // { tipo: "ok" | "error", texto }
 
 // ------------------------------------------------------------
@@ -66,11 +73,14 @@ export function registrosTcc() {
   return amparosDirectos()
     .filter(
       ({ seg }) =>
-        seg.etapa === "informe" && !seg.actuaria?.activo && !seg.informe?.enviado,
+        seg.etapa === "informe" &&
+        !seg.actuaria?.activo &&
+        !seg.informe?.enviado,
     )
     .sort(
       (a, b) =>
-        (venceInforme(a.seg)?.getTime() ?? 0) - (venceInforme(b.seg)?.getTime() ?? 0),
+        (venceInforme(a.seg)?.getTime() ?? 0) -
+        (venceInforme(b.seg)?.getTime() ?? 0),
     );
 }
 
@@ -144,7 +154,20 @@ export function renderTccDirectos(host, deps = {}) {
           : ""
       }
 
-      ${conAlerta.map(htmlAlerta).join("")}
+            <div class="mampd-tcc-layout">
+      <aside class="mampd-tcc-panel" aria-label="Notificaciones">
+        <header class="mampd-tcc-panel-header">
+          <strong><i class="fa-solid fa-bell"></i> Notificaciones</strong>
+          <span class="mampd-tcc-panel-count">${conAlerta.length}</span>
+        </header>
+        <div class="mampd-tcc-panel-lista">
+          ${
+            conAlerta.length
+              ? conAlerta.map(htmlAlerta).join("")
+              : `<p class="mampd-tcc-panel-vacio">Sin notificaciones pendientes.</p>`
+          }
+        </div>
+      </aside>
 
       <section class="mesas-secretaria-table-card">
         ${
@@ -164,6 +187,7 @@ export function renderTccDirectos(host, deps = {}) {
         </div>`
         }
       </section>
+      </div>
     </section>
   `;
 
@@ -183,14 +207,29 @@ export function renderTccDirectos(host, deps = {}) {
 
         break;
 
-      case "enviar-tcc":
-        enviarAlTcc(id);
-
-        aviso = { tipo: "ok", texto: `El informe del amparo ${id} se envió al Tribunal Colegiado.` };
-
-        refrescar();
-
+      case "gestionar-certificacion":
+        abrirCuadernillo(id, {
+          soloSeccion: SECCION_CERTIFICACION,
+          alCambiar: refrescar,
+        });
         break;
+
+      case "enviar-tcc": {
+        const resultado = enviarAlTcc(id);
+        aviso = resultado.ok
+          ? {
+              tipo: "ok",
+              texto: resultado.informePendiente
+                ? `Amparo ${id} enviado al TCC. El informe justificado quedó pendiente.`
+                : `Amparo ${id} enviado al Tribunal Colegiado con su informe.`,
+            }
+          : {
+              tipo: "error",
+              texto: "Sube primero la certificación para enviarlo al TCC.",
+            };
+        refrescar();
+        break;
+      }
 
       case "posponer":
         cambiarAlerta(id, (alerta) => {
@@ -243,7 +282,10 @@ export function renderTccDirectos(host, deps = {}) {
       case "demo":
         cargarDatosPrueba(deps);
 
-        aviso = { tipo: "ok", texto: "Se cargaron datos de prueba como si llegaran de Actuaría." };
+        aviso = {
+          tipo: "ok",
+          texto: "Se cargaron datos de prueba como si llegaran de Actuaría.",
+        };
 
         refrescar();
 
@@ -252,7 +294,10 @@ export function renderTccDirectos(host, deps = {}) {
       case "simular":
         simularLlegadas(deps);
 
-        aviso = { tipo: "ok", texto: "Los documentos enviados a Actuaría llegaron a esta pestaña." };
+        aviso = {
+          tipo: "ok",
+          texto: "Los documentos enviados a Actuaría llegaron a esta pestaña.",
+        };
 
         refrescar();
 
@@ -263,92 +308,126 @@ export function renderTccDirectos(host, deps = {}) {
 
 function htmlFila({ amparo, seg }) {
   const id = escapeHTML(amparo.id);
-
   const desactivada = seg.tcc?.alerta?.activa === false;
-
   const informeListo = seccionCumplida(seg, SECCION_INFORME);
+  const certificacionLista = seccionCumplida(seg, SECCION_CERTIFICACION);
 
   return `
     <tr>
       ${htmlCeldasDatos({ amparo, seg })}
       <td>
         <div class="mesas-actions mampd-pend-actions">
+          <button type="button" class="mesas-secondary-btn" data-tcc-action="gestionar-certificacion" data-amparo-id="${id}">
+            <i class="fa-solid fa-stamp"></i> ${certificacionLista ? "Ver certificación" : "Subir certificación"}
+          </button>
           <button type="button" class="mesas-primary-btn" data-tcc-action="gestionar" data-amparo-id="${id}">
             <i class="fa-solid fa-file-lines"></i> Gestionar informe justificado
           </button>
           <button type="button" class="mesas-primary-btn" data-tcc-action="enviar-tcc" data-amparo-id="${id}"
-            ${informeListo ? "" : "disabled"}
-            title="${informeListo ? "Enviar el informe al Tribunal Colegiado" : "Primero sube el documento del informe justificado"}">
+            ${certificacionLista ? "" : "disabled"}
+            title="${
+              certificacionLista
+                ? informeListo
+                  ? "Enviar al Tribunal Colegiado"
+                  : "Se enviará con el informe justificado pendiente"
+                : "Primero sube la certificación"
+            }">
             <i class="fa-solid fa-paper-plane"></i> Enviar al TCC
           </button>
           ${
+            certificacionLista && !informeListo
+              ? `<small class="mampd-pend-sub">Informe justificado pendiente</small>`
+              : ""
+          }
+          ${
             desactivada
               ? `<button type="button" class="mesas-secondary-btn" data-tcc-action="reactivar" data-amparo-id="${id}">
-                   <i class="fa-regular fa-bell"></i> Reactivar alerta
-                 </button>`
+                 <i class="fa-regular fa-bell"></i> Reactivar alerta
+               </button>`
               : ""
           }
         </div>
       </td>
     </tr>`;
 }
-
-// Aviso de los 3 días (se muestra al llegar y tras cada pospuesta vencida).
+// Notificación de los 3 días hábiles (tarjeta del panel izquierdo).
 function htmlAlerta({ amparo, seg }) {
   const id = escapeHTML(amparo.id);
 
   const vencida = (venceInforme(seg)?.getTime() ?? Infinity) <= Date.now();
 
   return `
-    <div class="mampd-tcc-alerta ${vencida ? "vencida" : ""}">
-      <div class="mampd-tcc-alerta-texto">
+    <article class="mampd-tcc-alerta ${vencida ? "vencida" : ""}">
+      <div class="mampd-tcc-alerta-cabecera">
         <i class="fa-solid ${vencida ? "fa-circle-exclamation" : "fa-bell"}"></i>
         <div>
-          <strong>Amparo ${id} · Expediente ${escapeHTML(amparo.expediente || "—")}</strong>
-          <span>
-            ${
-              vencida
-                ? "El plazo de 3 días hábiles para presentar el informe justificado ya venció."
-                : `Se tienen ${DIAS_INFORME_TCC} días hábiles para presentar el informe justificado.`
-            }
-            ${escapeHTML(textoVencimiento(seg))}.
-          </span>
+          <strong>Amparo ${id}</strong>
+          <small>Expediente ${escapeHTML(amparo.expediente || "—")}</small>
         </div>
       </div>
+
+      <p class="mampd-tcc-alerta-texto">
+        ${
+          vencida
+            ? `El plazo de ${DIAS_INFORME_TCC} días hábiles para presentar el informe justificado ya venció.`
+            : `Se tienen ${DIAS_INFORME_TCC} días hábiles para presentar el informe justificado.`
+        }
+      </p>
+
+      <span class="mampd-tcc-alerta-fecha">${escapeHTML(textoVencimiento(seg))}</span>
+
       <div class="mampd-tcc-alerta-acciones">
-        <span>Posponer:</span>
-        ${OPCIONES_POSPONER.map(
-          (opcion) => `
+        <span>Posponer</span>
+        <div class="mampd-tcc-alerta-botones">
+          ${OPCIONES_POSPONER.map(
+            (opcion) => `
           <button type="button" class="mesas-secondary-btn" data-tcc-action="posponer"
             data-amparo-id="${id}" data-horas="${opcion.horas}" data-etiqueta="${escapeHTML(opcion.etiqueta)}">
             ${escapeHTML(opcion.etiqueta)}
           </button>`,
-        ).join("")}
+          ).join("")}
+        </div>
         <button type="button" class="mesas-secondary-btn mampd-tcc-desactivar" data-tcc-action="desactivar" data-amparo-id="${id}">
-          <i class="fa-solid fa-bell-slash"></i> Desactivar
+          <i class="fa-solid fa-bell-slash"></i> Desactivar alerta
         </button>
       </div>
-    </div>`;
+    </article>`;
 }
 
 // Pasa el amparo a la etapa de Resolución (Tribunal Colegiado), igual que
 // el envío del informe que ya existía en el modal del amparo.
 function enviarAlTcc(id) {
+  const datos = obtenerAmparo(id);
+
+  // Candado real, no solo el botón deshabilitado
+  if (!datos || !seccionCumplida(datos.seg, SECCION_CERTIFICACION)) {
+    return { ok: false };
+  }
+
+  const informePendiente = !seccionCumplida(datos.seg, SECCION_INFORME);
+
   actualizarSeg(id, (seg) => {
     const ahora = new Date().toISOString();
 
-    if (seg.informe) {
+    if (seg.informe && !informePendiente) {
       seg.informe.enviado = true;
-
       seg.informe.enviadoEn = ahora;
     }
 
+    seg.tcc = seg.tcc && typeof seg.tcc === "object" ? seg.tcc : {};
+    seg.tcc.informePendiente = informePendiente;
     seg.etapa = "resolucion";
-
     seg.desde = ahora;
 
-    logSeg(seg, "Informe Justificado enviado al Tribunal Colegiado de Circuito");
+    logSeg(
+      seg,
+      informePendiente
+        ? "Enviado al Tribunal Colegiado con certificación; informe justificado pendiente"
+        : "Certificación e Informe Justificado enviados al Tribunal Colegiado de Circuito",
+    );
   });
+
+  return { ok: true, informePendiente };
 }
 
 function cambiarAlerta(id, fn) {
@@ -409,7 +488,10 @@ function marcarLlegada(id, horasAtras = 0) {
   actualizarSeg(id, (seg) => {
     seg.desde = llegada;
 
-    seg.tcc = { llegadaEn: llegada, alerta: { activa: true, pospuestaHasta: null } };
+    seg.tcc = {
+      llegadaEn: llegada,
+      alerta: { activa: true, pospuestaHasta: null },
+    };
   });
 }
 
@@ -423,9 +505,24 @@ function simularLlegadas(deps) {
 }
 
 const DEMO_TCC = [
-  { n: "T1", prom: "JOSEFINA RUIZ CORTÉS", acto: "Laudo condenatorio", horas: 2 },
-  { n: "T2", prom: "ALBERTO MENDOZA SILVA", acto: "Laudo absolutorio", horas: 50 },
-  { n: "T3", prom: "GUADALUPE ARREOLA PÉREZ", acto: "Laudo definitivo", horas: 170 },
+  {
+    n: "T1",
+    prom: "JOSEFINA RUIZ CORTÉS",
+    acto: "Laudo condenatorio",
+    horas: 2,
+  },
+  {
+    n: "T2",
+    prom: "ALBERTO MENDOZA SILVA",
+    acto: "Laudo absolutorio",
+    horas: 50,
+  },
+  {
+    n: "T3",
+    prom: "GUADALUPE ARREOLA PÉREZ",
+    acto: "Laudo definitivo",
+    horas: 170,
+  },
 ];
 
 const PARTES_TCC = [

@@ -13,7 +13,7 @@
 
 import { escapeHTML } from "../../utils.js";
 
-import { quejosoDe, formatFecha } from "./datos.js";
+import { quejosoDe, formatFecha, identificadorAmparo } from "./datos.js";
 
 import { firmasDe, ESTADO_FIRMADO } from "./firma.js";
 
@@ -66,7 +66,11 @@ export function esDiaHabil(fecha) {
 
 // Día resultante de sumar `n` días hábiles (el día de `desde` no cuenta).
 export function sumarDiasHabiles(desde, n) {
-  const fecha = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate());
+  const fecha = new Date(
+    desde.getFullYear(),
+    desde.getMonth(),
+    desde.getDate(),
+  );
 
   let contados = 0;
 
@@ -94,7 +98,11 @@ export function venceInforme(seg) {
 
 // Días hábiles que faltan después de hoy hasta el día de vencimiento.
 function diasHabilesRestantes(vence, ahora) {
-  const fecha = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+  const fecha = new Date(
+    ahora.getFullYear(),
+    ahora.getMonth(),
+    ahora.getDate(),
+  );
 
   const fin = new Date(vence.getFullYear(), vence.getMonth(), vence.getDate());
 

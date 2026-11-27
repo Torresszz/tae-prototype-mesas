@@ -21,6 +21,10 @@ import { renderPlantillasDirectos } from "./plantillasDirectos.js";
 
 import { renderListasDirectos, iniciarListasAutomaticas } from "./listas.js";
 
+import { renderEnviosTcc } from "./enviosTcc.js";
+
+import { renderNiegaAmparo } from "./niegaAmparo.js";
+
 const PAGINA = "mesas-amparos-directos";
 
 export const SECCIONES_DIRECTOS = [
@@ -34,10 +38,11 @@ export const SECCIONES_DIRECTOS = [
     etiqueta: "Pendiente de enviar al TCC",
     icono: "fa-building-columns",
   },
-  { id: "amparos", etiqueta: "Amparos", icono: "fa-scale-balanced" },
+  { id: "envios-tcc", etiqueta: "Envíos del TCC", icono: "fa-inbox" },
+  { id: "niega-amparo", etiqueta: "Niega Amparo", icono: "fa-ban" },
   { id: "cuadernillos", etiqueta: "Cuadernillos", icono: "fa-folder-open" },
-  { id: "plantillas", etiqueta: "Plantillas", icono: "fa-file-lines" },
   { id: "listas", etiqueta: "Listas", icono: "fa-list-check" },
+  { id: "plantillas", etiqueta: "Plantillas", icono: "fa-file-lines" },
 ];
 
 let seccionActiva = "pendientes";
@@ -155,7 +160,9 @@ export function renderSeccionesDirectos(deps = {}) {
   });
 
   // El encabezado indica dónde estás (las pestañas ya no están en la página)
-  const etiqueta = SECCIONES_DIRECTOS.find((s) => s.id === seccionActiva)?.etiqueta;
+  const etiqueta = SECCIONES_DIRECTOS.find(
+    (s) => s.id === seccionActiva,
+  )?.etiqueta;
 
   const eyebrow = document.querySelector("#mampPage .eyebrow");
 
@@ -189,6 +196,14 @@ export function renderSeccionesDirectos(deps = {}) {
     case "listas":
       renderListasDirectos(host("mampdListasHost"), deps);
 
+      break;
+
+    case "envios-tcc":
+      renderEnviosTcc(host("mampdEnviosTccHost"), deps);
+      break;
+
+    case "niega-amparo":
+      renderNiegaAmparo(host("mampdNiegaAmparoHost"), deps);
       break;
   }
 
