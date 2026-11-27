@@ -2058,3 +2058,5 @@
     }
 
 }
+/* Texto del acuerdo de una promoción (solo lectura) */
+.mesas-promocion-texto-acuerdo { margin: 0; padding: 16px 18px; max-height: 60vh; overflow: auto; white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.6; color: #1e293b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }

@@ -1,0 +1,1251 @@
+diff --git a/assets/css/mesasAmparosDirectos.css b/assets/css/mesasAmparosDirectos.css
+index 61933e4..dce7e95 100644
+--- a/assets/css/mesasAmparosDirectos.css
++++ b/assets/css/mesasAmparosDirectos.css
+@@ -678,3 +678,230 @@
+   margin: 6px 0;
+   color: #60758a;
+ }
++
++/* ============================================================
++   NOTIFICACIONES: calendario + Posponer / Agendar (tcc.js)
++   ============================================================ */
++.mampd-tcc-alerta-calendario {
++  display: grid;
++  grid-template-columns: 1fr 92px;
++  gap: 6px;
++}
++.mampd-tcc-alerta-calendario input {
++  width: 100%;
++  min-width: 0;
++  padding: 5px 6px;
++  border: 1px solid #d6dee8;
++  border-radius: 6px;
++  background: #fff;
++  font: inherit;
++  font-size: 12px;
++  color: #102b45;
++}
++.mampd-tcc-alerta-rapidas {
++  display: grid;
++  grid-template-columns: repeat(4, 1fr);
++  gap: 4px;
++}
++.mampd-tcc-alerta-rapidas .mesas-secondary-btn {
++  padding: 3px 4px;
++  font-size: 10px;
++}
++.mampd-tcc-alerta-acciones .mesas-primary-btn {
++  justify-content: center;
++  padding: 5px 6px;
++  font-size: 11px;
++}
++.mampd-tcc-alerta-ayuda {
++  color: #6b7f94;
++  font-size: 10px;
++  line-height: 1.35;
++}
++.mampd-tcc-alerta-agendado,
++.mampd-tcc-agendado {
++  color: #1d6b43;
++  font-weight: 700;
++}
++.mampd-tcc-alerta-agendado {
++  font-size: 11px;
++}
++
++/* ============================================================
++   AGENDA DE AMPAROS DIRECTOS (agendaDirectos.js)
++   ============================================================ */
++.mampd-agenda-layout {
++  display: grid;
++  grid-template-columns: minmax(0, 1fr) 300px;
++  gap: 18px;
++  align-items: start;
++}
++.mampd-agenda-calendario {
++  padding: 16px;
++}
++.mampd-agenda-mes {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  margin-bottom: 12px;
++}
++.mampd-agenda-mes strong {
++  min-width: 170px;
++  text-align: center;
++  color: #102b45;
++  font-size: 16px;
++}
++.mampd-agenda-semana,
++.mampd-agenda-grid {
++  display: grid;
++  grid-template-columns: repeat(7, minmax(0, 1fr));
++  gap: 6px;
++}
++.mampd-agenda-semana span {
++  padding: 4px 0;
++  text-align: center;
++  color: #6b7f94;
++  font-size: 11px;
++  font-weight: 700;
++  text-transform: uppercase;
++}
++.mampd-agenda-dia {
++  display: flex;
++  flex-direction: column;
++  gap: 4px;
++  min-height: 92px;
++  padding: 6px;
++  border: 1px solid #e3e9f0;
++  border-radius: 8px;
++  background: #fff;
++}
++.mampd-agenda-dia.vacio {
++  border-style: dashed;
++  background: #f8fafc;
++}
++.mampd-agenda-dia.hoy {
++  border-color: #2b6cb0;
++  box-shadow: inset 0 0 0 1px #2b6cb0;
++}
++.mampd-agenda-num {
++  color: #4a5f75;
++  font-size: 12px;
++  font-weight: 700;
++}
++.mampd-agenda-dia.hoy .mampd-agenda-num {
++  color: #2b6cb0;
++}
++.mampd-agenda-evento {
++  display: block;
++  width: 100%;
++  padding: 3px 5px;
++  overflow: hidden;
++  border: 0;
++  border-left: 3px solid #2f855a;
++  border-radius: 4px;
++  background: #e6f6ec;
++  color: #1d4f34;
++  font: inherit;
++  font-size: 11px;
++  line-height: 1.3;
++  text-align: left;
++  white-space: normal;
++  overflow-wrap: anywhere;
++  cursor: pointer;
++}
++.mampd-agenda-evento:hover {
++  background: #d3efdd;
++}
++.mampd-agenda-lateral {
++  display: flex;
++  flex-direction: column;
++  gap: 14px;
++}
++.mampd-agenda-bloque {
++  padding: 14px 16px;
++}
++.mampd-agenda-bloque h3 {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  margin: 0 0 10px;
++  color: #102b45;
++  font-size: 13px;
++}
++.mampd-agenda-lista {
++  display: flex;
++  flex-direction: column;
++  gap: 8px;
++  margin: 0;
++  padding: 0;
++  list-style: none;
++}
++.mampd-agenda-lista li {
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  font-size: 12px;
++  color: #4a5f75;
++}
++.mampd-agenda-lista li > strong {
++  color: #102b45;
++}
++.mampd-agenda-item {
++  display: flex;
++  flex-direction: column;
++  gap: 2px;
++  width: 100%;
++  padding: 8px 10px;
++  border: 1px solid #e3e9f0;
++  border-left: 3px solid #2f855a;
++  border-radius: 6px;
++  background: #fff;
++  color: #4a5f75;
++  font: inherit;
++  font-size: 12px;
++  text-align: left;
++  cursor: pointer;
++}
++.mampd-agenda-item strong {
++  color: #102b45;
++}
++.mampd-agenda-item:hover {
++  background: #f3faf6;
++}
++.mampd-agenda-vacio {
++  margin: 0;
++  color: #6b7f94;
++  font-size: 12px;
++}
++.mampd-agenda-detalle {
++  display: grid;
++  grid-template-columns: repeat(2, minmax(0, 1fr));
++  gap: 12px 20px;
++  margin: 0;
++}
++.mampd-agenda-detalle dt {
++  color: #6b7f94;
++  font-size: 12px;
++}
++.mampd-agenda-detalle dd {
++  margin: 2px 0 0;
++  color: #102b45;
++  font-weight: 600;
++}
++.mesas-modal-confirm.mampd-agenda-quitar {
++  background: #b83232;
++  border-color: #b83232;
++}
++
++@media (max-width: 1100px) {
++  .mampd-agenda-layout {
++    grid-template-columns: 1fr;
++  }
++}
++@media (max-width: 640px) {
++  .mampd-agenda-dia {
++    min-height: 64px;
++  }
++  .mampd-agenda-evento b {
++    display: none;
++  }
++}
+diff --git a/assets/css/mesasFase4.css b/assets/css/mesasFase4.css
+index 61bcd89..fce2844 100644
+--- a/assets/css/mesasFase4.css
++++ b/assets/css/mesasFase4.css
+@@ -2058,3 +2058,5 @@
+     }
+ 
+ }
++/* Texto del acuerdo de una promoción (solo lectura) */
++.mesas-promocion-texto-acuerdo { margin: 0; padding: 16px 18px; max-height: 60vh; overflow: auto; white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.6; color: #1e293b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+diff --git a/assets/js/modules/amparosDirectos/agendaDirectos.js b/assets/js/modules/amparosDirectos/agendaDirectos.js
+new file mode 100644
+index 0000000..442757c
+--- /dev/null
++++ b/assets/js/modules/amparosDirectos/agendaDirectos.js
+@@ -0,0 +1,480 @@
++// ============================================================
++// AGENDA DE AMPAROS DIRECTOS
++// assets/js/modules/amparosDirectos/agendaDirectos.js
++//
++// Calendario mensual con las fechas CONFIRMADAS de Amparos Directos.
++// Los eventos nacen desde el panel de Notificaciones de "Pendiente de
++// enviar al TCC" (tcc.js):
++//   - "Posponer": NO hay fecha asignada todavía; solo se oculta el aviso
++//     hasta el día elegido. No entra a la agenda (se lista aparte como
++//     "Pospuestos, sin fecha confirmada").
++//   - "Agendar": la fecha ya está confirmada; se crea el evento en esta
++//     agenda y el aviso vuelve a aparecer el día del evento.
++//
++// Datos (localStorage):
++//   amparosDirectosAgenda = [{ id, amparoId, expediente, fecha (AAAA-MM-DD),
++//                              hora (HH:MM), nota, creadoEn, creadoPor }]
++//   seguimiento del amparo: seg.tcc.alerta = { activa, pospuestaHasta,
++//                              pospuestaFecha?, agenda?: { eventoId, fecha, hora } }
++// Al migrar, la agenda pasa al servidor (una tabla de eventos).
++// ============================================================
++
++import { getData, saveData } from "../../storage.js";
++import { createId, escapeHTML } from "../../utils.js";
++import { showModal, closeForm } from "../../forms/formHelper.js";
++
++import {
++  amparosDirectos,
++  obtenerAmparo,
++  actualizarSeg,
++  logSeg,
++  nombreUsuario,
++} from "./datos.js";
++
++export const KEY_AGENDA_DIRECTOS = "amparosDirectosAgenda";
++
++const MESES = [
++  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
++  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
++];
++
++const DIAS_SEMANA = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
++
++// Mes visible del calendario (se conserva entre repintados).
++let vista = null; // { anio, mes }
++
++let aviso = null; // { tipo: "ok" | "error", texto }
++
++// ------------------------------------------------------------
++// FECHAS (hora local)
++// ------------------------------------------------------------
++export function fechaLocalISO(fecha = new Date()) {
++  const anio = fecha.getFullYear();
++  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
++  const dia = String(fecha.getDate()).padStart(2, "0");
++
++  return `${anio}-${mes}-${dia}`;
++}
++
++// "AAAA-MM-DD" (+ "HH:MM") -> Date local
++export function aFechaLocal(fecha, hora = "00:00") {
++  const [anio, mes, dia] = String(fecha).split("-").map(Number);
++  const [h, m] = String(hora || "00:00").split(":").map(Number);
++
++  return new Date(anio, (mes || 1) - 1, dia || 1, h || 0, m || 0, 0, 0);
++}
++
++// "AAAA-MM-DD" -> "DD/MM/AAAA" sin pasar por UTC (evita el día anterior).
++export function fechaCorta(fecha) {
++  const [anio, mes, dia] = String(fecha || "").slice(0, 10).split("-");
++
++  return anio && mes && dia ? `${dia}/${mes}/${anio}` : "—";
++}
++
++export function sumarDias(fecha, dias) {
++  const copia = new Date(fecha);
++
++  copia.setDate(copia.getDate() + dias);
++
++  return copia;
++}
++
++// ------------------------------------------------------------
++// DATOS
++// ------------------------------------------------------------
++export function eventosAgendaDirectos() {
++  const eventos = getData(KEY_AGENDA_DIRECTOS, []);
++
++  return Array.isArray(eventos) ? eventos : [];
++}
++
++function guardarEventos(eventos) {
++  saveData(KEY_AGENDA_DIRECTOS, eventos);
++}
++
++const ordenar = (a, b) =>
++  `${a.fecha} ${a.hora || ""}`.localeCompare(`${b.fecha} ${b.hora || ""}`);
++
++// Alertas pospuestas SIN fecha confirmada (todavía ocultas).
++export function pospuestosSinFecha(ahora = Date.now()) {
++  return amparosDirectos()
++    .filter(({ seg }) => {
++      const alerta = seg.tcc?.alerta;
++
++      return (
++        alerta?.activa !== false &&
++        !alerta?.agenda &&
++        alerta?.pospuestaHasta &&
++        Date.parse(alerta.pospuestaHasta) > ahora
++      );
++    })
++    .sort(
++      (a, b) =>
++        Date.parse(a.seg.tcc.alerta.pospuestaHasta) -
++        Date.parse(b.seg.tcc.alerta.pospuestaHasta),
++    );
++}
++
++// ------------------------------------------------------------
++// ACCIONES (las usa el panel de Notificaciones de tcc.js)
++// Devuelven { ok, error?, evento? }.
++// ------------------------------------------------------------
++
++// Posponer: sin fecha confirmada. El aviso se oculta hasta el día elegido.
++export function posponerAviso(amparoId, fecha, ahora = new Date()) {
++  if (!fecha) {
++    return { ok: false, error: "Elige en el calendario hasta qué día se pospone el aviso." };
++  }
++
++  const hasta = aFechaLocal(fecha);
++
++  if (hasta <= ahora) {
++    return { ok: false, error: "Para posponer, elige un día posterior a hoy." };
++  }
++
++  if (!obtenerAmparo(amparoId)) {
++    return { ok: false, error: "No se encontró el amparo." };
++  }
++
++  actualizarSeg(amparoId, (seg) => {
++    seg.tcc = seg.tcc && typeof seg.tcc === "object" ? seg.tcc : {};
++    seg.tcc.alerta = seg.tcc.alerta || { activa: true, pospuestaHasta: null };
++    seg.tcc.alerta.activa = true;
++    seg.tcc.alerta.pospuestaHasta = hasta.toISOString();
++    seg.tcc.alerta.pospuestaFecha = fecha;
++
++    logSeg(seg, `Aviso pospuesto hasta el ${fechaCorta(fecha)} (sin fecha confirmada)`);
++  });
++
++  return { ok: true };
++}
++
++// Agendar: la fecha ya está confirmada. Se crea el evento y el aviso
++// vuelve a aparecer el día del evento. Si ya estaba agendado, se
++// reprograma el mismo evento.
++export function agendarAviso(amparoId, { fecha, hora, nota = "" }, ahora = new Date()) {
++  if (!fecha || !hora) {
++    return { ok: false, error: "Para agendar, indica la fecha confirmada y la hora." };
++  }
++
++  if (aFechaLocal(fecha, hora) <= ahora) {
++    return { ok: false, error: "La fecha y hora confirmadas deben ser posteriores a este momento." };
++  }
++
++  const datos = obtenerAmparo(amparoId);
++
++  if (!datos) {
++    return { ok: false, error: "No se encontró el amparo." };
++  }
++
++  const eventos = eventosAgendaDirectos();
++  const previoId = datos.seg.tcc?.alerta?.agenda?.eventoId;
++  let evento = eventos.find((item) => item.id === previoId);
++
++  if (evento) {
++    Object.assign(evento, {
++      fecha,
++      hora,
++      nota: String(nota || "").trim(),
++      actualizadoEn: ahora.toISOString(),
++    });
++  } else {
++    evento = {
++      id: createId(),
++      amparoId: String(amparoId),
++      expediente: datos.amparo.expediente || "",
++      fecha,
++      hora,
++      nota: String(nota || "").trim(),
++      creadoEn: ahora.toISOString(),
++      creadoPor: nombreUsuario(),
++    };
++
++    eventos.push(evento);
++  }
++
++  guardarEventos(eventos);
++
++  actualizarSeg(amparoId, (seg) => {
++    seg.tcc = seg.tcc && typeof seg.tcc === "object" ? seg.tcc : {};
++    seg.tcc.alerta = seg.tcc.alerta || { activa: true, pospuestaHasta: null };
++    seg.tcc.alerta.activa = true;
++    seg.tcc.alerta.agenda = { eventoId: evento.id, fecha, hora };
++    seg.tcc.alerta.pospuestaHasta = aFechaLocal(fecha).toISOString();
++    delete seg.tcc.alerta.pospuestaFecha;
++
++    logSeg(seg, `Agendado el ${fechaCorta(fecha)} a las ${hora} (fecha confirmada)`);
++  });
++
++  return { ok: true, evento };
++}
++
++// Quita el evento de la agenda y vuelve a mostrar el aviso.
++export function quitarDeAgenda(eventoId) {
++  const eventos = eventosAgendaDirectos();
++  const evento = eventos.find((item) => item.id === eventoId);
++
++  if (!evento) return { ok: false, error: "El evento ya no existe." };
++
++  guardarEventos(eventos.filter((item) => item.id !== eventoId));
++
++  if (obtenerAmparo(evento.amparoId)) {
++    actualizarSeg(evento.amparoId, (seg) => {
++      const alerta = seg.tcc?.alerta;
++
++      if (alerta?.agenda?.eventoId === eventoId) {
++        delete alerta.agenda;
++        alerta.pospuestaHasta = null;
++      }
++
++      logSeg(seg, `Se quitó de la agenda el evento del ${fechaCorta(evento.fecha)}`);
++    });
++  }
++
++  return { ok: true };
++}
++
++// ------------------------------------------------------------
++// RENDER
++// ------------------------------------------------------------
++export function renderAgendaDirectos(host, deps = {}) {
++  if (!host) return;
++
++  const refrescar = () => renderAgendaDirectos(host, deps);
++
++  const hoy = new Date();
++  const hoyISO = fechaLocalISO(hoy);
++
++  if (!vista) vista = { anio: hoy.getFullYear(), mes: hoy.getMonth() };
++
++  const eventos = eventosAgendaDirectos().slice().sort(ordenar);
++  const proximos = eventos.filter((e) => e.fecha >= hoyISO);
++  const pospuestos = pospuestosSinFecha();
++  const mensaje = aviso;
++
++  aviso = null;
++
++  host.innerHTML = `
++    <section class="mesas-fase4-section mampd-agenda">
++      <div class="mesas-fase4-header">
++        <div>
++          <span class="mesas-mini-eyebrow">Agenda</span>
++          <h2>Agenda de Amparos Directos</h2>
++          <p>
++            Fechas confirmadas desde el panel de Notificaciones ("Agendar").
++            Lo pospuesto sin fecha confirmada se lista aparte.
++          </p>
++        </div>
++      </div>
++
++      ${
++        mensaje
++          ? `<p class="${mensaje.tipo === "ok" ? "mesas-fase6-notice" : "mesas-fase6-error"}" data-agenda-aviso>${escapeHTML(mensaje.texto)}</p>`
++          : ""
++      }
++
++      <div class="mampd-agenda-layout">
++        <section class="mesas-secretaria-table-card mampd-agenda-calendario">
++          <header class="mampd-agenda-mes">
++            <button type="button" class="mesas-secondary-btn" data-agd-action="mes-anterior" aria-label="Mes anterior">
++              <i class="fa-solid fa-chevron-left"></i>
++            </button>
++            <strong data-agd-mes>${MESES[vista.mes]} ${vista.anio}</strong>
++            <button type="button" class="mesas-secondary-btn" data-agd-action="mes-siguiente" aria-label="Mes siguiente">
++              <i class="fa-solid fa-chevron-right"></i>
++            </button>
++            <button type="button" class="mesas-secondary-btn" data-agd-action="hoy">Hoy</button>
++          </header>
++          <div class="mampd-agenda-semana">
++            ${DIAS_SEMANA.map((dia) => `<span>${dia}</span>`).join("")}
++          </div>
++          <div class="mampd-agenda-grid">
++            ${htmlDiasMes(vista.anio, vista.mes, eventos, hoyISO)}
++          </div>
++        </section>
++
++        <aside class="mampd-agenda-lateral">
++          <section class="mesas-secretaria-table-card mampd-agenda-bloque">
++            <h3><i class="fa-regular fa-calendar-check"></i> Próximos (fecha confirmada)</h3>
++            ${
++              proximos.length
++                ? `<ul class="mampd-agenda-lista" data-agd-proximos>
++                    ${proximos.map(htmlItemEvento).join("")}
++                  </ul>`
++                : `<p class="mampd-agenda-vacio">No hay eventos agendados.</p>`
++            }
++          </section>
++
++          <section class="mesas-secretaria-table-card mampd-agenda-bloque">
++            <h3><i class="fa-regular fa-clock"></i> Pospuestos (sin fecha confirmada)</h3>
++            ${
++              pospuestos.length
++                ? `<ul class="mampd-agenda-lista" data-agd-pospuestos>
++                    ${pospuestos
++                      .map(
++                        ({ amparo, seg }) => `
++                      <li>
++                        <strong>Amparo ${escapeHTML(amparo.id)}</strong>
++                        <span>Expediente ${escapeHTML(amparo.expediente || "—")}</span>
++                        <small>Se vuelve a avisar el ${escapeHTML(
++                          fechaCorta(
++                            seg.tcc.alerta.pospuestaFecha ||
++                              fechaLocalISO(new Date(seg.tcc.alerta.pospuestaHasta)),
++                          ),
++                        )}</small>
++                      </li>`,
++                      )
++                      .join("")}
++                  </ul>`
++                : `<p class="mampd-agenda-vacio">No hay avisos pospuestos.</p>`
++            }
++          </section>
++        </aside>
++      </div>
++    </section>
++  `;
++
++  host.onclick = (event) => {
++    const boton = event.target.closest("[data-agd-action]");
++
++    if (!boton) return;
++
++    switch (boton.dataset.agdAction) {
++      case "mes-anterior":
++        vista = vista.mes === 0
++          ? { anio: vista.anio - 1, mes: 11 }
++          : { anio: vista.anio, mes: vista.mes - 1 };
++        refrescar();
++        break;
++
++      case "mes-siguiente":
++        vista = vista.mes === 11
++          ? { anio: vista.anio + 1, mes: 0 }
++          : { anio: vista.anio, mes: vista.mes + 1 };
++        refrescar();
++        break;
++
++      case "hoy":
++        vista = { anio: hoy.getFullYear(), mes: hoy.getMonth() };
++        refrescar();
++        break;
++
++      case "ver-evento":
++        abrirEvento(boton.dataset.eventoId, deps, refrescar);
++        break;
++    }
++  };
++}
++
++// Lleva el calendario al mes de una fecha (al agendar desde el panel).
++export function mostrarMesDe(fecha) {
++  const d = aFechaLocal(fecha);
++
++  vista = { anio: d.getFullYear(), mes: d.getMonth() };
++}
++
++function htmlDiasMes(anio, mes, eventos, hoyISO) {
++  const primerDia = new Date(anio, mes, 1);
++  const totalDias = new Date(anio, mes + 1, 0).getDate();
++  const espaciosAntes = (primerDia.getDay() + 6) % 7; // lunes = 0
++  const celdas = [];
++
++  for (let i = 0; i < espaciosAntes; i += 1) {
++    celdas.push(`<div class="mampd-agenda-dia vacio" aria-hidden="true"></div>`);
++  }
++
++  for (let dia = 1; dia <= totalDias; dia += 1) {
++    const fecha = fechaLocalISO(new Date(anio, mes, dia));
++    const delDia = eventos.filter((e) => e.fecha === fecha);
++
++    celdas.push(`
++      <div class="mampd-agenda-dia ${fecha === hoyISO ? "hoy" : ""}" data-agd-fecha="${fecha}">
++        <span class="mampd-agenda-num">${dia}</span>
++        ${delDia
++          .map(
++            (evento) => `
++          <button type="button" class="mampd-agenda-evento" data-agd-action="ver-evento" data-evento-id="${escapeHTML(evento.id)}"
++            title="Amparo ${escapeHTML(evento.amparoId)} · ${escapeHTML(evento.hora || "")}">
++            <b>${escapeHTML(evento.hora || "")}</b> ${escapeHTML(evento.amparoId)}
++          </button>`,
++          )
++          .join("")}
++      </div>
++    `);
++  }
++
++  return celdas.join("");
++}
++
++function htmlItemEvento(evento) {
++  return `
++    <li>
++      <button type="button" class="mampd-agenda-item" data-agd-action="ver-evento" data-evento-id="${escapeHTML(evento.id)}">
++        <strong>${escapeHTML(fechaCorta(evento.fecha))} · ${escapeHTML(evento.hora || "")}</strong>
++        <span>Amparo ${escapeHTML(evento.amparoId)} · Expediente ${escapeHTML(evento.expediente || "—")}</span>
++        ${evento.nota ? `<small>${escapeHTML(evento.nota)}</small>` : ""}
++      </button>
++    </li>`;
++}
++
++function abrirEvento(eventoId, deps, refrescar) {
++  const evento = eventosAgendaDirectos().find((item) => item.id === eventoId);
++
++  if (!evento) return;
++
++  showModal(`
++    <div class="mesas-modal-shell">
++      <header class="mesas-modal-header">
++        <div class="mesas-modal-step"><i class="fa-regular fa-calendar-check"></i></div>
++        <div class="mesas-modal-header-text">
++          <h2>Amparo ${escapeHTML(evento.amparoId)}</h2>
++          <p>Expediente ${escapeHTML(evento.expediente || "—")}</p>
++        </div>
++      </header>
++      <div class="mesas-modal-body">
++        <dl class="mampd-agenda-detalle">
++          <div><dt>Fecha confirmada</dt><dd>${escapeHTML(fechaCorta(evento.fecha))}</dd></div>
++          <div><dt>Hora</dt><dd>${escapeHTML(evento.hora || "—")}</dd></div>
++          <div><dt>Nota</dt><dd>${escapeHTML(evento.nota || "—")}</dd></div>
++          <div><dt>Agendó</dt><dd>${escapeHTML(evento.creadoPor || "—")}</dd></div>
++        </dl>
++      </div>
++      <footer class="mesas-modal-footer">
++        <button type="button" class="mesas-modal-cancel" id="mampdAgendaCerrar">Cerrar</button>
++        ${
++          deps.abrirAmparo
++            ? `<button type="button" class="mesas-secondary-btn" id="mampdAgendaVerAmparo">
++                 <i class="fa-regular fa-folder-open"></i> Ver amparo
++               </button>`
++            : ""
++        }
++        <button type="button" class="mesas-modal-confirm mampd-agenda-quitar" id="mampdAgendaQuitar">
++          <i class="fa-regular fa-calendar-xmark"></i> Quitar de la agenda
++        </button>
++      </footer>
++    </div>
++  `);
++
++  document.getElementById("mampdAgendaCerrar").onclick = closeForm;
++
++  const ver = document.getElementById("mampdAgendaVerAmparo");
++
++  if (ver) {
++    ver.onclick = () => {
++      closeForm();
++      deps.abrirAmparo(evento.amparoId);
++    };
++  }
++
++  document.getElementById("mampdAgendaQuitar").onclick = () => {
++    const resultado = quitarDeAgenda(eventoId);
++
++    aviso = resultado.ok
++      ? { tipo: "ok", texto: "Se quitó el evento de la agenda; el aviso vuelve a mostrarse en Notificaciones." }
++      : { tipo: "error", texto: resultado.error };
++
++    closeForm();
++    refrescar();
++    deps.alCambiarAgenda?.();
++  };
++}
+diff --git a/assets/js/modules/amparosDirectos/index.js b/assets/js/modules/amparosDirectos/index.js
+index 187e178..330fc0a 100644
+--- a/assets/js/modules/amparosDirectos/index.js
++++ b/assets/js/modules/amparosDirectos/index.js
+@@ -7,6 +7,7 @@
+ // de la página "mesas-amparos-directos": no son rutas nuevas, así que
+ // los permisos de auth.js no cambian.
+ //   Pendientes de realizar · Amparos · Cuadernillos · Plantillas · Listas
++//   · Agenda (fechas confirmadas con "Agendar" en Notificaciones)
+ // El apartado "Amparos" es la tabla de siempre (en mesasAmparos.js);
+ // los otros tres los dibujan los módulos de esta carpeta.
+ // ============================================================
+@@ -26,6 +27,7 @@ import { renderEnviosTcc } from "./enviosTcc.js";
+ import { renderNiegaAmparo } from "./niegaAmparo.js";
+ 
+ import { renderAmparaProtege } from "./amparaProtege.js";
++import { renderAgendaDirectos } from "./agendaDirectos.js";
+ 
+ const PAGINA = "mesas-amparos-directos";
+ 
+@@ -40,6 +42,7 @@ export const SECCIONES_DIRECTOS = [
+     etiqueta: "Pendiente de enviar al TCC",
+     icono: "fa-building-columns",
+   },
++  { id: "agenda", etiqueta: "Agenda", icono: "fa-calendar-days" },
+   { id: "envios-tcc", etiqueta: "Envíos del TCC", icono: "fa-inbox" },
+   { id: "niega-amparo", etiqueta: "Niega Amparo", icono: "fa-ban" },
+   {
+@@ -209,6 +212,12 @@ export function renderSeccionesDirectos(deps = {}) {
+ 
+       break;
+ 
++    case "agenda":
++      renderAgendaDirectos(host("mampdAgendaHost"), {
++        ...deps,
++        alCambiarAgenda: marcarAlertasTcc,
++      });
++      break;
+     case "envios-tcc":
+       renderEnviosTcc(host("mampdEnviosTccHost"), deps);
+       break;
+diff --git a/assets/js/modules/amparosDirectos/tcc.js b/assets/js/modules/amparosDirectos/tcc.js
+index f16d0ab..baaf7a1 100644
+--- a/assets/js/modules/amparosDirectos/tcc.js
++++ b/assets/js/modules/amparosDirectos/tcc.js
+@@ -16,11 +16,17 @@
+ //   - "Enviar al TCC" se habilita con el documento del informe subido y
+ //     lo pasa a la etapa de Resolución (Tribunal Colegiado).
+ //   - Al llegar se avisa que hay 3 DÍAS HÁBILES para presentar el informe.
+-//     La alerta se puede posponer 24 h, 48 h, 3 días o 1 semana, o
+-//     desactivar (con confirmación).
++//     Cada aviso trae un calendario (fecha y hora) y dos botones:
++//       · "Posponer": NO hay fecha asignada; solo se oculta el aviso
++//         hasta el día elegido (atajos: 24 h, 48 h, 3 días, 1 semana).
++//       · "Agendar": la fecha YA está confirmada; se crea el evento en la
++//         Agenda de Amparos Directos (agendaDirectos.js) y el aviso vuelve
++//         a aparecer el día del evento.
++//     También se puede desactivar (con confirmación).
+ //
+ // Datos en el seguimiento del amparo:
+-//   seg.tcc = { llegadaEn?, alerta: { activa, pospuestaHasta?, desactivadaEn? } }
++//   seg.tcc = { llegadaEn?, alerta: { activa, pospuestaHasta?, pospuestaFecha?,
++//               agenda?: { eventoId, fecha, hora }, desactivadaEn? } }
+ //   (si no hay llegadaEn se usa seg.desde: cuando pasó a Informe)
+ // ============================================================
+ 
+@@ -49,6 +55,15 @@ import {
+   textoVencimiento,
+ } from "./tablaAmparos.js";
+ 
++import {
++  posponerAviso,
++  agendarAviso,
++  fechaLocalISO,
++  fechaCorta,
++  sumarDias,
++  mostrarMesDe,
++} from "./agendaDirectos.js";
++
+ export const OPCIONES_POSPONER = [
+   { horas: 24, etiqueta: "24 horas" },
+   { horas: 48, etiqueta: "48 horas" },
+@@ -231,23 +246,57 @@ export function renderTccDirectos(host, deps = {}) {
+         break;
+       }
+ 
+-      case "posponer":
+-        cambiarAlerta(id, (alerta) => {
+-          alerta.activa = true;
++      // Atajo: llena el calendario (no pospone por sí solo).
++      case "rapida": {
++        const campo = boton
++          .closest(".mampd-tcc-alerta")
++          ?.querySelector("[data-tcc-fecha]");
++
++        if (campo) {
++          campo.value = fechaLocalISO(
++            sumarDias(new Date(), Math.max(1, Math.round(Number(boton.dataset.horas) / 24))),
++          );
++          campo.dispatchEvent(new Event("change", { bubbles: true }));
++        }
+ 
+-          alerta.pospuestaHasta = new Date(
+-            Date.now() + Number(boton.dataset.horas) * 3600000,
+-          ).toISOString();
+-        });
++        break;
++      }
+ 
+-        aviso = {
+-          tipo: "ok",
+-          texto: `Alerta pospuesta ${boton.dataset.etiqueta}.`,
+-        };
++      // Sin fecha asignada: solo se pospone el aviso hasta el día elegido.
++      case "posponer": {
++        const { fecha } = leerCalendario(boton);
++        const resultado = posponerAviso(id, fecha);
++
++        aviso = resultado.ok
++          ? {
++              tipo: "ok",
++              texto: `Aviso pospuesto hasta el ${fechaCorta(fecha)} (sin fecha confirmada).`,
++            }
++          : { tipo: "error", texto: resultado.error };
++
++        refrescar();
++
++        break;
++      }
++
++      // Fecha confirmada: se agrega a la Agenda de Amparos Directos.
++      case "agendar": {
++        const { fecha, hora } = leerCalendario(boton);
++        const resultado = agendarAviso(id, { fecha, hora });
++
++        if (resultado.ok) mostrarMesDe(fecha);
++
++        aviso = resultado.ok
++          ? {
++              tipo: "ok",
++              texto: `Agendado el ${fechaCorta(fecha)} a las ${hora}. Ya aparece en la Agenda.`,
++            }
++          : { tipo: "error", texto: resultado.error };
+ 
+         refrescar();
+ 
+         break;
++      }
+ 
+       case "desactivar":
+         confirmarDesactivar(id, filas, () => {
+@@ -306,6 +355,41 @@ export function renderTccDirectos(host, deps = {}) {
+   };
+ }
+ 
++// Lee el calendario (fecha y hora) de la tarjeta del aviso.
++function leerCalendario(boton) {
++  const tarjeta = boton.closest(".mampd-tcc-alerta");
++
++  return {
++    fecha: tarjeta?.querySelector("[data-tcc-fecha]")?.value || "",
++    hora: tarjeta?.querySelector("[data-tcc-hora]")?.value || "",
++  };
++}
++
++// Leyenda de la fila: agendado (fecha confirmada) o pospuesto (sin fecha).
++function htmlEstadoAviso(seg) {
++  const alerta = seg.tcc?.alerta;
++
++  if (!alerta || alerta.activa === false) return "";
++
++  if (alerta.agenda?.fecha) {
++    return `<small class="mampd-pend-sub mampd-tcc-agendado" data-tcc-agendado>
++      <i class="fa-regular fa-calendar-check"></i>
++      Agendado: ${escapeHTML(fechaCorta(alerta.agenda.fecha))} · ${escapeHTML(alerta.agenda.hora || "")}
++    </small>`;
++  }
++
++  if (alerta.pospuestaHasta && Date.parse(alerta.pospuestaHasta) > Date.now()) {
++    return `<small class="mampd-pend-sub" data-tcc-pospuesto>
++      <i class="fa-regular fa-clock"></i>
++      Aviso pospuesto hasta el ${escapeHTML(
++        fechaCorta(alerta.pospuestaFecha || fechaLocalISO(new Date(alerta.pospuestaHasta))),
++      )} (sin fecha confirmada)
++    </small>`;
++  }
++
++  return "";
++}
++
+ function htmlFila({ amparo, seg }) {
+   const id = escapeHTML(amparo.id);
+   const desactivada = seg.tcc?.alerta?.activa === false;
+@@ -339,6 +423,7 @@ function htmlFila({ amparo, seg }) {
+               ? `<small class="mampd-pend-sub">Informe justificado pendiente</small>`
+               : ""
+           }
++          ${htmlEstadoAviso(seg)}
+           ${
+             desactivada
+               ? `<button type="button" class="mesas-secondary-btn" data-tcc-action="reactivar" data-amparo-id="${id}">
+@@ -356,6 +441,10 @@ function htmlAlerta({ amparo, seg }) {
+ 
+   const vencida = (venceInforme(seg)?.getTime() ?? Infinity) <= Date.now();
+ 
++  const agenda = seg.tcc?.alerta?.agenda || null;
++  const hoy = fechaLocalISO(new Date());
++  const manana = fechaLocalISO(sumarDias(new Date(), 1));
++
+   return `
+     <article class="mampd-tcc-alerta ${vencida ? "vencida" : ""}">
+       <div class="mampd-tcc-alerta-cabecera">
+@@ -376,17 +465,45 @@ function htmlAlerta({ amparo, seg }) {
+ 
+       <span class="mampd-tcc-alerta-fecha">${escapeHTML(textoVencimiento(seg))}</span>
+ 
++      ${
++        agenda?.fecha
++          ? `<span class="mampd-tcc-alerta-agendado">
++               <i class="fa-regular fa-calendar-check"></i>
++               Agendado: ${escapeHTML(fechaCorta(agenda.fecha))} · ${escapeHTML(agenda.hora || "")}
++             </span>`
++          : ""
++      }
++
+       <div class="mampd-tcc-alerta-acciones">
+-        <span>Posponer</span>
+-        <div class="mampd-tcc-alerta-botones">
++        <span>Fecha</span>
++        <div class="mampd-tcc-alerta-calendario">
++          <input type="date" data-tcc-fecha aria-label="Fecha"
++            min="${hoy}" value="${escapeHTML(agenda?.fecha || manana)}">
++          <input type="time" data-tcc-hora aria-label="Hora"
++            value="${escapeHTML(agenda?.hora || "10:00")}">
++        </div>
++        <div class="mampd-tcc-alerta-rapidas">
+           ${OPCIONES_POSPONER.map(
+             (opcion) => `
+-          <button type="button" class="mesas-secondary-btn" data-tcc-action="posponer"
+-            data-amparo-id="${id}" data-horas="${opcion.horas}" data-etiqueta="${escapeHTML(opcion.etiqueta)}">
++          <button type="button" class="mesas-secondary-btn" data-tcc-action="rapida"
++            data-amparo-id="${id}" data-horas="${opcion.horas}" title="Poner la fecha a ${escapeHTML(opcion.etiqueta)}">
+             ${escapeHTML(opcion.etiqueta)}
+           </button>`,
+           ).join("")}
+         </div>
++        <div class="mampd-tcc-alerta-botones">
++          <button type="button" class="mesas-secondary-btn" data-tcc-action="posponer" data-amparo-id="${id}"
++            title="Aún no hay fecha asignada: solo se pospone el aviso hasta el día elegido">
++            <i class="fa-regular fa-clock"></i> Posponer
++          </button>
++          <button type="button" class="mesas-primary-btn" data-tcc-action="agendar" data-amparo-id="${id}"
++            title="La fecha ya está confirmada: se agrega a la Agenda">
++            <i class="fa-regular fa-calendar-plus"></i> Agendar
++          </button>
++        </div>
++        <small class="mampd-tcc-alerta-ayuda">
++          Posponer: sin fecha asignada. Agendar: fecha confirmada (queda en la Agenda).
++        </small>
+         <button type="button" class="mesas-secondary-btn mampd-tcc-desactivar" data-tcc-action="desactivar" data-amparo-id="${id}">
+           <i class="fa-solid fa-bell-slash"></i> Desactivar alerta
+         </button>
+diff --git a/assets/js/modules/mesas/listas.js b/assets/js/modules/mesas/listas.js
+index 0e6176e..b708801 100644
+--- a/assets/js/modules/mesas/listas.js
++++ b/assets/js/modules/mesas/listas.js
+@@ -111,8 +111,22 @@ function estaPendienteDeLista(registro, campo) {
+   return Boolean(registro.firmadoEn) || registro[campo] === "en-lista";
+ }
+ 
+-const concepto = (registro, respaldo) =>
+-  String(registro?.acuerdo?.concepto || "").trim() || respaldo;
++// Texto de la columna ACUERDO. Orden ⚠️:
++//   1. "Extracto" capturado al enviar a firma (Demanda lo guarda en
++//      acuerdo.extracto; el modal común lo guarda en acuerdo.concepto).
++//   2. acuerdo.concepto, salvo la etiqueta genérica "Acuerdo" que
++//      algunas secciones guardan por defecto.
++//   3. Frase de respaldo según el tipo de asunto.
++const concepto = (registro, respaldo) => {
++  const acuerdo = registro?.acuerdo || {};
++  const extracto = String(acuerdo.extracto || "").trim();
++  const texto = String(acuerdo.concepto || "").trim();
++
++  if (extracto) return extracto;
++  if (texto && texto.toLowerCase() !== "acuerdo") return texto;
++
++  return respaldo;
++};
+ 
+ // Devuelve los acuerdos de la mesa aún no listados:
+ // [{ fuente, clave, expediente, actor, demandado, acuerdo }]
+diff --git a/assets/js/modules/mesas/promociones.js b/assets/js/modules/mesas/promociones.js
+index a2b4d73..b5f73da 100644
+--- a/assets/js/modules/mesas/promociones.js
++++ b/assets/js/modules/mesas/promociones.js
+@@ -13,7 +13,12 @@ import {
+   sincronizarBarraFiltros,
+ } from "./filtros.js";
+ 
+-import { aplicarAccion, renderEstadoBadge } from "./flujoEstados.js";
++import {
++  aplicarAccion,
++  renderEstadoBadge,
++  renderBotonesFlujo,
++} from "./flujoEstados.js";
++import { showModal, closeForm } from "../../forms/formHelper.js";
+ 
+ import { abrirEnvioFirma } from "./documentosFirma.js";
+ 
+@@ -931,6 +936,35 @@ function renderAccionesPromocion(item) {
+ 
+   const situacion = item.situacionVisual?.clave || "por-acordar";
+ 
++  // Botones del flujo común (firma de la Magistrada, Actuaría,
++  // Archivo, regresar a Mesa). Se usan en "En firma" y "Acordada".
++  const botonesFlujo = renderBotonesFlujo(item.estadoAcuerdo, {
++    actionAttr: "data-promociones-action",
++    attrs: `data-promocion-id="${id}"`,
++    acuerdo: item.promocion?.acuerdo || null,
++  });
++
++  // El acuerdo generado en "Acordar" es texto: se puede revisar antes
++  // de firmar aunque no tenga documento adjunto.
++  const textoAcuerdo =
++    typeof item.promocion?.acuerdo === "object"
++      ? String(item.promocion.acuerdo.texto || "").trim()
++      : "";
++  const botonVerAcuerdo =
++    textoAcuerdo && !item.promocion?.acuerdo?.documentoId
++      ? `
++        <button
++          type="button"
++          class="mesas-secondary-btn mesas-promocion-action-btn"
++          data-promociones-action="ver-acuerdo"
++          data-promocion-id="${id}"
++        >
++          <i class="fa-regular fa-file-lines"></i>
++          <span>Ver acuerdo</span>
++        </button>
++      `
++      : "";
++
+   const audienciaButton = `
+     <button
+       type="button"
+@@ -1056,21 +1090,10 @@ function renderAccionesPromocion(item) {
+     return `
+       <div class="mesas-promociones-actions">
+ 
++        <!-- Firma de la Magistrada (Mesa ve "Pendiente de firma") -->
++        ${botonesFlujo}
+ 
+-        <button
+-          type="button"
+-          class="mesas-secondary-btn mesas-promocion-action-btn"
+-          disabled
+-        >
+-
+-          <i class="fa-solid fa-hourglass-half"></i>
+-
+-          <span>
+-            En firma
+-          </span>
+-
+-        </button>
+-
++        ${botonVerAcuerdo}
+ 
+         ${audienciaButton}
+ 
+@@ -1101,6 +1124,8 @@ function renderAccionesPromocion(item) {
+ 
+       </button>
+ 
++      <!-- Después de la firma: Actuaría / Archivo / Regresar a Mesa -->
++      ${botonesFlujo}
+ 
+       ${audienciaButton}
+ 
+@@ -1236,6 +1261,22 @@ function configurarEventosPromociones(vista) {
+ 
+         break;
+ 
++      // ====================================================
++      // FLUJO COMÚN: firmar, Actuaría, Archivo, regresar
++      // ====================================================
++      case "flujo":
++        ejecutarAccionPromocion(promocionId, button.dataset.flujo);
++
++        break;
++
++      // ====================================================
++      // VER EL TEXTO DEL ACUERDO (antes de firmar)
++      // ====================================================
++      case "ver-acuerdo":
++        abrirTextoAcuerdo(promocionId);
++
++        break;
++
+       // ====================================================
+       // AUDIENCIA
+       // ====================================================
+@@ -1392,6 +1433,48 @@ function ejecutarAccionPromocion(id, accion) {
+ 
+   renderPromociones();
+ }
++// ============================================================
++// VER TEXTO DEL ACUERDO (solo lectura)
++// ============================================================
++function abrirTextoAcuerdo(id) {
++  const promociones = getData(KEY_PROMOCIONES, []);
++  const promocion = Array.isArray(promociones)
++    ? promociones.find((item) => String(item.id) === String(id))
++    : null;
++  const texto =
++    typeof promocion?.acuerdo === "object"
++      ? String(promocion.acuerdo.texto || "")
++      : "";
++
++  if (!promocion || !texto) {
++    return;
++  }
++
++  showModal(`
++    <div class="mesas-modal-shell">
++      <header class="mesas-modal-header">
++        <div class="mesas-modal-step">
++          <i class="fa-regular fa-file-lines"></i>
++        </div>
++        <div class="mesas-modal-header-text">
++          <h2>Acuerdo de la promoción</h2>
++          <p>Expediente ${escapeHTML(promocion.expediente || promocion.numero || "")}</p>
++        </div>
++      </header>
++      <div class="mesas-modal-body">
++        <pre class="mesas-promocion-texto-acuerdo" id="promocionTextoLectura">${escapeHTML(texto)}</pre>
++      </div>
++      <footer class="mesas-modal-footer">
++        <button type="button" class="mesas-modal-cancel" id="promocionTextoCerrar">
++          Cerrar
++        </button>
++      </footer>
++    </div>
++  `);
++
++  document.getElementById("promocionTextoCerrar").onclick = closeForm;
++}
++
+ // ============================================================
+ // IR AL EXPEDIENTE PRIORITARIO
+ // ============================================================
+diff --git a/assets/js/modules/mesas/recepcionPromociones.js b/assets/js/modules/mesas/recepcionPromociones.js
+index ea15847..91be0e9 100644
+--- a/assets/js/modules/mesas/recepcionPromociones.js
++++ b/assets/js/modules/mesas/recepcionPromociones.js
+@@ -24,7 +24,7 @@ import { getData, saveData } from "../../storage.js";
+ 
+ import { escapeHTML, createId } from "../../utils.js";
+ 
+-import { getSession } from "../../auth.js";
++import { getSession, canSign } from "../../auth.js";
+ 
+ import { showModal, closeForm } from "../../forms/formHelper.js";
+ 
+@@ -48,6 +48,9 @@ const KEY_SEGUIMIENTO = "mesasSeguimiento";
+ 
+ const KEY_DEMANDAS = "mesasDemandas";
+ 
++// La Magistrada consulta lo pendiente, pero solo la Mesa lo recibe.
++const puedeRecibir = () => !canSign();
++
+ // ============================================================
+ // RENDER PRINCIPAL
+ // ============================================================
+@@ -108,7 +111,7 @@ export function renderRecepcionPromociones() {
+ 
+                 <i class="fa-solid fa-inbox"></i>
+ 
+-                Recibir todo
++                ${puedeRecibir() ? "Recibir todo" : "Ver pendientes"}
+ 
+               </button>
+             `
+@@ -376,7 +379,7 @@ export function openRecepcionTodoModal() {
+ 
+ 
+         ${
+-          pendientes.length
++          pendientes.length && puedeRecibir()
+             ? `
+               <button
+                 type="button"
+@@ -724,6 +727,11 @@ function renderSinPendientes() {
+ // ============================================================
+ 
+ function recibirTodo() {
++  // Candado real (no solo el botón): la Magistrada no recibe.
++  if (!puedeRecibir()) {
++    return;
++  }
++
+   const pendientes = getPendientesRecepcion();
+ 
+   if (!pendientes.length) {
+diff --git a/pages/mesas-amparos-directos.html b/pages/mesas-amparos-directos.html
+index 9eed191..7a4cad7 100644
+--- a/pages/mesas-amparos-directos.html
++++ b/pages/mesas-amparos-directos.html
+@@ -23,6 +23,11 @@
+     <div id="mampdTccHost"></div>
+   </div>
+ 
++  <!-- Apartado: Agenda (lo dibuja amparosDirectos/agendaDirectos.js) -->
++  <div data-mamp-vista="agenda" hidden>
++    <div id="mampdAgendaHost"></div>
++  </div>
++
+   <div data-mamp-vista="envios-tcc" hidden>
+     <div id="mampdEnviosTccHost"></div>
+   </div>

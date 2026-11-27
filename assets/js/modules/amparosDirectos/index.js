@@ -7,6 +7,7 @@
 // de la página "mesas-amparos-directos": no son rutas nuevas, así que
 // los permisos de auth.js no cambian.
 //   Pendientes de realizar · Amparos · Cuadernillos · Plantillas · Listas
+//   · Agenda (fechas confirmadas con "Agendar" en Notificaciones)
 // El apartado "Amparos" es la tabla de siempre (en mesasAmparos.js);
 // los otros tres los dibujan los módulos de esta carpeta.
 // ============================================================
@@ -26,6 +27,7 @@ import { renderEnviosTcc } from "./enviosTcc.js";
 import { renderNiegaAmparo } from "./niegaAmparo.js";
 
 import { renderAmparaProtege } from "./amparaProtege.js";
+import { renderAgendaDirectos } from "./agendaDirectos.js";
 
 const PAGINA = "mesas-amparos-directos";
 
@@ -40,6 +42,7 @@ export const SECCIONES_DIRECTOS = [
     etiqueta: "Pendiente de enviar al TCC",
     icono: "fa-building-columns",
   },
+  { id: "agenda", etiqueta: "Agenda", icono: "fa-calendar-days" },
   { id: "envios-tcc", etiqueta: "Envíos del TCC", icono: "fa-inbox" },
   { id: "niega-amparo", etiqueta: "Niega Amparo", icono: "fa-ban" },
   {
@@ -209,6 +212,12 @@ export function renderSeccionesDirectos(deps = {}) {
 
       break;
 
+    case "agenda":
+      renderAgendaDirectos(host("mampdAgendaHost"), {
+        ...deps,
+        alCambiarAgenda: marcarAlertasTcc,
+      });
+      break;
     case "envios-tcc":
       renderEnviosTcc(host("mampdEnviosTccHost"), deps);
       break;

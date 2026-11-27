@@ -678,3 +678,230 @@
   margin: 6px 0;
   color: #60758a;
 }
+
+/* ============================================================
+   NOTIFICACIONES: calendario + Posponer / Agendar (tcc.js)
+   ============================================================ */
+.mampd-tcc-alerta-calendario {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  gap: 6px;
+}
+.mampd-tcc-alerta-calendario input {
+  width: 100%;
+  min-width: 0;
+  padding: 5px 6px;
+  border: 1px solid #d6dee8;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  color: #102b45;
+}
+.mampd-tcc-alerta-rapidas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.mampd-tcc-alerta-rapidas .mesas-secondary-btn {
+  padding: 3px 4px;
+  font-size: 10px;
+}
+.mampd-tcc-alerta-acciones .mesas-primary-btn {
+  justify-content: center;
+  padding: 5px 6px;
+  font-size: 11px;
+}
+.mampd-tcc-alerta-ayuda {
+  color: #6b7f94;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.mampd-tcc-alerta-agendado,
+.mampd-tcc-agendado {
+  color: #1d6b43;
+  font-weight: 700;
+}
+.mampd-tcc-alerta-agendado {
+  font-size: 11px;
+}
+
+/* ============================================================
+   AGENDA DE AMPAROS DIRECTOS (agendaDirectos.js)
+   ============================================================ */
+.mampd-agenda-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+.mampd-agenda-calendario {
+  padding: 16px;
+}
+.mampd-agenda-mes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mampd-agenda-mes strong {
+  min-width: 170px;
+  text-align: center;
+  color: #102b45;
+  font-size: 16px;
+}
+.mampd-agenda-semana,
+.mampd-agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+.mampd-agenda-semana span {
+  padding: 4px 0;
+  text-align: center;
+  color: #6b7f94;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.mampd-agenda-dia {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 92px;
+  padding: 6px;
+  border: 1px solid #e3e9f0;
+  border-radius: 8px;
+  background: #fff;
+}
+.mampd-agenda-dia.vacio {
+  border-style: dashed;
+  background: #f8fafc;
+}
+.mampd-agenda-dia.hoy {
+  border-color: #2b6cb0;
+  box-shadow: inset 0 0 0 1px #2b6cb0;
+}
+.mampd-agenda-num {
+  color: #4a5f75;
+  font-size: 12px;
+  font-weight: 700;
+}
+.mampd-agenda-dia.hoy .mampd-agenda-num {
+  color: #2b6cb0;
+}
+.mampd-agenda-evento {
+  display: block;
+  width: 100%;
+  padding: 3px 5px;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid #2f855a;
+  border-radius: 4px;
+  background: #e6f6ec;
+  color: #1d4f34;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.mampd-agenda-evento:hover {
+  background: #d3efdd;
+}
+.mampd-agenda-lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mampd-agenda-bloque {
+  padding: 14px 16px;
+}
+.mampd-agenda-bloque h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #102b45;
+  font-size: 13px;
+}
+.mampd-agenda-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mampd-agenda-lista li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: #4a5f75;
+}
+.mampd-agenda-lista li > strong {
+  color: #102b45;
+}
+.mampd-agenda-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e3e9f0;
+  border-left: 3px solid #2f855a;
+  border-radius: 6px;
+  background: #fff;
+  color: #4a5f75;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.mampd-agenda-item strong {
+  color: #102b45;
+}
+.mampd-agenda-item:hover {
+  background: #f3faf6;
+}
+.mampd-agenda-vacio {
+  margin: 0;
+  color: #6b7f94;
+  font-size: 12px;
+}
+.mampd-agenda-detalle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+.mampd-agenda-detalle dt {
+  color: #6b7f94;
+  font-size: 12px;
+}
+.mampd-agenda-detalle dd {
+  margin: 2px 0 0;
+  color: #102b45;
+  font-weight: 600;
+}
+.mesas-modal-confirm.mampd-agenda-quitar {
+  background: #b83232;
+  border-color: #b83232;
+}
+
+@media (max-width: 1100px) {
+  .mampd-agenda-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .mampd-agenda-dia {
+    min-height: 64px;
+  }
+  .mampd-agenda-evento b {
+    display: none;
+  }
+}

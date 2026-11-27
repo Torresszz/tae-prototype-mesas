@@ -24,7 +24,7 @@ import { getData, saveData } from "../../storage.js";
 
 import { escapeHTML, createId } from "../../utils.js";
 
-import { getSession } from "../../auth.js";
+import { getSession, canSign } from "../../auth.js";
 
 import { showModal, closeForm } from "../../forms/formHelper.js";
 
@@ -47,6 +47,9 @@ const KEY_PROMOCIONES = "promociones";
 const KEY_SEGUIMIENTO = "mesasSeguimiento";
 
 const KEY_DEMANDAS = "mesasDemandas";
+
+// La Magistrada consulta lo pendiente, pero solo la Mesa lo recibe.
+const puedeRecibir = () => !canSign();
 
 // ============================================================
 // RENDER PRINCIPAL
@@ -108,7 +111,7 @@ export function renderRecepcionPromociones() {
 
                 <i class="fa-solid fa-inbox"></i>
 
-                Recibir todo
+                ${puedeRecibir() ? "Recibir todo" : "Ver pendientes"}
 
               </button>
             `
@@ -376,7 +379,7 @@ export function openRecepcionTodoModal() {
 
 
         ${
-          pendientes.length
+          pendientes.length && puedeRecibir()
             ? `
               <button
                 type="button"
@@ -724,6 +727,11 @@ function renderSinPendientes() {
 // ============================================================
 
 function recibirTodo() {
+  // Candado real (no solo el botón): la Magistrada no recibe.
+  if (!puedeRecibir()) {
+    return;
+  }
+
   const pendientes = getPendientesRecepcion();
 
   if (!pendientes.length) {

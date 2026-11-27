@@ -16,11 +16,17 @@
 //   - "Enviar al TCC" se habilita con el documento del informe subido y
 //     lo pasa a la etapa de Resolución (Tribunal Colegiado).
 //   - Al llegar se avisa que hay 3 DÍAS HÁBILES para presentar el informe.
-//     La alerta se puede posponer 24 h, 48 h, 3 días o 1 semana, o
-//     desactivar (con confirmación).
+//     Cada aviso trae un calendario (fecha y hora) y dos botones:
+//       · "Posponer": NO hay fecha asignada; solo se oculta el aviso
+//         hasta el día elegido (atajos: 24 h, 48 h, 3 días, 1 semana).
+//       · "Agendar": la fecha YA está confirmada; se crea el evento en la
+//         Agenda de Amparos Directos (agendaDirectos.js) y el aviso vuelve
+//         a aparecer el día del evento.
+//     También se puede desactivar (con confirmación).
 //
 // Datos en el seguimiento del amparo:
-//   seg.tcc = { llegadaEn?, alerta: { activa, pospuestaHasta?, desactivadaEn? } }
+//   seg.tcc = { llegadaEn?, alerta: { activa, pospuestaHasta?, pospuestaFecha?,
+//               agenda?: { eventoId, fecha, hora }, desactivadaEn? } }
 //   (si no hay llegadaEn se usa seg.desde: cuando pasó a Informe)
 // ============================================================
 
@@ -48,6 +54,15 @@ import {
   venceInforme,
   textoVencimiento,
 } from "./tablaAmparos.js";
+
+import {
+  posponerAviso,
+  agendarAviso,
+  fechaLocalISO,
+  fechaCorta,
+  sumarDias,
+  mostrarMesDe,
+} from "./agendaDirectos.js";
 
 export const OPCIONES_POSPONER = [
   { horas: 24, etiqueta: "24 horas" },
@@ -231,23 +246,57 @@ export function renderTccDirectos(host, deps = {}) {
         break;
       }
 
-      case "posponer":
-        cambiarAlerta(id, (alerta) => {
-          alerta.activa = true;
+      // Atajo: llena el calendario (no pospone por sí solo).
+      case "rapida": {
+        const campo = boton
+          .closest(".mampd-tcc-alerta")
+          ?.querySelector("[data-tcc-fecha]");
 
-          alerta.pospuestaHasta = new Date(
-            Date.now() + Number(boton.dataset.horas) * 3600000,
-          ).toISOString();
-        });
+        if (campo) {
+          campo.value = fechaLocalISO(
+            sumarDias(new Date(), Math.max(1, Math.round(Number(boton.dataset.horas) / 24))),
+          );
+          campo.dispatchEvent(new Event("change", { bubbles: true }));
+        }
 
-        aviso = {
-          tipo: "ok",
-          texto: `Alerta pospuesta ${boton.dataset.etiqueta}.`,
-        };
+        break;
+      }
+
+      // Sin fecha asignada: solo se pospone el aviso hasta el día elegido.
+      case "posponer": {
+        const { fecha } = leerCalendario(boton);
+        const resultado = posponerAviso(id, fecha);
+
+        aviso = resultado.ok
+          ? {
+              tipo: "ok",
+              texto: `Aviso pospuesto hasta el ${fechaCorta(fecha)} (sin fecha confirmada).`,
+            }
+          : { tipo: "error", texto: resultado.error };
 
         refrescar();
 
         break;
+      }
+
+      // Fecha confirmada: se agrega a la Agenda de Amparos Directos.
+      case "agendar": {
+        const { fecha, hora } = leerCalendario(boton);
+        const resultado = agendarAviso(id, { fecha, hora });
+
+        if (resultado.ok) mostrarMesDe(fecha);
+
+        aviso = resultado.ok
+          ? {
+              tipo: "ok",
+              texto: `Agendado el ${fechaCorta(fecha)} a las ${hora}. Ya aparece en la Agenda.`,
+            }
+          : { tipo: "error", texto: resultado.error };
+
+        refrescar();
+
+        break;
+      }
 
       case "desactivar":
         confirmarDesactivar(id, filas, () => {
@@ -306,6 +355,41 @@ export function renderTccDirectos(host, deps = {}) {
   };
 }
 
+// Lee el calendario (fecha y hora) de la tarjeta del aviso.
+function leerCalendario(boton) {
+  const tarjeta = boton.closest(".mampd-tcc-alerta");
+
+  return {
+    fecha: tarjeta?.querySelector("[data-tcc-fecha]")?.value || "",
+    hora: tarjeta?.querySelector("[data-tcc-hora]")?.value || "",
+  };
+}
+
+// Leyenda de la fila: agendado (fecha confirmada) o pospuesto (sin fecha).
+function htmlEstadoAviso(seg) {
+  const alerta = seg.tcc?.alerta;
+
+  if (!alerta || alerta.activa === false) return "";
+
+  if (alerta.agenda?.fecha) {
+    return `<small class="mampd-pend-sub mampd-tcc-agendado" data-tcc-agendado>
+      <i class="fa-regular fa-calendar-check"></i>
+      Agendado: ${escapeHTML(fechaCorta(alerta.agenda.fecha))} · ${escapeHTML(alerta.agenda.hora || "")}
+    </small>`;
+  }
+
+  if (alerta.pospuestaHasta && Date.parse(alerta.pospuestaHasta) > Date.now()) {
+    return `<small class="mampd-pend-sub" data-tcc-pospuesto>
+      <i class="fa-regular fa-clock"></i>
+      Aviso pospuesto hasta el ${escapeHTML(
+        fechaCorta(alerta.pospuestaFecha || fechaLocalISO(new Date(alerta.pospuestaHasta))),
+      )} (sin fecha confirmada)
+    </small>`;
+  }
+
+  return "";
+}
+
 function htmlFila({ amparo, seg }) {
   const id = escapeHTML(amparo.id);
   const desactivada = seg.tcc?.alerta?.activa === false;
@@ -339,6 +423,7 @@ function htmlFila({ amparo, seg }) {
               ? `<small class="mampd-pend-sub">Informe justificado pendiente</small>`
               : ""
           }
+          ${htmlEstadoAviso(seg)}
           ${
             desactivada
               ? `<button type="button" class="mesas-secondary-btn" data-tcc-action="reactivar" data-amparo-id="${id}">
@@ -355,6 +440,10 @@ function htmlAlerta({ amparo, seg }) {
   const id = escapeHTML(amparo.id);
 
   const vencida = (venceInforme(seg)?.getTime() ?? Infinity) <= Date.now();
+
+  const agenda = seg.tcc?.alerta?.agenda || null;
+  const hoy = fechaLocalISO(new Date());
+  const manana = fechaLocalISO(sumarDias(new Date(), 1));
 
   return `
     <article class="mampd-tcc-alerta ${vencida ? "vencida" : ""}">
@@ -376,17 +465,45 @@ function htmlAlerta({ amparo, seg }) {
 
       <span class="mampd-tcc-alerta-fecha">${escapeHTML(textoVencimiento(seg))}</span>
 
+      ${
+        agenda?.fecha
+          ? `<span class="mampd-tcc-alerta-agendado">
+               <i class="fa-regular fa-calendar-check"></i>
+               Agendado: ${escapeHTML(fechaCorta(agenda.fecha))} · ${escapeHTML(agenda.hora || "")}
+             </span>`
+          : ""
+      }
+
       <div class="mampd-tcc-alerta-acciones">
-        <span>Posponer</span>
-        <div class="mampd-tcc-alerta-botones">
+        <span>Fecha</span>
+        <div class="mampd-tcc-alerta-calendario">
+          <input type="date" data-tcc-fecha aria-label="Fecha"
+            min="${hoy}" value="${escapeHTML(agenda?.fecha || manana)}">
+          <input type="time" data-tcc-hora aria-label="Hora"
+            value="${escapeHTML(agenda?.hora || "10:00")}">
+        </div>
+        <div class="mampd-tcc-alerta-rapidas">
           ${OPCIONES_POSPONER.map(
             (opcion) => `
-          <button type="button" class="mesas-secondary-btn" data-tcc-action="posponer"
-            data-amparo-id="${id}" data-horas="${opcion.horas}" data-etiqueta="${escapeHTML(opcion.etiqueta)}">
+          <button type="button" class="mesas-secondary-btn" data-tcc-action="rapida"
+            data-amparo-id="${id}" data-horas="${opcion.horas}" title="Poner la fecha a ${escapeHTML(opcion.etiqueta)}">
             ${escapeHTML(opcion.etiqueta)}
           </button>`,
           ).join("")}
         </div>
+        <div class="mampd-tcc-alerta-botones">
+          <button type="button" class="mesas-secondary-btn" data-tcc-action="posponer" data-amparo-id="${id}"
+            title="Aún no hay fecha asignada: solo se pospone el aviso hasta el día elegido">
+            <i class="fa-regular fa-clock"></i> Posponer
+          </button>
+          <button type="button" class="mesas-primary-btn" data-tcc-action="agendar" data-amparo-id="${id}"
+            title="La fecha ya está confirmada: se agrega a la Agenda">
+            <i class="fa-regular fa-calendar-plus"></i> Agendar
+          </button>
+        </div>
+        <small class="mampd-tcc-alerta-ayuda">
+          Posponer: sin fecha asignada. Agendar: fecha confirmada (queda en la Agenda).
+        </small>
         <button type="button" class="mesas-secondary-btn mampd-tcc-desactivar" data-tcc-action="desactivar" data-amparo-id="${id}">
           <i class="fa-solid fa-bell-slash"></i> Desactivar alerta
         </button>

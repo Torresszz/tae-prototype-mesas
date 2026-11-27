@@ -111,8 +111,22 @@ function estaPendienteDeLista(registro, campo) {
   return Boolean(registro.firmadoEn) || registro[campo] === "en-lista";
 }
 
-const concepto = (registro, respaldo) =>
-  String(registro?.acuerdo?.concepto || "").trim() || respaldo;
+// Texto de la columna ACUERDO. Orden ⚠️:
+//   1. "Extracto" capturado al enviar a firma (Demanda lo guarda en
+//      acuerdo.extracto; el modal común lo guarda en acuerdo.concepto).
+//   2. acuerdo.concepto, salvo la etiqueta genérica "Acuerdo" que
+//      algunas secciones guardan por defecto.
+//   3. Frase de respaldo según el tipo de asunto.
+const concepto = (registro, respaldo) => {
+  const acuerdo = registro?.acuerdo || {};
+  const extracto = String(acuerdo.extracto || "").trim();
+  const texto = String(acuerdo.concepto || "").trim();
+
+  if (extracto) return extracto;
+  if (texto && texto.toLowerCase() !== "acuerdo") return texto;
+
+  return respaldo;
+};
 
 // Devuelve los acuerdos de la mesa aún no listados:
 // [{ fuente, clave, expediente, actor, demandado, acuerdo }]

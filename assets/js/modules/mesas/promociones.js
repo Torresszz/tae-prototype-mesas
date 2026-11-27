@@ -13,7 +13,12 @@ import {
   sincronizarBarraFiltros,
 } from "./filtros.js";
 
-import { aplicarAccion, renderEstadoBadge } from "./flujoEstados.js";
+import {
+  aplicarAccion,
+  renderEstadoBadge,
+  renderBotonesFlujo,
+} from "./flujoEstados.js";
+import { showModal, closeForm } from "../../forms/formHelper.js";
 
 import { abrirEnvioFirma } from "./documentosFirma.js";
 
@@ -931,6 +936,35 @@ function renderAccionesPromocion(item) {
 
   const situacion = item.situacionVisual?.clave || "por-acordar";
 
+  // Botones del flujo común (firma de la Magistrada, Actuaría,
+  // Archivo, regresar a Mesa). Se usan en "En firma" y "Acordada".
+  const botonesFlujo = renderBotonesFlujo(item.estadoAcuerdo, {
+    actionAttr: "data-promociones-action",
+    attrs: `data-promocion-id="${id}"`,
+    acuerdo: item.promocion?.acuerdo || null,
+  });
+
+  // El acuerdo generado en "Acordar" es texto: se puede revisar antes
+  // de firmar aunque no tenga documento adjunto.
+  const textoAcuerdo =
+    typeof item.promocion?.acuerdo === "object"
+      ? String(item.promocion.acuerdo.texto || "").trim()
+      : "";
+  const botonVerAcuerdo =
+    textoAcuerdo && !item.promocion?.acuerdo?.documentoId
+      ? `
+        <button
+          type="button"
+          class="mesas-secondary-btn mesas-promocion-action-btn"
+          data-promociones-action="ver-acuerdo"
+          data-promocion-id="${id}"
+        >
+          <i class="fa-regular fa-file-lines"></i>
+          <span>Ver acuerdo</span>
+        </button>
+      `
+      : "";
+
   const audienciaButton = `
     <button
       type="button"
@@ -1056,21 +1090,10 @@ function renderAccionesPromocion(item) {
     return `
       <div class="mesas-promociones-actions">
 
+        <!-- Firma de la Magistrada (Mesa ve "Pendiente de firma") -->
+        ${botonesFlujo}
 
-        <button
-          type="button"
-          class="mesas-secondary-btn mesas-promocion-action-btn"
-          disabled
-        >
-
-          <i class="fa-solid fa-hourglass-half"></i>
-
-          <span>
-            En firma
-          </span>
-
-        </button>
-
+        ${botonVerAcuerdo}
 
         ${audienciaButton}
 
@@ -1101,6 +1124,8 @@ function renderAccionesPromocion(item) {
 
       </button>
 
+      <!-- Después de la firma: Actuaría / Archivo / Regresar a Mesa -->
+      ${botonesFlujo}
 
       ${audienciaButton}
 
@@ -1233,6 +1258,22 @@ function configurarEventosPromociones(vista) {
 
       case "enviar-firma":
         ejecutarAccionPromocion(promocionId, "enviar-firma");
+
+        break;
+
+      // ====================================================
+      // FLUJO COMÚN: firmar, Actuaría, Archivo, regresar
+      // ====================================================
+      case "flujo":
+        ejecutarAccionPromocion(promocionId, button.dataset.flujo);
+
+        break;
+
+      // ====================================================
+      // VER EL TEXTO DEL ACUERDO (antes de firmar)
+      // ====================================================
+      case "ver-acuerdo":
+        abrirTextoAcuerdo(promocionId);
 
         break;
 
@@ -1392,6 +1433,48 @@ function ejecutarAccionPromocion(id, accion) {
 
   renderPromociones();
 }
+// ============================================================
+// VER TEXTO DEL ACUERDO (solo lectura)
+// ============================================================
+function abrirTextoAcuerdo(id) {
+  const promociones = getData(KEY_PROMOCIONES, []);
+  const promocion = Array.isArray(promociones)
+    ? promociones.find((item) => String(item.id) === String(id))
+    : null;
+  const texto =
+    typeof promocion?.acuerdo === "object"
+      ? String(promocion.acuerdo.texto || "")
+      : "";
+
+  if (!promocion || !texto) {
+    return;
+  }
+
+  showModal(`
+    <div class="mesas-modal-shell">
+      <header class="mesas-modal-header">
+        <div class="mesas-modal-step">
+          <i class="fa-regular fa-file-lines"></i>
+        </div>
+        <div class="mesas-modal-header-text">
+          <h2>Acuerdo de la promoción</h2>
+          <p>Expediente ${escapeHTML(promocion.expediente || promocion.numero || "")}</p>
+        </div>
+      </header>
+      <div class="mesas-modal-body">
+        <pre class="mesas-promocion-texto-acuerdo" id="promocionTextoLectura">${escapeHTML(texto)}</pre>
+      </div>
+      <footer class="mesas-modal-footer">
+        <button type="button" class="mesas-modal-cancel" id="promocionTextoCerrar">
+          Cerrar
+        </button>
+      </footer>
+    </div>
+  `);
+
+  document.getElementById("promocionTextoCerrar").onclick = closeForm;
+}
+
 // ============================================================
 // IR AL EXPEDIENTE PRIORITARIO
 // ============================================================
