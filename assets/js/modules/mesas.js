@@ -20,7 +20,6 @@ import {
   etiquetaEstado,
 } from "./mesas/estados.js";
 
-
 import {
   getFiltros,
   setFiltro,
@@ -61,9 +60,7 @@ import {
 import { renderAudiencia } from "./mesas/audiencia.js";
 import { renderDemanda } from "./mesas/demanda.js";
 import { renderPromociones } from "./mesas/promociones.js";
-import {
-  renderConsultaExpedientes,
-} from "./mesas/expedientes.js";
+import { renderConsultaExpedientes } from "./mesas/expedientes.js";
 import { renderCalificacion } from "./mesas/calificacion.js";
 import { renderConsultas } from "./mesas/consultas.js";
 import { renderIntersindicales } from "./mesas/intersindicales.js";
@@ -72,9 +69,7 @@ import { renderEstadistica } from "./mesas/estadistica.js";
 import { renderListas, iniciarListasAutomaticas } from "./mesas/listas.js";
 import { sembrarDemoFases } from "./mesas/demo.js";
 
-import {
-  renderRecepcionPromociones,
-} from "./mesas/recepcionPromociones.js";
+import { renderRecepcionPromociones } from "./mesas/recepcionPromociones.js";
 
 import {
   getAvisosAgendaPendientes,
@@ -100,10 +95,7 @@ const KEY = "mesasSeguimiento";
 registrarSeccion("plantillas", renderPlantillas);
 registrarSeccion("exhortos", renderExhortosMesa);
 registrarSeccion("agenda", renderAgendaCombinada);
-registrarSeccion(
-  "expedientes",
-  renderConsultaExpedientes,
-);
+registrarSeccion("expedientes", renderConsultaExpedientes);
 registrarSeccion("audiencia", renderAudiencia);
 registrarSeccion("demanda", renderDemanda);
 registrarSeccion("promociones", renderPromociones);
@@ -264,14 +256,8 @@ function getRegistros() {
   const mesa = mesaUsuario();
 
   return expedientes
-    .filter(
-      (expediente) => expediente.recibidoMesa !== false,
-    )
-    .filter(
-      (expediente) =>
-        !mesa ||
-        mesaDeExpediente(expediente) === mesa,
-    )
+    .filter((expediente) => expediente.recibidoMesa !== false)
+    .filter((expediente) => !mesa || mesaDeExpediente(expediente) === mesa)
     .map((expediente) => {
       const numero = getNumero(expediente);
 
@@ -282,11 +268,7 @@ function getRegistros() {
       const promocionesExp = promociones.filter(
         (promo) =>
           promo.recibidaMesa === true &&
-          String(
-            promo.expediente ||
-              promo.numero ||
-              "",
-          ) === String(numero),
+          String(promo.expediente || promo.numero || "") === String(numero),
       );
 
       return {
@@ -296,18 +278,11 @@ function getRegistros() {
 
         numero,
 
-        promovente:
-          expediente.actor ||
-          expediente.promovente ||
-          "—",
+        promovente: expediente.actor || expediente.promovente || "—",
 
-        demandado:
-          expediente.demandado ||
-          "—",
+        demandado: expediente.demandado || "—",
 
-        ubicacion:
-          expediente.ubicacion ||
-          "—",
+        ubicacion: expediente.ubicacion || "—",
 
         asunto:
           expediente.actoDemandado ||
@@ -346,52 +321,35 @@ function setupEvents() {
     search.value = currentTexto;
 
     search.oninput = (event) => {
-      currentTexto =
-        event.target.value
-          .trim()
-          .toLowerCase();
+      currentTexto = event.target.value.trim().toLowerCase();
 
       renderMesas();
     };
   }
 
-  const orden =
-    document.getElementById(
-      "mesasOrdenPromociones",
-    );
+  const orden = document.getElementById("mesasOrdenPromociones");
 
   if (orden) {
-    orden.value =
-      currentOrdenPromociones;
+    orden.value = currentOrdenPromociones;
 
     orden.onchange = (event) => {
-      currentOrdenPromociones =
-        event.target.value;
+      currentOrdenPromociones = event.target.value;
 
       renderMesas();
     };
   }
 
-  const tabs =
-    document.getElementById(
-      "mesasStatusTabs",
-    );
+  const tabs = document.getElementById("mesasStatusTabs");
 
   if (tabs) {
     tabs.onclick = (event) => {
-      const button =
-        event.target.closest(
-          ".mesas-status-tab",
-        );
+      const button = event.target.closest(".mesas-status-tab");
 
       if (!button) {
         return;
       }
 
-      setFiltro(
-        "estado",
-        button.dataset.status,
-      );
+      setFiltro("estado", button.dataset.status);
 
       sincronizarBarraFiltros();
 
@@ -399,87 +357,55 @@ function setupEvents() {
     };
   }
 
-  const demoButton =
-    document.getElementById(
-      "mesasLoadDemoBtn",
-    );
+  const demoButton = document.getElementById("mesasLoadDemoBtn");
 
   if (demoButton) {
-    demoButton.onclick =
-      seedSecretariaDemo;
+    demoButton.onclick = seedSecretariaDemo;
   }
 
   if (page) {
     page.onclick = (event) => {
-      const agendaButton =
-        event.target.closest(
-          "[data-agenda-alert-action]",
-        );
+      const agendaButton = event.target.closest("[data-agenda-alert-action]");
 
       if (agendaButton) {
-        const action =
-          agendaButton.dataset
-            .agendaAlertAction;
+        const action = agendaButton.dataset.agendaAlertAction;
 
-        const notificacionId =
-          agendaButton.dataset
-            .notificacionId;
+        const notificacionId = agendaButton.dataset.notificacionId;
 
-        if (
-          action === "marcar-leida" &&
-          notificacionId
-        ) {
-          marcarNotificacionLeida(
-            notificacionId,
-          );
+        if (action === "marcar-leida" && notificacionId) {
+          marcarNotificacionLeida(notificacionId);
 
           renderMesas();
         }
 
-        if (
-          action === "posponer" &&
-          notificacionId
-        ) {
-          openPosponerAviso(
-            notificacionId,
-          );
+        if (action === "posponer" && notificacionId) {
+          openPosponerAviso(notificacionId);
         }
 
         return;
       }
 
-      const button =
-        event.target.closest(
-          "[data-mesas-action]",
-        );
+      const button = event.target.closest("[data-mesas-action]");
 
       if (!button) {
         return;
       }
 
-      const action =
-        button.dataset.mesasAction;
+      const action = button.dataset.mesasAction;
 
-      const numero =
-        button.dataset.expediente;
+      const numero = button.dataset.expediente;
 
       switch (action) {
         case "crear-acuerdo":
-          openCrearAcuerdos(
-            numero,
-          );
+          openCrearAcuerdos(numero);
           break;
 
         case "enviar-firma":
-          openEnviarAFirma(
-            numero,
-          );
+          openEnviarAFirma(numero);
           break;
 
         case "firmar":
-          openFirmarAcuerdo(
-            numero,
-          );
+          openFirmarAcuerdo(numero);
           break;
 
         case "a-actuaria":
@@ -489,8 +415,7 @@ function setupEvents() {
         case "a-archivo":
           ejecutarAccionFlujo(numero, "archivar", {
             extra: {
-              archivadoEn:
-                new Date().toISOString(),
+              archivadoEn: new Date().toISOString(),
             },
           });
           break;
@@ -499,9 +424,7 @@ function setupEvents() {
           break;
 
         case "ver":
-          openDetalleExpediente(
-            numero,
-          );
+          openDetalleExpediente(numero);
           break;
       }
     };
@@ -513,17 +436,13 @@ function setupEvents() {
 // ============================================================
 
 function renderTabsEstado(registros) {
-  const contenedor =
-    document.getElementById(
-      "mesasStatusTabs",
-    );
+  const contenedor = document.getElementById("mesasStatusTabs");
 
   if (!contenedor) {
     return;
   }
 
-  const activo =
-    getFiltros().estado;
+  const activo = getFiltros().estado;
 
   const tabs = [
     {
@@ -538,24 +457,17 @@ function renderTabsEstado(registros) {
       etiqueta: estado.etiqueta,
 
       total: registros.filter(
-        (registro) =>
-          registro.seguimiento
-            .estado === estado.clave,
+        (registro) => registro.seguimiento.estado === estado.clave,
       ).length,
     })),
   ];
 
-  contenedor.innerHTML =
-    tabs
-      .map(
-        (tab) => `
+  contenedor.innerHTML = tabs
+    .map(
+      (tab) => `
           <button
             type="button"
-            class="mesas-status-tab ${
-              tab.clave === activo
-                ? "active"
-                : ""
-            }"
+            class="mesas-status-tab ${tab.clave === activo ? "active" : ""}"
             data-status="${tab.clave}"
           >
             <span>
@@ -567,8 +479,8 @@ function renderTabsEstado(registros) {
             </strong>
           </button>
         `,
-      )
-      .join("");
+    )
+    .join("");
 }
 
 // ============================================================
@@ -576,64 +488,39 @@ function renderTabsEstado(registros) {
 // ============================================================
 
 function renderTable(registros) {
-  const tbody =
-    document.getElementById(
-      "mesasTable",
-    );
+  const tbody = document.getElementById("mesasTable");
 
-  const empty =
-    document.getElementById(
-      "mesasEmpty",
-    );
+  const empty = document.getElementById("mesasEmpty");
 
   if (!tbody) {
     return;
   }
 
-  let visibles =
-    registros.filter(
-      (item) =>
-        coincideEstado(
-          item.seguimiento.estado,
-        ) &&
-        coincideExpediente(
-          item.numero,
-        ) &&
-        coincideFecha(
-          item.fecha,
-        ),
-    );
+  let visibles = registros.filter(
+    (item) =>
+      coincideEstado(item.seguimiento.estado) &&
+      coincideExpediente(item.numero) &&
+      coincideFecha(item.fecha),
+  );
 
   if (currentTexto) {
-    visibles =
-      visibles.filter(
-        (item) => {
-          const texto = `
+    visibles = visibles.filter((item) => {
+      const texto = `
             ${item.promovente}
             ${item.demandado}
             ${item.asunto}
             ${item.ubicacion}
           `.toLowerCase();
 
-          return texto.includes(
-            currentTexto,
-          );
-        },
-      );
+      return texto.includes(currentTexto);
+    });
   }
 
-  if (
-    currentOrdenPromociones !==
-    "sin-orden"
-  ) {
-    visibles.sort(
-      (a, b) =>
-        currentOrdenPromociones ===
-        "asc"
-          ? a.promociones.length -
-            b.promociones.length
-          : b.promociones.length -
-            a.promociones.length,
+  if (currentOrdenPromociones !== "sin-orden") {
+    visibles.sort((a, b) =>
+      currentOrdenPromociones === "asc"
+        ? a.promociones.length - b.promociones.length
+        : b.promociones.length - a.promociones.length,
     );
   }
 
@@ -651,13 +538,7 @@ function renderTable(registros) {
     empty.hidden = true;
   }
 
-  tbody.innerHTML =
-    visibles
-      .map(
-        (item) =>
-          renderRow(item),
-      )
-      .join("");
+  tbody.innerHTML = visibles.map((item) => renderRow(item)).join("");
 }
 
 // ============================================================
@@ -665,11 +546,9 @@ function renderTable(registros) {
 // ============================================================
 
 function renderRow(item) {
-  const estado =
-    item.seguimiento.estado;
+  const estado = item.seguimiento.estado;
 
-  const promoCount =
-    item.promociones.length;
+  const promoCount = item.promociones.length;
 
   return `
     <tr>
@@ -686,60 +565,44 @@ function renderRow(item) {
 
 
       <td>
-        <span class="mesas-promos-count ${nivelPromociones(
-          promoCount,
-        )}">
+        <span class="mesas-promos-count ${nivelPromociones(promoCount)}">
           ${promoCount}
         </span>
       </td>
 
 
       <td>
-        ${escapeHTML(
-          formatFecha(item.fecha),
-        )}
+        ${escapeHTML(formatFecha(item.fecha))}
       </td>
 
 
       <td>
-        ${escapeHTML(
-          item.promovente,
-        )}
+        ${escapeHTML(item.promovente)}
       </td>
 
 
       <td>
-        ${escapeHTML(
-          item.demandado,
-        )}
+        ${escapeHTML(item.demandado)}
       </td>
 
 
       <td>
-        ${escapeHTML(
-          item.asunto,
-        )}
+        ${escapeHTML(item.asunto)}
       </td>
 
 
       <td>
-        ${renderEstadoBadge(
-          estado,
-        )}
+        ${renderEstadoBadge(estado)}
       </td>
 
 
       <td>
-        ${escapeHTML(
-          item.ubicacion,
-        )}
+        ${escapeHTML(item.ubicacion)}
       </td>
 
 
       <td>
-        ${renderActions(
-          item,
-        )}
+        ${renderActions(item)}
       </td>
 
     </tr>
@@ -750,16 +613,10 @@ function renderRow(item) {
 // BADGE ESTADO
 // ============================================================
 
-function renderEstadoBadge(
-  estado,
-) {
+function renderEstadoBadge(estado) {
   return `
-    <span class="mesas-estado-badge ${escapeHTML(
-      estado,
-    )}">
-      ${escapeHTML(
-        etiquetaEstado(estado),
-      )}
+    <span class="mesas-estado-badge ${escapeHTML(estado)}">
+      ${escapeHTML(etiquetaEstado(estado))}
     </span>
   `;
 }
@@ -769,23 +626,13 @@ function renderEstadoBadge(
 // ============================================================
 
 function renderActions(item) {
-  const numero =
-    escapeHTML(
-      item.numero,
-    );
+  const numero = escapeHTML(item.numero);
 
-  const estado =
-    item.seguimiento.estado;
+  const estado = item.seguimiento.estado;
 
-  const esMagistrada =
-    canSign();
+  const esMagistrada = canSign();
 
-  const boton = (
-    accion,
-    texto,
-    icono,
-    clase = "mesas-secondary-btn",
-  ) => `
+  const boton = (accion, texto, icono, clase = "mesas-secondary-btn") => `
     <button
       type="button"
       class="${clase}"
@@ -797,53 +644,47 @@ function renderActions(item) {
     </button>
   `;
 
-  const verDocumentos =
-    boton(
-      "ver",
-      "Ver documentos",
-      "fa-regular fa-folder-open",
-    );
+  const verDocumentos = boton(
+    "ver",
+    "Ver documentos",
+    "fa-regular fa-folder-open",
+  );
 
   let principal = "";
 
   switch (estado) {
     case "en-proceso":
       if (!esMagistrada) {
-        principal =
-          boton(
-            "crear-acuerdo",
-            "Crear acuerdos",
-            "fa-regular fa-file-lines",
-          );
+        principal = boton(
+          "crear-acuerdo",
+          "Crear acuerdos",
+          "fa-regular fa-file-lines",
+        );
       }
 
       break;
-
 
     case "en-revision-interna":
       if (!esMagistrada) {
-        principal =
-          boton(
-            "enviar-firma",
-            "Enviar a firma",
-            "fa-solid fa-paper-plane",
-            "mesas-primary-btn",
-          );
+        principal = boton(
+          "enviar-firma",
+          "Enviar a firma",
+          "fa-solid fa-paper-plane",
+          "mesas-primary-btn",
+        );
       }
 
       break;
 
-
     case "en-firma":
-      principal =
-        esMagistrada
-          ? boton(
-              "firmar",
-              "Firmar acuerdo",
-              "fa-solid fa-signature",
-              "mesas-primary-btn",
-            )
-          : `
+      principal = esMagistrada
+        ? boton(
+            "firmar",
+            "Firmar acuerdo",
+            "fa-solid fa-signature",
+            "mesas-primary-btn",
+          )
+        : `
             <button
               type="button"
               class="mesas-secondary-btn"
@@ -859,38 +700,27 @@ function renderActions(item) {
         <div class="mesas-actions">
           ${principal}
 
-          ${boton(
-            "ver",
-            "Ver acuerdo",
-            "fa-regular fa-eye",
-          )}
+          ${boton("ver", "Ver acuerdo", "fa-regular fa-eye")}
         </div>
       `;
 
-
     case "en-lista":
       if (!esMagistrada) {
-        principal =
-          boton(
-            "a-actuaria",
-            "Pasar a Actuaría",
-            "fa-solid fa-building-columns",
-            "mesas-primary-btn",
-          );
+        principal = boton(
+          "a-actuaria",
+          "Pasar a Actuaría",
+          "fa-solid fa-building-columns",
+          "mesas-primary-btn",
+        );
       }
 
       break;
-
 
     case "en-actuaria":
       // Actuaría tiene dos salidas: regresar a Mesa o enviar a Archivo.
       if (!esMagistrada) {
         principal =
-          boton(
-            "regresar-mesa",
-            "Regresar a Mesa",
-            "fa-solid fa-rotate-left",
-          ) +
+          boton("regresar-mesa", "Regresar a Mesa", "fa-solid fa-rotate-left") +
           boton(
             "a-archivo",
             "Pasar a Archivo",
@@ -913,9 +743,7 @@ function renderActions(item) {
 // ALERTAS
 // ============================================================
 
-function renderAlertItem(
-  alerta,
-) {
+function renderAlertItem(alerta) {
   return `
     <div class="mesas-alert-item ${alerta.clase}">
 
@@ -926,15 +754,11 @@ function renderAlertItem(
       <div class="mesas-alert-body">
 
         <strong>
-          ${escapeHTML(
-            alerta.numero,
-          )}
+          ${escapeHTML(alerta.numero)}
         </strong>
 
         <span>
-          ${escapeHTML(
-            alerta.texto,
-          )}
+          ${escapeHTML(alerta.texto)}
         </span>
 
       </div>
@@ -943,11 +767,7 @@ function renderAlertItem(
   `;
 }
 
-
-function renderAlertGroup(
-  titulo,
-  alertas,
-) {
+function renderAlertGroup(titulo, alertas) {
   if (!alertas.length) {
     return "";
   }
@@ -963,9 +783,7 @@ function renderAlertGroup(
 
     </div>
 
-    ${alertas
-      .map(renderAlertItem)
-      .join("")}
+    ${alertas.map(renderAlertItem).join("")}
   `;
 }
 
@@ -973,23 +791,12 @@ function renderAlertGroup(
 // ALERTAS DE AGENDA
 // ============================================================
 
-function renderAgendaAlertItem(
-  alerta,
-) {
-  const tipo =
-    etiquetaTipoEventoAgenda(
-      alerta.tipo,
-    );
+function renderAgendaAlertItem(alerta) {
+  const tipo = etiquetaTipoEventoAgenda(alerta.tipo);
 
-  const destinatario =
-    etiquetaDestinatarioAgenda(
-      alerta.destinatario,
-    );
+  const destinatario = etiquetaDestinatarioAgenda(alerta.destinatario);
 
-  const hora =
-    alerta.hora
-      ? ` · ${alerta.hora}`
-      : "";
+  const hora = alerta.hora ? ` · ${alerta.hora}` : "";
 
   return `
     <div class="mesas-alert-item agenda">
@@ -1002,28 +809,20 @@ function renderAgendaAlertItem(
       <div class="mesas-alert-body">
 
         <strong>
-          ${escapeHTML(
-            alerta.expediente,
-          )}
+          ${escapeHTML(alerta.expediente)}
         </strong>
 
 
         <span>
           ${escapeHTML(tipo)}
           ·
-          ${escapeHTML(
-            formatFecha(
-              alerta.fechaEvento,
-            ),
-          )}
+          ${escapeHTML(formatFecha(alerta.fechaEvento))}
           ${escapeHTML(hora)}
         </span>
 
 
         <span class="mesas-alert-destinatario">
-          ${escapeHTML(
-            destinatario,
-          )}
+          ${escapeHTML(destinatario)}
         </span>
 
 
@@ -1033,9 +832,7 @@ function renderAgendaAlertItem(
             type="button"
             class="mesas-alert-read-btn"
             data-agenda-alert-action="marcar-leida"
-            data-notificacion-id="${escapeHTML(
-              alerta.id,
-            )}"
+            data-notificacion-id="${escapeHTML(alerta.id)}"
           >
             <i class="fa-solid fa-check"></i>
             Marcar como leída
@@ -1045,9 +842,7 @@ function renderAgendaAlertItem(
             type="button"
             class="mesas-alert-read-btn"
             data-agenda-alert-action="posponer"
-            data-notificacion-id="${escapeHTML(
-              alerta.id,
-            )}"
+            data-notificacion-id="${escapeHTML(alerta.id)}"
           >
             <i class="fa-regular fa-clock"></i>
             Posponer
@@ -1061,10 +856,7 @@ function renderAgendaAlertItem(
   `;
 }
 
-
-function renderAgendaAlertGroup(
-  alertas,
-) {
+function renderAgendaAlertGroup(alertas) {
   if (!alertas.length) {
     return "";
   }
@@ -1080,11 +872,7 @@ function renderAgendaAlertGroup(
 
     </div>
 
-    ${alertas
-      .map(
-        renderAgendaAlertItem,
-      )
-      .join("")}
+    ${alertas.map(renderAgendaAlertItem).join("")}
   `;
 }
 
@@ -1092,102 +880,51 @@ function renderAgendaAlertGroup(
 // RENDER ALERTAS
 // ============================================================
 
-function renderAlerts(
-  registros,
-) {
-  const container =
-    document.getElementById(
-      "mesasAlerts",
-    );
+function renderAlerts(registros) {
+  const container = document.getElementById("mesasAlerts");
 
   if (!container) {
     return;
   }
 
-  const criticos =
-    registros
-      .filter(
-        (item) =>
-          esCritico(
-            item.promociones.length,
-          ),
-      )
-      .sort(
-        (a, b) =>
-          b.promociones.length -
-          a.promociones.length,
-      )
-      .map(
-        (item) => ({
-          clase: "danger",
+  const criticos = registros
+    .filter((item) => esCritico(item.promociones.length))
+    .sort((a, b) => b.promociones.length - a.promociones.length)
+    .map((item) => ({
+      clase: "danger",
 
-          icono:
-            "fa-triangle-exclamation",
+      icono: "fa-triangle-exclamation",
 
-          numero:
-            item.numero,
+      numero: item.numero,
 
-          texto:
-            `${item.promociones.length} promociones · ${etiquetaEstado(
-              item.seguimiento.estado,
-            )}`,
-        }),
-      );
+      texto: `${item.promociones.length} promociones · ${etiquetaEstado(
+        item.seguimiento.estado,
+      )}`,
+    }));
 
+  const porFirmar = registros
+    .filter((item) => item.seguimiento.estado === "en-firma")
+    .map((item) => ({
+      clase: "blue",
 
-  const porFirmar =
-    registros
-      .filter(
-        (item) =>
-          item.seguimiento
-            .estado ===
-          "en-firma",
-      )
-      .map(
-        (item) => ({
-          clase: "blue",
+      icono: "fa-flag",
 
-          icono:
-            "fa-flag",
+      numero: item.numero,
 
-          numero:
-            item.numero,
+      texto: "Proyecto de acuerdo pendiente de firma",
+    }));
 
-          texto:
-            "Proyecto de acuerdo pendiente de firma",
-        }),
-      );
+  const mesa = mesaUsuario();
 
-
-  const mesa =
-    mesaUsuario();
-
-  const agenda =
-    getAvisosAgendaPendientes()
-      .filter(
-        (aviso) =>
-          !mesa ||
-          Number(
-            aviso.mesa,
-          ) ===
-            Number(
-              mesa,
-            ),
-      );
-
+  const agenda = getAvisosAgendaPendientes().filter(
+    (aviso) => !mesa || Number(aviso.mesa) === Number(mesa),
+  );
 
   programarReaparicionAvisos();
 
-  const total =
-    criticos.length +
-    porFirmar.length +
-    agenda.length;
+  const total = criticos.length + porFirmar.length + agenda.length;
 
-  setText(
-    "mesasAlertCount",
-    total,
-  );
-
+  setText("mesasAlertCount", total);
 
   if (!total) {
     container.innerHTML = `
@@ -1205,21 +942,13 @@ function renderAlerts(
     return;
   }
 
-
   container.innerHTML =
     renderAlertGroup(
       `Críticos (más de ${MESAS_CONFIG.PROMOS_CRITICO_MAYOR_A} promociones)`,
       criticos,
     ) +
-
-    renderAlertGroup(
-      "Pendientes de firma",
-      porFirmar,
-    ) +
-
-    renderAgendaAlertGroup(
-      agenda,
-    );
+    renderAlertGroup("Pendientes de firma", porFirmar) +
+    renderAgendaAlertGroup(agenda);
 }
 
 // ============================================================
@@ -1228,15 +957,11 @@ function renderAlerts(
 // ============================================================
 
 function formatearFechaHora(iso) {
-  return new Date(iso).toLocaleString(
-    "es-MX",
-    {
-      dateStyle: "medium",
-      timeStyle: "short",
-    },
-  );
+  return new Date(iso).toLocaleString("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
-
 
 // Vuelve a pintar las alertas justo cuando venza el próximo
 // aviso pospuesto, para que reaparezca sin recargar la página.
@@ -1245,8 +970,7 @@ function programarReaparicionAvisos() {
 
   temporizadorAvisos = null;
 
-  const proxima =
-    proximaReaparicionAviso();
+  const proxima = proximaReaparicionAviso();
 
   if (!proxima) {
     return;
@@ -1254,33 +978,19 @@ function programarReaparicionAvisos() {
 
   // setTimeout no admite más de ~24.8 días; si falta más,
   // despierta antes y vuelve a programarse al renderizar.
-  const espera =
-    Math.min(
-      Math.max(proxima - Date.now(), 0) + 500,
-      2147483647,
-    );
+  const espera = Math.min(Math.max(proxima - Date.now(), 0) + 500, 2147483647);
 
-  temporizadorAvisos =
-    setTimeout(
-      () => {
-        if (document.getElementById("mesasPage")) {
-          renderMesas();
-        }
-      },
-      espera,
-    );
+  temporizadorAvisos = setTimeout(() => {
+    if (document.getElementById("mesasPage")) {
+      renderMesas();
+    }
+  }, espera);
 }
 
-
-function openPosponerAviso(
-  notificacionId,
-) {
-  const aviso =
-    getAvisosAgendaPendientes()
-      .find(
-        (item) =>
-          item.id === notificacionId,
-      );
+function openPosponerAviso(notificacionId) {
+  const aviso = getAvisosAgendaPendientes().find(
+    (item) => item.id === notificacionId,
+  );
 
   if (!aviso) {
     return;
@@ -1385,17 +1095,13 @@ function openPosponerAviso(
     </div>
   `);
 
-  const cantidad =
-    document.getElementById("posponerCantidad");
+  const cantidad = document.getElementById("posponerCantidad");
 
-  const unidad =
-    document.getElementById("posponerUnidad");
+  const unidad = document.getElementById("posponerUnidad");
 
-  const vistaPrevia =
-    document.getElementById("posponerVistaPrevia");
+  const vistaPrevia = document.getElementById("posponerVistaPrevia");
 
-  const error =
-    document.getElementById("posponerError");
+  const error = document.getElementById("posponerError");
 
   const mostrarError = (mensaje) => {
     error.textContent = mensaje;
@@ -1404,28 +1110,16 @@ function openPosponerAviso(
   };
 
   const actualizarVistaPrevia = () => {
-    const hasta =
-      calcularPosposicion(
-        cantidad.value,
-        unidad.value,
-      );
+    const hasta = calcularPosposicion(cantidad.value, unidad.value);
 
-    vistaPrevia.textContent =
-      hasta
-        ? `El aviso volverá a aparecer el ${formatearFechaHora(hasta)}`
-        : "";
+    vistaPrevia.textContent = hasta
+      ? `El aviso volverá a aparecer el ${formatearFechaHora(hasta)}`
+      : "";
   };
 
   const aplicar = (hastaISO) => {
-    if (
-      !posponerNotificacion(
-        notificacionId,
-        hastaISO,
-      )
-    ) {
-      mostrarError(
-        "Indica un tiempo válido, mayor a cero.",
-      );
+    if (!posponerNotificacion(notificacionId, hastaISO)) {
+      mostrarError("Indica un tiempo válido, mayor a cero.");
 
       return;
     }
@@ -1435,19 +1129,13 @@ function openPosponerAviso(
     renderMesas();
   };
 
-  cantidad.addEventListener(
-    "input",
-    () => {
-      mostrarError("");
+  cantidad.addEventListener("input", () => {
+    mostrarError("");
 
-      actualizarVistaPrevia();
-    },
-  );
+    actualizarVistaPrevia();
+  });
 
-  unidad.addEventListener(
-    "change",
-    actualizarVistaPrevia,
-  );
+  unidad.addEventListener("change", actualizarVistaPrevia);
 
   document
     .getElementById("cancelarPosponer")
@@ -1455,26 +1143,13 @@ function openPosponerAviso(
 
   document
     .getElementById("confirmarPosponer")
-    ?.addEventListener(
-      "click",
-      () =>
-        aplicar(
-          calcularPosposicion(
-            cantidad.value,
-            unidad.value,
-          ),
-        ),
+    ?.addEventListener("click", () =>
+      aplicar(calcularPosposicion(cantidad.value, unidad.value)),
     );
 
   document
     .getElementById("posponerHastaManana")
-    ?.addEventListener(
-      "click",
-      () =>
-        aplicar(
-          inicioDiaSiguienteISO(),
-        ),
-    );
+    ?.addEventListener("click", () => aplicar(inicioDiaSiguienteISO()));
 
   actualizarVistaPrevia();
 
@@ -1486,16 +1161,8 @@ function openPosponerAviso(
 // MODAL 2 - CREAR ACUERDOS
 // ============================================================
 
-function openCrearAcuerdos(
-  numero,
-) {
-  const item =
-    getRegistros()
-      .find(
-        (registro) =>
-          registro.numero ===
-          numero,
-      );
+function openCrearAcuerdos(numero) {
+  const item = getRegistros().find((registro) => registro.numero === numero);
 
   if (!item) {
     return;
@@ -1635,198 +1302,104 @@ function openCrearAcuerdos(
     </div>
   `);
 
-
   document
-    .getElementById(
-      "closeCrearAcuerdo",
-    )
-    ?.addEventListener(
-      "click",
-      closeForm,
-    );
+    .getElementById("closeCrearAcuerdo")
+    ?.addEventListener("click", closeForm);
 
+  const paneArchivo = document.getElementById("acuerdoPaneArchivo");
 
-  const paneArchivo =
-    document.getElementById(
-      "acuerdoPaneArchivo",
-    );
+  const paneTexto = document.getElementById("acuerdoPaneTexto");
 
-  const paneTexto =
-    document.getElementById(
-      "acuerdoPaneTexto",
-    );
+  document.querySelectorAll("[data-acuerdo-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const esArchivo = tab.dataset.acuerdoTab === "archivo";
 
-
-  document
-    .querySelectorAll(
-      "[data-acuerdo-tab]",
-    )
-    .forEach(
-      (tab) => {
-        tab.addEventListener(
-          "click",
-          () => {
-            const esArchivo =
-              tab.dataset.acuerdoTab ===
-              "archivo";
-
-            document
-              .querySelectorAll(
-                "[data-acuerdo-tab]",
-              )
-              .forEach(
-                (otro) =>
-                  otro.classList.toggle(
-                    "active",
-                    otro === tab,
-                  ),
-              );
-
-            paneArchivo.hidden =
-              !esArchivo;
-
-            paneTexto.hidden =
-              esArchivo;
-          },
-        );
-      },
-    );
       document
-    .getElementById(
-      "acuerdoArchivo",
-    )
-    ?.addEventListener(
-      "change",
-      (event) => {
-        const nombre =
-          event.target.files?.[0]
-            ?.name;
+        .querySelectorAll("[data-acuerdo-tab]")
+        .forEach((otro) => otro.classList.toggle("active", otro === tab));
 
-        document
-          .getElementById(
-            "acuerdoArchivoNombre",
-          )
-          .textContent =
-          nombre
-            ? `Archivo: ${nombre}`
-            : "Ningún archivo seleccionado.";
-      },
-    );
+      paneArchivo.hidden = !esArchivo;
 
+      paneTexto.hidden = esArchivo;
+    });
+  });
+  document
+    .getElementById("acuerdoArchivo")
+    ?.addEventListener("change", (event) => {
+      const nombre = event.target.files?.[0]?.name;
+
+      document.getElementById("acuerdoArchivoNombre").textContent = nombre
+        ? `Archivo: ${nombre}`
+        : "Ningún archivo seleccionado.";
+    });
 
   document
-    .getElementById(
-      "enviarARevision",
-    )
-    ?.addEventListener(
-      "click",
-      async () => {
-        const archivoSeleccionado =
-          document
-            .getElementById(
-              "acuerdoArchivo",
-            )
-            ?.files?.[0] ||
-          null;
+    .getElementById("enviarARevision")
+    ?.addEventListener("click", async () => {
+      const archivoSeleccionado =
+        document.getElementById("acuerdoArchivo")?.files?.[0] || null;
 
-        const archivo =
-          archivoSeleccionado?.name ||
-          null;
+      const archivo = archivoSeleccionado?.name || null;
 
-        const texto =
-          document
-            .getElementById(
-              "acuerdoTexto",
-            )
-            ?.value.trim() ||
-          "";
+      const texto = document.getElementById("acuerdoTexto")?.value.trim() || "";
 
-        if (
-          !archivo &&
-          !texto
-        ) {
-          const error =
-            document.getElementById(
-              "acuerdoError",
-            );
+      if (!archivo && !texto) {
+        const error = document.getElementById("acuerdoError");
 
-          error.textContent =
-            "Sube un archivo o redacta el acuerdo antes de enviarlo a revisión interna.";
+        error.textContent =
+          "Sube un archivo o redacta el acuerdo antes de enviarlo a revisión interna.";
 
-          error.hidden =
-            false;
+        error.hidden = false;
+
+        return;
+      }
+
+      // El archivo se guarda para poder consultarlo después.
+      let documentoId = null;
+
+      if (archivoSeleccionado) {
+        const error = document.getElementById("acuerdoError");
+
+        const problema = validarArchivoDocumento(archivoSeleccionado);
+
+        if (problema) {
+          error.textContent = problema;
+
+          error.hidden = false;
 
           return;
         }
 
-        // El archivo se guarda para poder consultarlo después.
-        let documentoId =
-          null;
+        try {
+          const guardado = guardarDocumento({
+            archivo: archivoSeleccionado,
 
-        if (archivoSeleccionado) {
-          const error =
-            document.getElementById(
-              "acuerdoError",
-            );
+            dataUrl: await leerComoDataUrl(archivoSeleccionado),
+          });
 
-          const problema =
-            validarArchivoDocumento(
-              archivoSeleccionado,
-            );
-
-          if (problema) {
-            error.textContent =
-              problema;
-
-            error.hidden =
-              false;
-
-            return;
+          if (!guardado.ok) {
+            throw new Error(guardado.error);
           }
 
-          try {
-            const guardado =
-              guardarDocumento({
-                archivo:
-                  archivoSeleccionado,
+          documentoId = guardado.documento.id;
+        } catch (fallo) {
+          console.error(fallo);
 
-                dataUrl:
-                  await leerComoDataUrl(
-                    archivoSeleccionado,
-                  ),
-              });
+          error.textContent =
+            "No se pudo guardar el archivo (¿almacenamiento del navegador lleno?). Prueba con uno más pequeño.";
 
-            if (!guardado.ok) {
-              throw new Error(
-                guardado.error,
-              );
-            }
+          error.hidden = false;
 
-            documentoId =
-              guardado.documento.id;
-          } catch (fallo) {
-            console.error(fallo);
-
-            error.textContent =
-              "No se pudo guardar el archivo (¿almacenamiento del navegador lleno?). Prueba con uno más pequeño.";
-
-            error.hidden =
-              false;
-
-            return;
-          }
+          return;
         }
+      }
 
-        enviarARevisionInterna(
-          numero,
-          {
-            archivo,
-            documentoId,
-            texto,
-          },
-        );
-      },
-    );
+      enviarARevisionInterna(numero, {
+        archivo,
+        documentoId,
+        texto,
+      });
+    });
 }
 
 // ============================================================
@@ -1835,59 +1408,32 @@ function openCrearAcuerdos(
 // validación viven en documentosFirma.js (los comparten todas las tablas).
 // ============================================================
 
-function openEnviarAFirma(
-  numero,
-) {
-  const item =
-    getRegistros()
-      .find(
-        (registro) =>
-          registro.numero ===
-          numero,
-      );
+function openEnviarAFirma(numero) {
+  const item = getRegistros().find((registro) => registro.numero === numero);
 
-  if (
-    !item ||
-    !puedeAplicar(
-      "enviar-firma",
-      item.seguimiento.estado,
-    )
-  ) {
+  if (!item || !puedeAplicar("enviar-firma", item.seguimiento.estado)) {
     return;
   }
 
   abrirEnvioFirma({
-    referencia:
-      `Expediente ${numero}`,
+    referencia: `Expediente ${numero}`,
 
-    acuerdo:
-      normalizarAcuerdo(
-        item.seguimiento.acuerdo,
-      ),
+    acuerdo: normalizarAcuerdo(item.seguimiento.acuerdo),
 
-    aplicar:
-      (acuerdo) =>
-        aplicarAccionSeguimiento(
-          numero,
-          "enviar-firma",
-          {
-            movimiento:
-              "Proyecto de acuerdo enviado a firma de la Magistrada",
+    aplicar: (acuerdo) =>
+      aplicarAccionSeguimiento(numero, "enviar-firma", {
+        movimiento: "Proyecto de acuerdo enviado a firma de la Magistrada",
 
-            usuario:
-              getSession()?.nombre || "",
+        usuario: getSession()?.nombre || "",
 
-            extra: {
-              acuerdo,
+        extra: {
+          acuerdo,
 
-              enviadoFirmaEn:
-                new Date().toISOString(),
-            },
-          },
-        ),
+          enviadoFirmaEn: new Date().toISOString(),
+        },
+      }),
 
-    alTerminar:
-      renderMesas,
+    alTerminar: renderMesas,
   });
 }
 
@@ -1897,32 +1443,17 @@ function openEnviarAFirma(
 
 function enviarARevisionInterna(
   numero,
-  {
-    archivo,
-    documentoId = null,
-    texto,
-  },
+  { archivo, documentoId = null, texto },
 ) {
-  const seguimiento =
-    getData(
-      KEY,
-      {},
-    );
+  const seguimiento = getData(KEY, {});
 
-  const estado =
-    seguimiento[numero];
+  const estado = seguimiento[numero];
 
-  if (
-    !estado ||
-    estado.estado !==
-      "en-proceso"
-  ) {
+  if (!estado || estado.estado !== "en-proceso") {
     return;
   }
 
-  const ahora =
-    new Date().toISOString();
-
+  const ahora = new Date().toISOString();
 
   estado.acuerdo = {
     texto,
@@ -1931,39 +1462,24 @@ function enviarARevisionInterna(
 
     documentoId,
 
-    creadoPor:
-      getSession()?.nombre ||
-      "Secretaría de Acuerdos",
+    creadoPor: getSession()?.nombre || "Secretaría de Acuerdos",
 
-    creadoEn:
-      ahora,
+    creadoEn: ahora,
   };
 
+  estado.estado = "en-revision-interna";
 
-  estado.estado =
-    "en-revision-interna";
+  estado.ultimoMovimiento = "Proyecto de acuerdo en revisión interna";
 
-  estado.ultimoMovimiento =
-    "Proyecto de acuerdo en revisión interna";
-
-  estado.historial =
-    Array.isArray(
-      estado.historial,
-    )
-      ? estado.historial
-      : [];
+  estado.historial = Array.isArray(estado.historial) ? estado.historial : [];
 
   estado.historial.push({
     fecha: ahora,
 
-    movimiento:
-      "Proyecto de acuerdo enviado a revisión interna",
+    movimiento: "Proyecto de acuerdo enviado a revisión interna",
   });
 
-  saveData(
-    KEY,
-    seguimiento,
-  );
+  saveData(KEY, seguimiento);
 
   closeForm();
 
@@ -1988,54 +1504,32 @@ function ejecutarAccionFlujo(numero, accion, opciones = {}) {
 // AVANZAR ESTADO (heredado; ya no se usa desde los botones)
 // ============================================================
 
-function avanzarEstado(
-  numero,
-  nuevoEstado,
-  movimiento,
-  extra = {},
-) {
-  const seguimiento =
-    getData(
-      KEY,
-      {},
-    );
+function avanzarEstado(numero, nuevoEstado, movimiento, extra = {}) {
+  const seguimiento = getData(KEY, {});
 
-  const registro =
-    seguimiento[numero];
+  const registro = seguimiento[numero];
 
   if (!registro) {
     return;
   }
 
-  registro.estado =
-    nuevoEstado;
+  registro.estado = nuevoEstado;
 
-  registro.ultimoMovimiento =
-    movimiento;
+  registro.ultimoMovimiento = movimiento;
 
-  Object.assign(
-    registro,
-    extra,
-  );
+  Object.assign(registro, extra);
 
-  registro.historial =
-    Array.isArray(
-      registro.historial,
-    )
-      ? registro.historial
-      : [];
+  registro.historial = Array.isArray(registro.historial)
+    ? registro.historial
+    : [];
 
   registro.historial.push({
-    fecha:
-      new Date().toISOString(),
+    fecha: new Date().toISOString(),
 
     movimiento,
   });
 
-  saveData(
-    KEY,
-    seguimiento,
-  );
+  saveData(KEY, seguimiento);
 
   renderMesas();
 }
@@ -2044,33 +1538,18 @@ function avanzarEstado(
 // MODAL FIRMAR ACUERDO
 // ============================================================
 
-function openFirmarAcuerdo(
-  numero,
-) {
+function openFirmarAcuerdo(numero) {
   if (!canSign()) {
     return;
   }
 
-  const item =
-    getRegistros()
-      .find(
-        (registro) =>
-          registro.numero ===
-          numero,
-      );
+  const item = getRegistros().find((registro) => registro.numero === numero);
 
-  if (
-    !item ||
-    item.seguimiento.estado !==
-      "en-firma"
-  ) {
+  if (!item || item.seguimiento.estado !== "en-firma") {
     return;
   }
 
-  const acuerdo =
-    normalizarAcuerdo(
-      item.seguimiento.acuerdo,
-    );
+  const acuerdo = normalizarAcuerdo(item.seguimiento.acuerdo);
 
   showModal(`
     <div class="mesas-modal-shell">
@@ -2108,9 +1587,7 @@ function openFirmarAcuerdo(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.promovente,
-              )}
+              ${escapeHTML(item.promovente)}
             </strong>
 
           </div>
@@ -2123,9 +1600,7 @@ function openFirmarAcuerdo(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.asunto,
-              )}
+              ${escapeHTML(item.asunto)}
             </strong>
 
           </div>
@@ -2140,19 +1615,13 @@ function openFirmarAcuerdo(
           </span>
 
           <strong>
-            ${escapeHTML(
-              describirAcuerdo(
-                acuerdo,
-              ),
-            )}
+            ${escapeHTML(describirAcuerdo(acuerdo))}
           </strong>
 
         </div>
 
 
-        ${htmlVistaPreviaDocumento(
-          acuerdo,
-        )}
+        ${htmlVistaPreviaDocumento(acuerdo)}
 
 
         <p class="mesas-upload-help">
@@ -2188,91 +1657,49 @@ function openFirmarAcuerdo(
     </div>
   `);
 
-
-  activarVistasPreviasDocumento(
-    document.getElementById(
-      "modalContent",
-    ),
-  );
-
+  activarVistasPreviasDocumento(document.getElementById("modalContent"));
 
   document
-    .getElementById(
-      "cancelFirmarAcuerdo",
-    )
-    ?.addEventListener(
-      "click",
-      closeForm,
-    );
-
+    .getElementById("cancelFirmarAcuerdo")
+    ?.addEventListener("click", closeForm);
 
   document
-    .getElementById(
-      "confirmFirmarAcuerdo",
-    )
-    ?.addEventListener(
-      "click",
-      () =>
-        firmarAcuerdo(
-          numero,
-        ),
-    );
+    .getElementById("confirmFirmarAcuerdo")
+    ?.addEventListener("click", () => firmarAcuerdo(numero));
 }
 
 // ============================================================
 // FIRMAR
 // ============================================================
 
-function firmarAcuerdo(
-  numero,
-) {
+function firmarAcuerdo(numero) {
   if (!canSign()) {
     return;
   }
 
-  const seguimiento =
-    getData(
-      KEY,
-      {},
-    );
+  const seguimiento = getData(KEY, {});
 
-  const estado =
-    seguimiento[numero];
+  const estado = seguimiento[numero];
 
-  if (
-    !estado ||
-    estado.estado !==
-      "en-firma"
-  ) {
+  if (!estado || estado.estado !== "en-firma") {
     return;
   }
 
-  const ahora =
-    new Date().toISOString();
+  const ahora = new Date().toISOString();
 
-  estado.estado =
-    "en-lista";
+  estado.estado = "en-lista";
 
-  estado.firmadoEn =
-    ahora;
+  estado.firmadoEn = ahora;
 
-  estado.firmadoPor =
-    getSession()?.nombre ||
-    "Magistrada";
+  estado.firmadoPor = getSession()?.nombre || "Magistrada";
 
   // El acuerdo recién firmado queda pendiente de la lista del día.
   delete estado.listaId;
   delete estado.listaNumero;
 
-  estado.ultimoMovimiento =
-    "Acuerdo firmado por la Magistrada · pasa a lista";
+  estado.ultimoMovimiento = "Acuerdo firmado por la Magistrada · pasa a lista";
 
-  estado.historial =
-    Array.isArray(
-      estado.historial,
-    )
-      ? estado.historial
-      : [];
+  estado.historial = Array.isArray(estado.historial) ? estado.historial : [];
 
   estado.historial.push({
     fecha: ahora,
@@ -2281,10 +1708,7 @@ function firmarAcuerdo(
       "Acuerdo firmado por la Magistrada de Presidencia; el expediente pasa a En lista",
   });
 
-  saveData(
-    KEY,
-    seguimiento,
-  );
+  saveData(KEY, seguimiento);
   actualizarUbicacionExpediente(numero, "mesa");
   closeForm();
   renderMesas();
@@ -2293,17 +1717,12 @@ function firmarAcuerdo(
 // ACUERDO
 // ============================================================
 
-function normalizarAcuerdo(
-  acuerdo,
-) {
+function normalizarAcuerdo(acuerdo) {
   if (!acuerdo) {
     return null;
   }
 
-  if (
-    typeof acuerdo ===
-    "string"
-  ) {
+  if (typeof acuerdo === "string") {
     return {
       texto: acuerdo,
       archivo: null,
@@ -2313,10 +1732,7 @@ function normalizarAcuerdo(
   return acuerdo;
 }
 
-
-function describirAcuerdo(
-  acuerdo,
-) {
+function describirAcuerdo(acuerdo) {
   if (!acuerdo) {
     return "Sin acuerdo registrado.";
   }
@@ -2324,95 +1740,57 @@ function describirAcuerdo(
   const partes = [];
 
   if (acuerdo.archivo) {
-    partes.push(
-      `Archivo: ${acuerdo.archivo}`,
-    );
+    partes.push(`Archivo: ${acuerdo.archivo}`);
   }
 
   if (acuerdo.texto) {
-    partes.push(
-      acuerdo.texto,
-    );
+    partes.push(acuerdo.texto);
   }
 
   if (acuerdo.concepto) {
-    partes.push(
-      `Acuerdo: ${acuerdo.concepto}`,
-    );
+    partes.push(`Acuerdo: ${acuerdo.concepto}`);
   }
 
-  return (
-    partes.join(" · ") ||
-    "Sin acuerdo registrado."
-  );
+  return partes.join(" · ") || "Sin acuerdo registrado.";
 }
 
 // ============================================================
 // VER EXPEDIENTE
 // ============================================================
 
-function openDetalleExpediente(
-  numero,
-) {
-  const item =
-    getRegistros()
-      .find(
-        (registro) =>
-          registro.numero ===
-          numero,
-      );
+function openDetalleExpediente(numero) {
+  const item = getRegistros().find((registro) => registro.numero === numero);
 
   if (!item) {
     return;
   }
 
-  const seg =
-    item.seguimiento;
+  const seg = item.seguimiento;
 
-  const acuerdo =
-    normalizarAcuerdo(
-      seg.acuerdo,
-    );
+  const acuerdo = normalizarAcuerdo(seg.acuerdo);
 
-
-  const historial =
-    (
-      Array.isArray(
-        seg.historial,
-      )
-        ? seg.historial
-        : []
-    )
-      .slice()
-      .reverse()
-      .map(
-        (evento) => `
+  const historial = (Array.isArray(seg.historial) ? seg.historial : [])
+    .slice()
+    .reverse()
+    .map(
+      (evento) => `
           <li>
 
             <strong>
-              ${escapeHTML(
-                formatFecha(
-                  evento.fecha,
-                ),
-              )}
+              ${escapeHTML(formatFecha(evento.fecha))}
             </strong>
 
             <span>
-              ${escapeHTML(
-                evento.movimiento ||
-                "",
-              )}
+              ${escapeHTML(evento.movimiento || "")}
             </span>
 
           </li>
         `,
-      )
-      .join("");
+    )
+    .join("");
 
-
-  const firma =
-    seg.firmadoEn
-      ? `
+  const firma = seg.firmadoEn
+    ? `
         <div class="mesas-modal-info-item">
 
           <span>
@@ -2420,22 +1798,14 @@ function openDetalleExpediente(
           </span>
 
           <strong>
-            ${escapeHTML(
-              seg.firmadoPor ||
-              "Magistrada",
-            )}
+            ${escapeHTML(seg.firmadoPor || "Magistrada")}
             ·
-            ${escapeHTML(
-              formatFecha(
-                seg.firmadoEn,
-              ),
-            )}
+            ${escapeHTML(formatFecha(seg.firmadoEn))}
           </strong>
 
         </div>
       `
-      : "";
-
+    : "";
 
   showModal(`
     <div class="mesas-modal-shell">
@@ -2469,9 +1839,7 @@ function openDetalleExpediente(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.promovente,
-              )}
+              ${escapeHTML(item.promovente)}
             </strong>
 
           </div>
@@ -2484,11 +1852,7 @@ function openDetalleExpediente(
             </span>
 
             <strong>
-              ${escapeHTML(
-                etiquetaEstado(
-                  seg.estado,
-                ),
-              )}
+              ${escapeHTML(etiquetaEstado(seg.estado))}
             </strong>
 
           </div>
@@ -2501,11 +1865,7 @@ function openDetalleExpediente(
             </span>
 
             <strong>
-              ${escapeHTML(
-                describirAcuerdo(
-                  acuerdo,
-                ),
-              )}
+              ${escapeHTML(describirAcuerdo(acuerdo))}
             </strong>
 
           </div>
@@ -2525,9 +1885,7 @@ function openDetalleExpediente(
                   Documento
                 </span>
 
-                ${htmlVistaPreviaDocumento(
-                  acuerdo,
-                )}
+                ${htmlVistaPreviaDocumento(acuerdo)}
 
               </div>
             `
@@ -2563,66 +1921,33 @@ function openDetalleExpediente(
     </div>
   `);
 
-  activarVistasPreviasDocumento(
-    document.getElementById(
-      "modalContent",
-    ),
-  );
-
+  activarVistasPreviasDocumento(document.getElementById("modalContent"));
 
   document
-    .getElementById(
-      "closeDetalleMesa",
-    )
-    ?.addEventListener(
-      "click",
-      closeForm,
-    );
+    .getElementById("closeDetalleMesa")
+    ?.addEventListener("click", closeForm);
 }
 
 // ============================================================
 // DEMO
 // ============================================================
 
-function seedSecretariaDemo() {
-  const expedientes =
-    getData(
-      "expedientes",
-      [],
-    );
+export function seedSecretariaDemo() {
+  const expedientes = getData("expedientes", []);
 
-  const promociones =
-    getData(
-      "promociones",
-      [],
-    );
+  const promociones = getData("promociones", []);
 
-  const seguimiento =
-    getData(
-      KEY,
-      {},
-    );
+  const seguimiento = getData(KEY, {});
 
-  const existentes =
-    new Set(
-      expedientes.map(
-        (item) =>
-          getNumero(item),
-      ),
-    );
-
+  const existentes = new Set(expedientes.map((item) => getNumero(item)));
 
   const ubicaciones = {
-    "en-firma":
-      "Presidencia",
+    "en-firma": "Presidencia",
 
-    "en-actuaria":
-      "Actuaría",
+    "en-actuaria": "Actuaría",
 
-    "en-archivo":
-      "Archivo",
+    "en-archivo": "Archivo",
   };
-
 
   const demo = [
     {
@@ -2752,320 +2077,182 @@ function seedSecretariaDemo() {
     },
   ];
 
+  demo.forEach((item, index) => {
+    const ubicacion =
+      ubicaciones[item.estado] ||
+      `Mesa ${mesaDeExpediente({
+        numero: item.numero,
+      })}`;
 
-  demo.forEach(
-    (item, index) => {
-      const ubicacion =
-        ubicaciones[
-          item.estado
-        ] ||
-        `Mesa ${mesaDeExpediente({
-          numero:
-            item.numero,
-        })}`;
+    const fecha = fechaOffset(-(index + 1));
 
-      const fecha =
-        fechaOffset(
-          -(index + 1),
-        );
+    if (!existentes.has(item.numero)) {
+      expedientes.push({
+        id: createId(),
 
+        numero: item.numero,
 
-      if (
-        !existentes.has(
-          item.numero,
-        )
-      ) {
-        expedientes.push({
-          id: createId(),
+        expediente: item.numero,
 
-          numero:
-            item.numero,
+        actor: item.actor,
 
-          expediente:
-            item.numero,
+        demandado: item.demandado,
 
-          actor:
-            item.actor,
+        actoDemandado: item.actoDemandado,
 
-          demandado:
-            item.demandado,
+        ubicacion,
 
-          actoDemandado:
-            item.actoDemandado,
+        fecha,
 
-          ubicacion,
+        fechaRecepcion: fecha,
 
-          fecha,
+        estado: "Recibido",
 
-          fechaRecepcion:
-            fecha,
+        demoSecretaria: true,
+      });
+    } else {
+      expedientes.forEach((expediente) => {
+        if (
+          getNumero(expediente) === item.numero &&
+          expediente.demoSecretaria
+        ) {
+          expediente.demandado = expediente.demandado || item.demandado;
 
-          estado:
-            "Recibido",
+          expediente.ubicacion = expediente.ubicacion || ubicacion;
 
-          demoSecretaria:
-            true,
-        });
-      } else {
-        expedientes.forEach(
-          (expediente) => {
-            if (
-              getNumero(
-                expediente,
-              ) ===
-                item.numero &&
-              expediente.demoSecretaria
-            ) {
-              expediente.demandado =
-                expediente.demandado ||
-                item.demandado;
+          expediente.fechaRecepcion =
+            expediente.fechaRecepcion || expediente.fecha || fecha;
+        }
+      });
+    }
 
-              expediente.ubicacion =
-                expediente.ubicacion ||
-                ubicacion;
+    const conAcuerdo = item.estado !== "en-proceso";
 
-              expediente.fechaRecepcion =
-                expediente.fechaRecepcion ||
-                expediente.fecha ||
-                fecha;
-            }
+    const firmado = ["en-lista", "en-actuaria", "en-archivo"].includes(
+      item.estado,
+    );
+
+    // Documento de ejemplo (alterna Word y PDF) para la vista previa.
+    // El concepto "Acuerdo" ya viene escrito desde que está en firma.
+    const archivoDemo = conAcuerdo
+      ? sembrarDocumentoDemo(
+          index % 2 ? "consultas" : "promociones",
+          `demo-doc-exp-${item.numero}`,
+          {
+            nombreBase: `acuerdo-${item.numero.replace("/", "-")}`,
+
+            concepto:
+              item.estado === "en-revision-interna"
+                ? ""
+                : "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
           },
-        );
-      }
+        )
+      : null;
 
+    seguimiento[item.numero] = {
+      estado: item.estado,
 
-      const conAcuerdo =
-        item.estado !==
-        "en-proceso";
+      recibidoEn: new Date().toISOString(),
 
+      ultimoMovimiento: getMovimientoDemo(item.estado),
 
-      const firmado =
-        [
-          "en-lista",
-          "en-actuaria",
-          "en-archivo",
-        ].includes(
-          item.estado,
-        );
+      acuerdo: conAcuerdo
+        ? {
+            texto: "Proyecto de acuerdo de demostración",
 
+            archivo: archivoDemo?.archivo || null,
 
-      // Documento de ejemplo (alterna Word y PDF) para la vista previa.
-      // El concepto "Acuerdo" ya viene escrito desde que está en firma.
-      const archivoDemo =
-        conAcuerdo
-          ? sembrarDocumentoDemo(
-              index % 2
-                ? "consultas"
-                : "promociones",
-              `demo-doc-exp-${item.numero}`,
-              {
-                nombreBase:
-                  `acuerdo-${item.numero.replace("/", "-")}`,
+            documentoId: archivoDemo?.documentoId || null,
 
-                concepto:
-                  item.estado ===
-                  "en-revision-interna"
-                    ? ""
-                    : "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
-              },
-            )
-          : null;
+            concepto: archivoDemo?.concepto || "",
 
+            creadoPor: "Secretaría de Acuerdos",
 
-      seguimiento[
-        item.numero
-      ] = {
-        estado:
-          item.estado,
+            creadoEn: new Date().toISOString(),
+          }
+        : null,
 
-        recibidoEn:
-          new Date()
-            .toISOString(),
+      firmadoEn: firmado ? new Date().toISOString() : null,
 
-        ultimoMovimiento:
-          getMovimientoDemo(
-            item.estado,
-          ),
+      firmadoPor: firmado ? "Magistrada" : null,
 
-        acuerdo:
-          conAcuerdo
-            ? {
-                texto:
-                  "Proyecto de acuerdo de demostración",
+      historial: [],
+    };
 
-                archivo:
-                  archivoDemo?.archivo ||
-                  null,
+    const existentesPromo = promociones.filter(
+      (promo) => promo.expediente === item.numero,
+    ).length;
 
-                documentoId:
-                  archivoDemo?.documentoId ||
-                  null,
+    for (let i = existentesPromo; i < item.promos; i += 1) {
+      promociones.push({
+        id: createId(),
 
-                concepto:
-                  archivoDemo?.concepto ||
-                  "",
+        numero: item.numero,
 
-                creadoPor:
-                  "Secretaría de Acuerdos",
+        expediente: item.numero,
 
-                creadoEn:
-                  new Date()
-                    .toISOString(),
-              }
-            : null,
+        fecha: fechaOffset(-i),
 
-        firmadoEn:
-          firmado
-            ? new Date()
-                .toISOString()
-            : null,
+        tipo: "Promoción",
 
-        firmadoPor:
-          firmado
-            ? "Magistrada"
-            : null,
+        descripcion: "Promoción de demostración",
 
-        historial: [],
-      };
+        estado: "Pendiente",
 
+        creadoEn: new Date().toISOString(),
 
-      const existentesPromo =
-        promociones.filter(
-          (promo) =>
-            promo.expediente ===
-            item.numero,
-        ).length;
+        // Ya recibida por Mesa (las pendientes de recibir las
+        // siembra demo.js para probar la tarjeta "por recibir").
+        recibidaMesa: true,
 
+        recibidaMesaEn: new Date().toISOString(),
 
-      for (
-        let i =
-          existentesPromo;
+        recibidaMesaPor: "Demo",
 
-        i <
-        item.promos;
+        mesaRecepcion: mesaDeExpediente({
+          numero: item.numero,
+        }),
 
-        i += 1
-      ) {
-        promociones.push({
-          id:
-            createId(),
+        // La primera promoción refleja el estado del expediente
+        // (así hay promociones en firma, en lista, en Actuaría...).
+        estadoAcuerdo: i === 0 ? item.estado : "en-proceso",
 
-          numero:
-            item.numero,
+        // La promoción que refleja el estado del expediente trae su documento.
+        ...(i === 0 && conAcuerdo
+          ? {
+              acuerdo: sembrarDocumentoDemo(
+                index % 2 ? "consultas" : "promociones",
+                `demo-doc-promo-${item.numero}`,
+                {
+                  nombreBase: `promocion-${item.numero.replace("/", "-")}`,
 
-          expediente:
-            item.numero,
+                  concepto:
+                    item.estado === "en-revision-interna"
+                      ? ""
+                      : "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
+                },
+              ),
+            }
+          : {}),
 
-          fecha:
-            fechaOffset(
-              -i,
-            ),
+        estadoPromocion: i === 0 && firmado ? "acordado" : "por-acordar",
 
-          tipo:
-            "Promoción",
+        ...(i === 0 && firmado
+          ? {
+              acordadoEn: fechaOffset(-(index + 1)),
+            }
+          : {}),
+      });
+    }
+  });
 
-          descripcion:
-            "Promoción de demostración",
+  saveData("expedientes", expedientes);
 
-          estado:
-            "Pendiente",
+  saveData("promociones", promociones);
 
-          creadoEn:
-            new Date()
-              .toISOString(),
+  saveData(KEY, seguimiento);
 
-          // Ya recibida por Mesa (las pendientes de recibir las
-          // siembra demo.js para probar la tarjeta "por recibir").
-          recibidaMesa:
-            true,
-
-          recibidaMesaEn:
-            new Date()
-              .toISOString(),
-
-          recibidaMesaPor:
-            "Demo",
-
-          mesaRecepcion:
-            mesaDeExpediente({
-              numero:
-                item.numero,
-            }),
-
-          // La primera promoción refleja el estado del expediente
-          // (así hay promociones en firma, en lista, en Actuaría...).
-          estadoAcuerdo:
-            i === 0
-              ? item.estado
-              : "en-proceso",
-
-          // La promoción que refleja el estado del expediente trae su documento.
-          ...(
-            i === 0 &&
-            conAcuerdo
-              ? {
-                  acuerdo:
-                    sembrarDocumentoDemo(
-                      index % 2
-                        ? "consultas"
-                        : "promociones",
-                      `demo-doc-promo-${item.numero}`,
-                      {
-                        nombreBase:
-                          `promocion-${item.numero.replace("/", "-")}`,
-
-                        concepto:
-                          item.estado ===
-                          "en-revision-interna"
-                            ? ""
-                            : "Se tiene por presentado el escrito y se ordena notificar a las partes (demostración).",
-                      },
-                    ),
-                }
-              : {}
-          ),
-
-          estadoPromocion:
-            i === 0 &&
-            firmado
-              ? "acordado"
-              : "por-acordar",
-
-          ...(
-            i === 0 &&
-            firmado
-              ? {
-                  acordadoEn:
-                    fechaOffset(
-                      -(index + 1),
-                    ),
-                }
-              : {}
-          ),
-        });
-      }
-    },
-  );
-
-
-  saveData(
-    "expedientes",
-    expedientes,
-  );
-
-  saveData(
-    "promociones",
-    promociones,
-  );
-
-  saveData(
-    KEY,
-    seguimiento,
-  );
-
-  sembrarDemoFases(
-    demo.map((item) => item.numero),
-  );
+  sembrarDemoFases(demo.map((item) => item.numero));
 
   renderMesas();
 }
@@ -3074,87 +2261,50 @@ function seedSecretariaDemo() {
 // MOVIMIENTO DEMO
 // ============================================================
 
-function getMovimientoDemo(
-  estado,
-) {
+function getMovimientoDemo(estado) {
   const movimientos = {
-    "en-proceso":
-      "Turnado a Secretaría de Acuerdos",
+    "en-proceso": "Turnado a Secretaría de Acuerdos",
 
-    "en-revision-interna":
-      "Proyecto de acuerdo en revisión interna",
+    "en-revision-interna": "Proyecto de acuerdo en revisión interna",
 
-    "en-firma":
-      "Proyecto de acuerdo enviado a firma",
+    "en-firma": "Proyecto de acuerdo enviado a firma",
 
-    "en-lista":
-      "Acuerdo firmado · publicado en lista",
+    "en-lista": "Acuerdo firmado · publicado en lista",
 
-    "en-actuaria":
-      "Turnado a Actuaría",
+    "en-actuaria": "Turnado a Actuaría",
 
-    "en-archivo":
-      "Turnado a Archivo",
+    "en-archivo": "Turnado a Archivo",
   };
 
-  return (
-    movimientos[estado] ||
-    "Sin movimiento"
-  );
+  return movimientos[estado] || "Sin movimiento";
 }
 
 // ============================================================
 // ASIGNACIÓN DE MESA
 // ============================================================
 
-function parseNumero(
-  numero,
-) {
-  const texto =
-    String(
-      numero ||
-      "",
-    );
+function parseNumero(numero) {
+  const texto = String(numero || "");
 
-  let match =
-    texto.match(
-      /(\d+)\s*\/\s*(\d{4})/,
-    );
+  let match = texto.match(/(\d+)\s*\/\s*(\d{4})/);
 
   if (match) {
     return {
-      consecutivo:
-        Number(
-          match[1],
-        ),
+      consecutivo: Number(match[1]),
 
-      anio:
-        Number(
-          match[2],
-        ),
+      anio: Number(match[2]),
     };
   }
 
-
-  match =
-    texto.match(
-      /(\d{4})\D+(\d+)/,
-    );
+  match = texto.match(/(\d{4})\D+(\d+)/);
 
   if (match) {
     return {
-      consecutivo:
-        Number(
-          match[2],
-        ),
+      consecutivo: Number(match[2]),
 
-      anio:
-        Number(
-          match[1],
-        ),
+      anio: Number(match[1]),
     };
   }
-
 
   return {
     consecutivo: null,
@@ -3162,43 +2312,21 @@ function parseNumero(
   };
 }
 
+function mesaDeExpediente(expediente) {
+  const numero = getNumero(expediente);
 
-function mesaDeExpediente(
-  expediente,
-) {
-  const numero =
-    getNumero(
-      expediente,
-    );
+  const { consecutivo, anio } = parseNumero(numero);
 
-  const {
-    consecutivo,
-    anio,
-  } =
-    parseNumero(
-      numero,
-    );
-
-
-  const anioFecha =
-    Number(
-      String(
-        expediente.fechaRecepcion ||
+  const anioFecha = Number(
+    String(
+      expediente.fechaRecepcion ||
         expediente.fecha ||
         expediente.creadoEn ||
         "",
-      ).slice(
-        0,
-        4,
-      ),
-    );
+    ).slice(0, 4),
+  );
 
-
-  const anioEfectivo =
-    anio ||
-    anioFecha ||
-    null;
-
+  const anioEfectivo = anio || anioFecha || null;
 
   const texto = [
     numero,
@@ -3209,35 +2337,15 @@ function mesaDeExpediente(
     .filter(Boolean)
     .join(" ");
 
-
-  if (
-    /\bOJC\b/i.test(
-      texto,
-    ) ||
-    (
-      anioEfectivo &&
-      anioEfectivo <=
-        2021
-    )
-  ) {
+  if (/\bOJC\b/i.test(texto) || (anioEfectivo && anioEfectivo <= 2021)) {
     return 3;
   }
 
-
-  if (
-    consecutivo ===
-    null
-  ) {
+  if (consecutivo === null) {
     return 1;
   }
 
-
-  return (
-    consecutivo % 2 ===
-    0
-      ? 1
-      : 2
-  );
+  return consecutivo % 2 === 0 ? 1 : 2;
 }
 
 // ============================================================
@@ -3245,10 +2353,7 @@ function mesaDeExpediente(
 // ============================================================
 
 function mesaUsuario() {
-  return (
-    getSession()?.mesa ||
-    null
-  );
+  return getSession()?.mesa || null;
 }
 
 // ============================================================
@@ -3256,53 +2361,30 @@ function mesaUsuario() {
 // ============================================================
 
 const MESA_TITULOS = {
-  1: [
-    "Mesa 1",
-    "Expedientes pares.",
-  ],
+  1: ["Mesa 1", "Expedientes pares."],
 
-  2: [
-    "Mesa 2",
-    "Expedientes impares.",
-  ],
+  2: ["Mesa 2", "Expedientes impares."],
 
-  3: [
-    "Mesa 3",
-    "Acuerdos con OJC y expedientes de 2021 y anteriores.",
-  ],
+  3: ["Mesa 3", "Acuerdos con OJC y expedientes de 2021 y anteriores."],
 };
 
-
 function renderTituloMesa() {
-  const mesa =
-    mesaUsuario();
+  const mesa = mesaUsuario();
 
   if (!mesa) {
     return;
   }
 
-  const h1 =
-    document.querySelector(
-      "#mesasPage .mesas-page-header h1",
-    );
+  const h1 = document.querySelector("#mesasPage .mesas-page-header h1");
 
-  const p =
-    document.querySelector(
-      "#mesasPage .mesas-page-header p",
-    );
-
+  const p = document.querySelector("#mesasPage .mesas-page-header p");
 
   if (h1) {
-    h1.textContent =
-      `Secretaría de Acuerdos · ${MESA_TITULOS[mesa][0]}`;
+    h1.textContent = `Secretaría de Acuerdos · ${MESA_TITULOS[mesa][0]}`;
   }
 
-
   if (p) {
-    p.textContent =
-      MESA_TITULOS[
-        mesa
-      ][1];
+    p.textContent = MESA_TITULOS[mesa][1];
   }
 }
 
@@ -3310,92 +2392,46 @@ function renderTituloMesa() {
 // HELPERS
 // ============================================================
 
-function getNumero(
-  expediente,
-) {
-  return String(
-    expediente.numero ||
-    expediente.expediente ||
-    "",
-  );
+function getNumero(expediente) {
+  return String(expediente.numero || expediente.expediente || "");
 }
 
-
-function formatFecha(
-  value,
-) {
+function formatFecha(value) {
   if (!value) {
     return "—";
   }
 
-  const texto =
-    String(value);
+  const texto = String(value);
 
-  const clean =
-    texto.slice(
-      0,
-      10,
-    );
+  const clean = texto.slice(0, 10);
 
-  const parts =
-    clean.split("-");
+  const parts = clean.split("-");
 
-  if (
-    parts.length ===
-    3
-  ) {
+  if (parts.length === 3) {
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   }
 
   return clean;
 }
 
+function fechaOffset(offset) {
+  const date = new Date();
 
-function fechaOffset(
-  offset,
-) {
-  const date =
-    new Date();
+  date.setDate(date.getDate() + offset);
 
-  date.setDate(
-    date.getDate() +
-    offset,
-  );
+  const y = date.getFullYear();
 
-  const y =
-    date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
 
-  const m =
-    String(
-      date.getMonth() + 1,
-    ).padStart(
-      2,
-      "0",
-    );
-
-  const d =
-    String(
-      date.getDate(),
-    ).padStart(
-      2,
-      "0",
-    );
+  const d = String(date.getDate()).padStart(2, "0");
 
   return `${y}-${m}-${d}`;
 }
 
-
-function setText(
-  id,
-  value,
-) {
-  const element =
-    document.getElementById(
-      id,
-    );
+function setText(id, value) {
+  const element = document.getElementById(id);
 
   if (element) {
-    element.textContent =
-      value;
+    element.textContent = value;
   }
 }

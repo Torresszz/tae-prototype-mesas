@@ -601,3 +601,80 @@
 .mampd-doc-link:hover .mesas-stage-badge {
   text-decoration: underline;
 }
+
+.plantillas-buscador {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #dce3ea;
+  border-radius: 9px;
+  background: #f8fbff;
+}
+
+.plantillas-buscador-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: #102b45;
+}
+
+.plantillas-buscador-cabecera small {
+  color: #60758a;
+}
+
+.plantillas-buscador-busqueda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dce3ea;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #60758a;
+}
+
+.plantillas-buscador-busqueda input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.plantillas-buscador-lista {
+  max-height: 170px;
+  margin-top: 8px;
+  overflow-y: auto;
+}
+
+.plantillas-buscador-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #e6ecf1;
+}
+
+.plantillas-buscador-fila:last-child {
+  border-bottom: 0;
+}
+
+.plantillas-buscador-nombre {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.plantillas-buscador-nombre small {
+  color: #60758a;
+  overflow-wrap: anywhere;
+}
+
+.plantillas-buscador-vacio {
+  margin: 6px 0;
+  color: #60758a;
+}

@@ -25,6 +25,19 @@ import { escapeHTML } from "../../utils.js";
 
 import { showModal, closeForm } from "../../forms/formHelper.js";
 
+import { montarBuscadorPlantillas } from "../mesas/buscadorPlantillas.js";
+
+const CATEGORIA_PLANTILLA_SECCION = {
+  "acuerdo-radicacion": "radicaciones",
+  "copia-radicacion": "radicaciones",
+  "informe-justificado": "informe-justificado",
+  certificacion: "certificacion",
+  "oficio-niega-amparo": "oficios",
+  "acuerdo-niega-amparo": "no-ampara-ni-protege",
+  "oficio-ampara-protege": "oficios",
+  "acuerdo-ampara-protege": "ampara-y-protege",
+};
+
 import {
   obtenerDocumento,
   guardarDocumento,
@@ -73,10 +86,19 @@ export const DOCS_NIEGA_AMPARO = [
   { id: "acuerdo-niega-amparo", texto: "Acuerdo (amparo negado)" },
 ];
 
+// Secciones extra que solo tienen los amparos CONCEDIDOS (se llenan en "Ampara y Protege")
+export const DOCS_AMPARA_PROTEGE = [
+  { id: "oficio-ampara-protege", texto: "Oficio al TCC (amparo concedido)" },
+  { id: "acuerdo-ampara-protege", texto: "Acuerdo (amparo concedido)" },
+];
+
 export function docsDeCuadernillo(seg) {
-  return seg?.envioTcc?.resultado === "negado"
-    ? [...DOCS_CUADERNILLO, ...DOCS_NIEGA_AMPARO]
-    : DOCS_CUADERNILLO;
+  const resultado = seg?.envioTcc?.resultado;
+  if (resultado === "negado")
+    return [...DOCS_CUADERNILLO, ...DOCS_NIEGA_AMPARO];
+  if (resultado === "concedido")
+    return [...DOCS_CUADERNILLO, ...DOCS_AMPARA_PROTEGE];
+  return DOCS_CUADERNILLO;
 }
 
 // ------------------------------------------------------------
@@ -187,7 +209,7 @@ export function abrirCuadernillo(id, opciones = {}) {
 
   const filas = secciones
     .map((doc) => {
-      const indice = DOCS_CUADERNILLO.indexOf(doc);
+      const indice = docsAmparo.indexOf(doc);
 
       const registro = cuad.docs[doc.id];
 
@@ -217,6 +239,13 @@ export function abrirCuadernillo(id, opciones = {}) {
             ${cumplida ? "Reemplazar" : "Subir documento"}
             <input type="file" id="cuadArchivo-${doc.id}" data-cuad-archivo="${doc.id}" accept=".pdf,.docx" hidden>
           </label>
+          ${
+            !solo && CATEGORIA_PLANTILLA_SECCION[doc.id]
+              ? `<button type="button" class="mesas-secondary-btn" data-cuad-accion="plantillas" data-seccion="${doc.id}">
+                   <i class="fa-regular fa-file-lines"></i> Plantillas
+                 </button>`
+              : ""
+          }          
           ${
             cumplida
               ? `
@@ -269,6 +298,7 @@ export function abrirCuadernillo(id, opciones = {}) {
         }
 
         <ul class="mampd-cuad-docs">${filas}</ul>
+        <section id="mampdCuadPlantillas"></section>        
         ${
           solo && seccionCumplida(seg, solo)
             ? `<section class="mampd-cuad-preview">
@@ -308,6 +338,14 @@ export function abrirCuadernillo(id, opciones = {}) {
   const modal = document.getElementById("mampdCuadModal");
   // Vista previa automática (solo si el modal trae una sección con archivo)
   activarVistasPreviasDocumento(modal);
+
+  const buscador = montarBuscadorPlantillas(
+    modal.querySelector("#mampdCuadPlantillas"),
+    {
+      contexto: "directos",
+      categoria: solo ? CATEGORIA_PLANTILLA_SECCION[solo] || "" : "",
+    },
+  );
 
   const mostrarError = (mensaje) => {
     const caja = modal.querySelector("#mampdCuadError");
@@ -369,7 +407,7 @@ export function abrirCuadernillo(id, opciones = {}) {
       );
     }
 
-    const seccion = DOCS_CUADERNILLO.find(
+    const seccion = docsAmparo.find(
       (doc) => doc.id === input.dataset.cuadArchivo,
     );
 
@@ -404,11 +442,18 @@ export function abrirCuadernillo(id, opciones = {}) {
 
     if (!boton) return;
 
-    const seccion = DOCS_CUADERNILLO.find(
-      (doc) => doc.id === boton.dataset.seccion,
-    );
+    const seccion = docsAmparo.find((doc) => doc.id === boton.dataset.seccion);
 
     switch (boton.dataset.cuadAccion) {
+      case "plantillas":
+        buscador.definir({
+          categoria: CATEGORIA_PLANTILLA_SECCION[seccion.id] || "",
+        });
+        modal
+          .querySelector("#mampdCuadPlantillas")
+          .scrollIntoView({ block: "nearest" });
+        break;
+
       case "ver":
         verDocumento(id, seccion, opciones);
 

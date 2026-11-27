@@ -20,89 +20,50 @@
 //
 // ============================================================
 
-import {
-  getData,
-  saveData
-} from "../../storage.js";
+import { getData, saveData } from "../../storage.js";
 
-import {
-  escapeHTML,
-  createId
-} from "../../utils.js";
+import { escapeHTML, createId } from "../../utils.js";
 
-import {
-  getSession
-} from "../../auth.js";
+import { getSession } from "../../auth.js";
 
-import {
-  showModal,
-  closeForm
-} from "../../forms/formHelper.js";
+import { showModal, closeForm } from "../../forms/formHelper.js";
 
-import {
-  reactivarPorPromocionNueva
-} from "./flujoEstados.js";
+import { reactivarPorPromocionNueva } from "./flujoEstados.js";
 
 import {
   getNumeroExpediente,
   mesaDeExpediente,
-  mesaUsuarioActual
+  mesaUsuarioActual,
 } from "./mesaUtils.js";
-
 
 // ============================================================
 // LLAVES
 // ============================================================
 
-const KEY_EXPEDIENTES =
-  "expedientes";
+const KEY_EXPEDIENTES = "expedientes";
 
-const KEY_PROMOCIONES =
-  "promociones";
+const KEY_PROMOCIONES = "promociones";
 
-const KEY_SEGUIMIENTO =
-  "mesasSeguimiento";
+const KEY_SEGUIMIENTO = "mesasSeguimiento";
 
-const KEY_DEMANDAS =
-  "mesasDemandas";
-
+const KEY_DEMANDAS = "mesasDemandas";
 
 // ============================================================
 // RENDER PRINCIPAL
 // ============================================================
 
 export function renderRecepcionPromociones() {
-
-  const host =
-    document.getElementById(
-      "mesasRecepcionPromociones"
-    );
-
+  const host = document.getElementById("mesasRecepcionPromociones");
 
   if (!host) {
     return;
   }
 
+  const pendientes = getPendientesRecepcion();
 
-  const pendientes =
-    getPendientesRecepcion();
+  const demandas = pendientes.filter((item) => item.tipo === "demanda");
 
-
-  const demandas =
-    pendientes.filter(
-      item =>
-        item.tipo ===
-        "demanda"
-    );
-
-
-  const promociones =
-    pendientes.filter(
-      item =>
-        item.tipo ===
-        "promocion"
-    );
-
+  const promociones = pendientes.filter((item) => item.tipo === "promocion");
 
   host.innerHTML = `
     <section class="mesas-recepcion-card">
@@ -133,13 +94,9 @@ export function renderRecepcionPromociones() {
 
         ${
           pendientes.length
-
             ? `
               <p>
-                ${renderResumenPendientes(
-                  demandas.length,
-                  promociones.length
-                )}
+                ${renderResumenPendientes(demandas.length, promociones.length)}
               </p>
 
 
@@ -155,7 +112,6 @@ export function renderRecepcionPromociones() {
 
               </button>
             `
-
             : `
               <p>
                 No hay documentos pendientes de recibir.
@@ -181,381 +137,193 @@ export function renderRecepcionPromociones() {
     </section>
   `;
 
+  document
+    .getElementById("mesasAbrirRecepcionTodo")
+    ?.addEventListener("click", openRecepcionTodoModal);
 
   document
-    .getElementById(
-      "mesasAbrirRecepcionTodo"
-    )
-    ?.addEventListener(
-      "click",
-      openRecepcionTodoModal
-    );
-
-
-  document
-    .getElementById(
-      "mesasCargarDemoRecepcion"
-    )
-    ?.addEventListener(
-      "click",
-      cargarDatosDemoRecepcion
-    );
-
+    .getElementById("mesasCargarDemoRecepcion")
+    ?.addEventListener("click", cargarDatosDemoRecepcion);
 }
-
 
 // ============================================================
 // RESUMEN
 // ============================================================
 
-function renderResumenPendientes(
-  demandas,
-  promociones
-) {
-
-  const partes =
-    [];
-
+function renderResumenPendientes(demandas, promociones) {
+  const partes = [];
 
   if (demandas) {
-
-    partes.push(
-      `${demandas} ${
-        demandas === 1
-          ? "demanda"
-          : "demandas"
-      }`
-    );
-
+    partes.push(`${demandas} ${demandas === 1 ? "demanda" : "demandas"}`);
   }
-
 
   if (promociones) {
-
     partes.push(
-      `${promociones} ${
-        promociones === 1
-          ? "promoción"
-          : "promociones"
-      }`
+      `${promociones} ${promociones === 1 ? "promoción" : "promociones"}`,
     );
-
   }
 
-
-  return (
-    partes.join(" · ") ||
-    "Sin pendientes"
-  );
-
+  return partes.join(" · ") || "Sin pendientes";
 }
-
 
 // ============================================================
 // OBTENER TODO LO PENDIENTE
 // ============================================================
 
 export function getPendientesRecepcion() {
+  const expedientesRaw = getData(KEY_EXPEDIENTES, []);
 
-  const expedientesRaw =
-    getData(
-      KEY_EXPEDIENTES,
-      []
-    );
+  const promocionesRaw = getData(KEY_PROMOCIONES, []);
 
+  const expedientes = Array.isArray(expedientesRaw) ? expedientesRaw : [];
 
-  const promocionesRaw =
-    getData(
-      KEY_PROMOCIONES,
-      []
-    );
+  const promociones = Array.isArray(promocionesRaw) ? promocionesRaw : [];
 
+  const mesaActual = mesaUsuarioActual();
 
-  const expedientes =
-    Array.isArray(
-      expedientesRaw
-    )
-      ? expedientesRaw
-      : [];
-
-
-  const promociones =
-    Array.isArray(
-      promocionesRaw
-    )
-      ? promocionesRaw
-      : [];
-
-
-  const mesaActual =
-    mesaUsuarioActual();
-
-
-  const resultado =
-    [];
-
+  const resultado = [];
 
   // ==========================================================
   // DEMANDAS / EXPEDIENTES NUEVOS
   // ==========================================================
 
   expedientes
-    .filter(
-      expediente =>
-        expediente?.recibidoMesa ===
-        false
-    )
-    .forEach(
-      expediente => {
+    .filter((expediente) => expediente?.recibidoMesa === false)
+    .forEach((expediente) => {
+      const numero = getNumeroExpediente(expediente);
 
-        const numero =
-          getNumeroExpediente(
-            expediente
-          );
-
-
-        if (!numero) {
-          return;
-        }
-
-
-        const mesaDestino =
-          mesaDeExpediente(
-            expediente
-          );
-
-
-        if (
-          mesaActual &&
-          Number(
-            mesaDestino
-          ) !==
-          Number(
-            mesaActual
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        resultado.push({
-
-          id:
-            expediente.id ||
-            numero,
-
-          tipo:
-            "demanda",
-
-          numero,
-
-          mesaDestino,
-
-          expediente,
-
-          fecha:
-            expediente.fechaRecepcion ||
-            expediente.fecha ||
-            expediente.creadoEn ||
-            "",
-
-          hora:
-            obtenerHora(
-              expediente
-            ),
-
-          actor:
-            expediente.actor ||
-            expediente.promovente ||
-            "—",
-
-          demandado:
-            expediente.demandado ||
-            "—",
-
-          terceros:
-            expediente.terceros ||
-            expediente.tercerosInteresados ||
-            expediente.codemandado ||
-            "—",
-
-          archivo:
-            obtenerNombreArchivo(
-              expediente
-            )
-
-        });
-
+      if (!numero) {
+        return;
       }
-    );
 
+      const mesaDestino = mesaDeExpediente(expediente);
+
+      if (mesaActual && Number(mesaDestino) !== Number(mesaActual)) {
+        return;
+      }
+
+      resultado.push({
+        id: expediente.id || numero,
+
+        tipo: "demanda",
+
+        numero,
+
+        mesaDestino,
+
+        expediente,
+
+        fecha:
+          expediente.fechaRecepcion ||
+          expediente.fecha ||
+          expediente.creadoEn ||
+          "",
+
+        hora: obtenerHora(expediente),
+
+        actor: expediente.actor || expediente.promovente || "—",
+
+        demandado: expediente.demandado || "—",
+
+        terceros:
+          expediente.terceros ||
+          expediente.tercerosInteresados ||
+          expediente.codemandado ||
+          "—",
+
+        archivo: obtenerNombreArchivo(expediente),
+      });
+    });
 
   // ==========================================================
   // PROMOCIONES
   // ==========================================================
 
   promociones
-    .filter(
-      promocion =>
-        promocion?.recibidaMesa !==
-        true
-    )
-    .forEach(
-      promocion => {
+    .filter((promocion) => promocion?.recibidaMesa !== true)
+    .forEach((promocion) => {
+      const numero = String(
+        promocion.expediente || promocion.numero || "",
+      ).trim();
 
-        const numero =
-          String(
-            promocion.expediente ||
-            promocion.numero ||
-            ""
-          ).trim();
-
-
-        if (!numero) {
-          return;
-        }
-
-
-        const expediente =
-          expedientes.find(
-            item =>
-              getNumeroExpediente(
-                item
-              )
-                .trim()
-                .toLowerCase() ===
-              numero
-                .toLowerCase()
-          );
-
-
-        // Una promoción debe estar relacionada
-        // con un expediente existente.
-        if (!expediente) {
-          return;
-        }
-
-
-        const mesaDestino =
-          mesaDeExpediente(
-            expediente
-          );
-
-
-        if (
-          mesaActual &&
-          Number(
-            mesaDestino
-          ) !==
-          Number(
-            mesaActual
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        resultado.push({
-
-          id:
-            promocion.id,
-
-          tipo:
-            "promocion",
-
-          numero,
-
-          mesaDestino,
-
-          promocion,
-
-          expediente,
-
-          fecha:
-            promocion.fecha ||
-            promocion.fechaRecepcion ||
-            promocion.creadoEn ||
-            "",
-
-          hora:
-            obtenerHora(
-              promocion
-            ),
-
-          actor:
-            expediente.actor ||
-            expediente.promovente ||
-            "—",
-
-          demandado:
-            expediente.demandado ||
-            "—",
-
-          tipoPromocion:
-            promocion.tipo ||
-            promocion.tipoPromocion ||
-            "Promoción",
-
-          descripcion:
-            promocion.descripcion ||
-            promocion.observacion ||
-            promocion.observaciones ||
-            "Sin observaciones.",
-
-          archivo:
-            obtenerNombreArchivo(
-              promocion
-            )
-
-        });
-
+      if (!numero) {
+        return;
       }
-    );
 
+      const expediente = expedientes.find(
+        (item) =>
+          getNumeroExpediente(item).trim().toLowerCase() ===
+          numero.toLowerCase(),
+      );
+
+      // Una promoción debe estar relacionada
+      // con un expediente existente.
+      if (!expediente) {
+        return;
+      }
+
+      const mesaDestino = mesaDeExpediente(expediente);
+
+      if (mesaActual && Number(mesaDestino) !== Number(mesaActual)) {
+        return;
+      }
+
+      resultado.push({
+        id: promocion.id,
+
+        tipo: "promocion",
+
+        numero,
+
+        mesaDestino,
+
+        promocion,
+
+        expediente,
+
+        fecha:
+          promocion.fecha ||
+          promocion.fechaRecepcion ||
+          promocion.creadoEn ||
+          "",
+
+        hora: obtenerHora(promocion),
+
+        actor: expediente.actor || expediente.promovente || "—",
+
+        demandado: expediente.demandado || "—",
+
+        tipoPromocion: promocion.tipo || promocion.tipoPromocion || "Promoción",
+
+        descripcion:
+          promocion.descripcion ||
+          promocion.observacion ||
+          promocion.observaciones ||
+          "Sin observaciones.",
+
+        archivo: obtenerNombreArchivo(promocion),
+      });
+    });
 
   // ==========================================================
   // ORDEN
   // ==========================================================
 
-  return resultado.sort(
-    (a, b) => {
+  return resultado.sort((a, b) => {
+    const fechaA = obtenerFechaOrden(a);
 
-      const fechaA =
-        obtenerFechaOrden(
-          a
-        );
+    const fechaB = obtenerFechaOrden(b);
 
-
-      const fechaB =
-        obtenerFechaOrden(
-          b
-        );
-
-
-      return (
-        fechaA -
-        fechaB
-      );
-
-    }
-  );
-
+    return fechaA - fechaB;
+  });
 }
-
 
 // ============================================================
 // ABRIR MODAL
 // ============================================================
 
 export function openRecepcionTodoModal() {
-
-  const pendientes =
-    getPendientesRecepcion();
-
+  const pendientes = getPendientesRecepcion();
 
   showModal(`
     <div class="mesas-modal-shell mesas-recepcion-modal">
@@ -589,11 +357,7 @@ export function openRecepcionTodoModal() {
 
         ${
           pendientes.length
-
-            ? renderPendientes(
-                pendientes
-              )
-
+            ? renderPendientes(pendientes)
             : renderSinPendientes()
         }
 
@@ -613,7 +377,6 @@ export function openRecepcionTodoModal() {
 
         ${
           pendientes.length
-
             ? `
               <button
                 type="button"
@@ -627,7 +390,6 @@ export function openRecepcionTodoModal() {
 
               </button>
             `
-
             : ""
         }
 
@@ -636,78 +398,42 @@ export function openRecepcionTodoModal() {
     </div>
   `);
 
+  document
+    .getElementById("mesasCerrarRecepcionTodo")
+    ?.addEventListener("click", closeForm);
 
   document
-    .getElementById(
-      "mesasCerrarRecepcionTodo"
-    )
-    ?.addEventListener(
-      "click",
-      closeForm
-    );
-
-
-  document
-    .getElementById(
-      "mesasConfirmarRecepcionTodo"
-    )
-    ?.addEventListener(
-      "click",
-      recibirTodo
-    );
-
+    .getElementById("mesasConfirmarRecepcionTodo")
+    ?.addEventListener("click", recibirTodo);
 }
-
 
 // ============================================================
 // RENDER LISTA
 // ============================================================
 
-function renderPendientes(
-  pendientes
-) {
-
+function renderPendientes(pendientes) {
   return `
     <div class="mesas-recepcion-list">
 
       ${pendientes
-        .map(
-          item => {
-
-            if (
-              item.tipo ===
-              "demanda"
-            ) {
-
-              return renderDemanda(
-                item
-              );
-
-            }
-
-
-            return renderPromocion(
-              item
-            );
-
+        .map((item) => {
+          if (item.tipo === "demanda") {
+            return renderDemanda(item);
           }
-        )
+
+          return renderPromocion(item);
+        })
         .join("")}
 
     </div>
   `;
-
 }
-
 
 // ============================================================
 // DEMANDA
 // ============================================================
 
-function renderDemanda(
-  item
-) {
-
+function renderDemanda(item) {
   return `
     <article class="mesas-recepcion-item">
 
@@ -724,9 +450,7 @@ function renderDemanda(
 
             <strong>
               Expediente
-              ${escapeHTML(
-                item.numero
-              )}
+              ${escapeHTML(item.numero)}
             </strong>
 
           </div>
@@ -734,11 +458,7 @@ function renderDemanda(
 
           <span class="mesas-recepcion-mesa-badge">
             Mesa
-            ${escapeHTML(
-              String(
-                item.mesaDestino
-              )
-            )}
+            ${escapeHTML(String(item.mesaDestino))}
           </span>
 
         </div>
@@ -754,11 +474,7 @@ function renderDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                formatFecha(
-                  item.fecha
-                )
-              )}
+              ${escapeHTML(formatFecha(item.fecha))}
             </strong>
 
           </div>
@@ -771,10 +487,7 @@ function renderDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.hora ||
-                "—"
-              )}
+              ${escapeHTML(item.hora || "—")}
             </strong>
 
           </div>
@@ -787,9 +500,7 @@ function renderDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.actor
-              )}
+              ${escapeHTML(item.actor)}
             </strong>
 
           </div>
@@ -802,9 +513,7 @@ function renderDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.demandado
-              )}
+              ${escapeHTML(item.demandado)}
             </strong>
 
           </div>
@@ -817,9 +526,7 @@ function renderDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.terceros
-              )}
+              ${escapeHTML(item.terceros)}
             </strong>
 
           </div>
@@ -832,10 +539,7 @@ function renderDemanda(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.archivo ||
-                "Sin archivo"
-              )}
+              ${escapeHTML(item.archivo || "Sin archivo")}
             </strong>
 
           </div>
@@ -847,18 +551,13 @@ function renderDemanda(
 
     </article>
   `;
-
 }
-
 
 // ============================================================
 // PROMOCIÓN
 // ============================================================
 
-function renderPromocion(
-  item
-) {
-
+function renderPromocion(item) {
   return `
     <article class="mesas-recepcion-item">
 
@@ -875,9 +574,7 @@ function renderPromocion(
 
             <strong>
               Expediente
-              ${escapeHTML(
-                item.numero
-              )}
+              ${escapeHTML(item.numero)}
             </strong>
 
           </div>
@@ -885,11 +582,7 @@ function renderPromocion(
 
           <span class="mesas-recepcion-mesa-badge">
             Mesa
-            ${escapeHTML(
-              String(
-                item.mesaDestino
-              )
-            )}
+            ${escapeHTML(String(item.mesaDestino))}
           </span>
 
         </div>
@@ -905,11 +598,7 @@ function renderPromocion(
             </span>
 
             <strong>
-              ${escapeHTML(
-                formatFecha(
-                  item.fecha
-                )
-              )}
+              ${escapeHTML(formatFecha(item.fecha))}
             </strong>
 
           </div>
@@ -922,10 +611,7 @@ function renderPromocion(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.hora ||
-                "—"
-              )}
+              ${escapeHTML(item.hora || "—")}
             </strong>
 
           </div>
@@ -938,9 +624,7 @@ function renderPromocion(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.tipoPromocion
-              )}
+              ${escapeHTML(item.tipoPromocion)}
             </strong>
 
           </div>
@@ -953,9 +637,7 @@ function renderPromocion(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.actor
-              )}
+              ${escapeHTML(item.actor)}
             </strong>
 
           </div>
@@ -968,9 +650,7 @@ function renderPromocion(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.demandado
-              )}
+              ${escapeHTML(item.demandado)}
             </strong>
 
           </div>
@@ -983,10 +663,7 @@ function renderPromocion(
             </span>
 
             <strong>
-              ${escapeHTML(
-                item.archivo ||
-                "Sin archivo"
-              )}
+              ${escapeHTML(item.archivo || "Sin archivo")}
             </strong>
 
           </div>
@@ -1002,9 +679,7 @@ function renderPromocion(
           </span>
 
           <p>
-            ${escapeHTML(
-              item.descripcion
-            )}
+            ${escapeHTML(item.descripcion)}
           </p>
 
         </div>
@@ -1014,16 +689,13 @@ function renderPromocion(
 
     </article>
   `;
-
 }
-
 
 // ============================================================
 // VACÍO
 // ============================================================
 
 function renderSinPendientes() {
-
   return `
     <div class="mesas-empty-state mesas-recepcion-empty">
 
@@ -1045,853 +717,443 @@ function renderSinPendientes() {
 
     </div>
   `;
-
 }
-
 
 // ============================================================
 // RECIBIR TODO
 // ============================================================
 
 function recibirTodo() {
-
-  const pendientes =
-    getPendientesRecepcion();
-
+  const pendientes = getPendientesRecepcion();
 
   if (!pendientes.length) {
     return;
   }
 
+  const expedientes = getData(KEY_EXPEDIENTES, []);
 
-  const expedientes =
-    getData(
-      KEY_EXPEDIENTES,
-      []
-    );
+  const promociones = getData(KEY_PROMOCIONES, []);
 
+  const seguimiento = getData(KEY_SEGUIMIENTO, {});
 
-  const promociones =
-    getData(
-      KEY_PROMOCIONES,
-      []
-    );
+  const demandas = getData(KEY_DEMANDAS, {});
 
+  const ahora = new Date().toISOString();
 
-  const seguimiento =
-    getData(
-      KEY_SEGUIMIENTO,
-      {}
-    );
+  const session = getSession();
 
+  const usuario = session?.nombre || session?.email || "Mesa";
 
-  const demandas =
-    getData(
-      KEY_DEMANDAS,
-      {}
-    );
-
-
-  const ahora =
-    new Date()
-      .toISOString();
-
-
-  const session =
-    getSession();
-
-
-  const usuario =
-    session?.nombre ||
-    session?.email ||
-    "Mesa";
-
-
-  const promocionesRecibidas =
-    [];
-
+  const promocionesRecibidas = [];
 
   // ==========================================================
   // PRIMERO DEMANDAS
   // ==========================================================
 
   pendientes
-    .filter(
-      item =>
-        item.tipo ===
-        "demanda"
-    )
-    .forEach(
-      item => {
+    .filter((item) => item.tipo === "demanda")
+    .forEach((item) => {
+      const expediente = expedientes.find(
+        (registro) => getNumeroExpediente(registro) === item.numero,
+      );
 
-        const expediente =
-          expedientes.find(
-            registro =>
-              getNumeroExpediente(
-                registro
-              ) ===
-              item.numero
-          );
-
-
-        if (!expediente) {
-          return;
-        }
-
-
-        expediente.recibidoMesa =
-          true;
-
-
-        expediente.recibidoMesaEn =
-          ahora;
-
-
-        expediente.recibidoMesaPor =
-          usuario;
-
-
-        expediente.mesaRecepcion =
-          item.mesaDestino;
-
-
-        expediente.ubicacion =
-          `Mesa ${item.mesaDestino}`;
-
-
-        // ====================================================
-        // SEGUIMIENTO
-        // ====================================================
-
-        const actual =
-          seguimiento[
-            item.numero
-          ] ||
-          {};
-
-
-        const historial =
-          Array.isArray(
-            actual.historial
-          )
-            ? actual.historial
-            : [];
-
-
-        historial.push({
-
-          fecha:
-            ahora,
-
-          movimiento:
-            "Demanda recibida por Secretaría de Acuerdos",
-
-          usuario
-
-        });
-
-
-        seguimiento[
-          item.numero
-        ] = {
-
-          ...actual,
-
-          estado:
-            "en-proceso",
-
-          recibidoEn:
-            ahora,
-
-          recibidoPor:
-            usuario,
-
-          ubicacion:
-            `Mesa ${item.mesaDestino}`,
-
-          ultimoMovimiento:
-            "Demanda recibida por Secretaría de Acuerdos",
-
-          historial
-
-        };
-
-
-        // ====================================================
-        // DEMANDA
-        // ====================================================
-
-        if (
-          !demandas[
-            item.numero
-          ]
-        ) {
-
-          demandas[
-            item.numero
-          ] = {
-
-            expediente:
-              item.numero,
-
-            radicacion:
-              "en-proceso",
-
-            categoria:
-              "por-radicar",
-
-            recibidoEn:
-              ahora,
-
-            recibidoPor:
-              usuario
-
-          };
-
-        }
-
+      if (!expediente) {
+        return;
       }
-    );
 
+      expediente.recibidoMesa = true;
+
+      expediente.recibidoMesaEn = ahora;
+
+      expediente.recibidoMesaPor = usuario;
+
+      expediente.mesaRecepcion = item.mesaDestino;
+
+      expediente.ubicacion = `Mesa ${item.mesaDestino}`;
+
+      // ====================================================
+      // SEGUIMIENTO
+      // ====================================================
+
+      const actual = seguimiento[item.numero] || {};
+
+      const historial = Array.isArray(actual.historial) ? actual.historial : [];
+
+      historial.push({
+        fecha: ahora,
+
+        movimiento: "Demanda recibida por Secretaría de Acuerdos",
+
+        usuario,
+      });
+
+      seguimiento[item.numero] = {
+        ...actual,
+
+        estado: "en-proceso",
+
+        recibidoEn: ahora,
+
+        recibidoPor: usuario,
+
+        ubicacion: `Mesa ${item.mesaDestino}`,
+
+        ultimoMovimiento: "Demanda recibida por Secretaría de Acuerdos",
+
+        historial,
+      };
+
+      // ====================================================
+      // DEMANDA
+      // ====================================================
+
+      if (!demandas[item.numero]) {
+        demandas[item.numero] = {
+          expediente: item.numero,
+
+          radicacion: "en-proceso",
+
+          categoria: "por-radicar",
+
+          recibidoEn: ahora,
+
+          recibidoPor: usuario,
+        };
+      }
+    });
 
   // ==========================================================
   // DESPUÉS PROMOCIONES
   // ==========================================================
 
   pendientes
-    .filter(
-      item =>
-        item.tipo ===
-        "promocion"
-    )
-    .forEach(
-      item => {
+    .filter((item) => item.tipo === "promocion")
+    .forEach((item) => {
+      const promocion = promociones.find(
+        (registro) => String(registro.id) === String(item.id),
+      );
 
-        const promocion =
-          promociones.find(
-            registro =>
-              String(
-                registro.id
-              ) ===
-              String(
-                item.id
-              )
-          );
-
-
-        if (!promocion) {
-          return;
-        }
-
-
-        promocion.recibidaMesa =
-          true;
-
-
-        promocion.recibidaMesaEn =
-          ahora;
-
-
-        promocion.recibidaMesaPor =
-          usuario;
-
-
-        promocion.mesaRecepcion =
-          item.mesaDestino;
-
-
-        if (
-          !promocion.estadoPromocion
-        ) {
-
-          promocion.estadoPromocion =
-            "por-acordar";
-
-        }
-
-
-        if (
-          !promocion.estadoAcuerdo
-        ) {
-
-          promocion.estadoAcuerdo =
-            "en-proceso";
-
-        }
-
-
-        promocion.historialAcuerdo = [
-
-          ...(
-            Array.isArray(
-              promocion.historialAcuerdo
-            )
-              ? promocion.historialAcuerdo
-              : []
-          ),
-
-          {
-
-            fecha:
-              ahora,
-
-            movimiento:
-              "Promoción recibida en Mesa; pasa a En proceso",
-
-            usuario
-
-          }
-
-        ];
-
-
-        // ====================================================
-        // HISTORIAL DEL EXPEDIENTE
-        // ====================================================
-
-        const actual =
-          seguimiento[
-            item.numero
-          ] ||
-          {};
-
-
-        const historial =
-          Array.isArray(
-            actual.historial
-          )
-            ? actual.historial
-            : [];
-
-
-        historial.push({
-
-          fecha:
-            ahora,
-
-          movimiento:
-            "Promoción recibida por Secretaría de Acuerdos",
-
-          usuario
-
-        });
-
-
-        seguimiento[
-          item.numero
-        ] = {
-
-          ...actual,
-
-          historial,
-
-          ultimoMovimiento:
-            "Promoción recibida por Secretaría de Acuerdos"
-
-        };
-
-
-        promocionesRecibidas.push(
-          item.numero
-        );
-
+      if (!promocion) {
+        return;
       }
-    );
 
+      promocion.recibidaMesa = true;
+
+      promocion.recibidaMesaEn = ahora;
+
+      promocion.recibidaMesaPor = usuario;
+
+      promocion.mesaRecepcion = item.mesaDestino;
+
+      if (!promocion.estadoPromocion) {
+        promocion.estadoPromocion = "por-acordar";
+      }
+
+      if (!promocion.estadoAcuerdo) {
+        promocion.estadoAcuerdo = "en-proceso";
+      }
+
+      promocion.historialAcuerdo = [
+        ...(Array.isArray(promocion.historialAcuerdo)
+          ? promocion.historialAcuerdo
+          : []),
+
+        {
+          fecha: ahora,
+
+          movimiento: "Promoción recibida en Mesa; pasa a En proceso",
+
+          usuario,
+        },
+      ];
+
+      // ====================================================
+      // HISTORIAL DEL EXPEDIENTE
+      // ====================================================
+
+      const actual = seguimiento[item.numero] || {};
+
+      const historial = Array.isArray(actual.historial) ? actual.historial : [];
+
+      historial.push({
+        fecha: ahora,
+
+        movimiento: "Promoción recibida por Secretaría de Acuerdos",
+
+        usuario,
+      });
+
+      seguimiento[item.numero] = {
+        ...actual,
+
+        historial,
+
+        ultimoMovimiento: "Promoción recibida por Secretaría de Acuerdos",
+      };
+
+      promocionesRecibidas.push(item.numero);
+    });
 
   // ==========================================================
   // GUARDAR
   // ==========================================================
 
-  saveData(
-    KEY_EXPEDIENTES,
-    expedientes
-  );
+  saveData(KEY_EXPEDIENTES, expedientes);
 
+  saveData(KEY_PROMOCIONES, promociones);
 
-  saveData(
-    KEY_PROMOCIONES,
-    promociones
-  );
+  saveData(KEY_SEGUIMIENTO, seguimiento);
 
-
-  saveData(
-    KEY_SEGUIMIENTO,
-    seguimiento
-  );
-
-
-  saveData(
-    KEY_DEMANDAS,
-    demandas
-  );
-
+  saveData(KEY_DEMANDAS, demandas);
 
   // ==========================================================
   // REACTIVAR EXPEDIENTES POR PROMOCIÓN NUEVA
   // ==========================================================
 
-  [
-    ...new Set(
-      promocionesRecibidas
-    )
-  ]
-    .forEach(
-      numero => {
-
-        reactivarPorPromocionNueva(
-          numero
-        );
-
-      }
-    );
-
+  [...new Set(promocionesRecibidas)].forEach((numero) => {
+    reactivarPorPromocionNueva(numero);
+  });
 
   closeForm();
 
-
-  if (
-    typeof window.renderMesas ===
-    "function"
-  ) {
-
+  if (typeof window.renderMesas === "function") {
     window.renderMesas();
-
-  }
-  else {
-
+  } else {
     renderRecepcionPromociones();
-
   }
-
 }
-
 
 // ============================================================
 // DATOS DEMO
 // ============================================================
 
-function cargarDatosDemoRecepcion() {
+export function cargarDatosDemoRecepcion() {
+  const expedientes = getData(KEY_EXPEDIENTES, []);
 
-  const expedientes =
-    getData(
-      KEY_EXPEDIENTES,
-      []
-    );
+  const promociones = getData(KEY_PROMOCIONES, []);
 
+  const seguimiento = getData(KEY_SEGUIMIENTO, {});
 
-  const promociones =
-    getData(
-      KEY_PROMOCIONES,
-      []
-    );
+  const mesa = Number(mesaUsuarioActual()) || 1;
 
+  const numeros = getNumerosDemo(mesa);
 
-  const seguimiento =
-    getData(
-      KEY_SEGUIMIENTO,
-      {}
-    );
+  const ahora = new Date();
 
+  const fecha = ahora.toISOString().slice(0, 10);
 
-  const mesa =
-    Number(
-      mesaUsuarioActual()
-    ) || 1;
-
-
-  const numeros =
-    getNumerosDemo(
-      mesa
-    );
-
-
-  const ahora =
-    new Date();
-
-
-  const fecha =
-    ahora
-      .toISOString()
-      .slice(
-        0,
-        10
-      );
-
-
-  const hora =
-    ahora
-      .toTimeString()
-      .slice(
-        0,
-        5
-      );
-
+  const hora = ahora.toTimeString().slice(0, 5);
 
   // ==========================================================
   // DEMANDA NUEVA PENDIENTE
   // ==========================================================
 
-  if (
-    !expedientes.some(
-      item =>
-        item.demoRecepcionUnificada ===
-        "demanda"
-    )
-  ) {
-
+  if (!expedientes.some((item) => item.demoRecepcionUnificada === "demanda")) {
     expedientes.push({
+      id: createId(),
 
-      id:
-        createId(),
+      numero: numeros.demanda,
 
-      numero:
-        numeros.demanda,
+      expediente: numeros.demanda,
 
-      expediente:
-        numeros.demanda,
+      origen: "demanda",
 
-      origen:
-        "demanda",
+      actor: "ANA MARTÍNEZ LÓPEZ",
 
-      actor:
-        "ANA MARTÍNEZ LÓPEZ",
+      demandado: "AYUNTAMIENTO DE COLIMA",
 
-      demandado:
-        "AYUNTAMIENTO DE COLIMA",
+      terceros: "SINDICATO DE TRABAJADORES",
 
-      terceros:
-        "SINDICATO DE TRABAJADORES",
-
-      actoDemandado:
-        "Demanda laboral de nulidad",
+      actoDemandado: "Demanda laboral de nulidad",
 
       fecha,
 
-      fechaRecepcion:
-        fecha,
+      fechaRecepcion: fecha,
 
       hora,
 
-      creadoEn:
-        ahora.toISOString(),
+      creadoEn: ahora.toISOString(),
 
       archivoAdjunto: {
-        nombre:
-          "demanda_ana_martinez.pdf"
+        nombre: "demanda_ana_martinez.pdf",
       },
 
-      recibidoMesa:
-        false,
+      recibidoMesa: false,
 
-      demoRecepcionUnificada:
-        "demanda"
-
+      demoRecepcionUnificada: "demanda",
     });
-
   }
-
 
   // ==========================================================
   // EXPEDIENTE EXISTENTE PARA PROMOCIÓN
   // ==========================================================
 
-  let expedientePromocion =
-    expedientes.find(
-      item =>
-        getNumeroExpediente(
-          item
-        ) ===
-        numeros.promocion
-    );
-
+  let expedientePromocion = expedientes.find(
+    (item) => getNumeroExpediente(item) === numeros.promocion,
+  );
 
   if (!expedientePromocion) {
-
     expedientePromocion = {
+      id: createId(),
 
-      id:
-        createId(),
+      numero: numeros.promocion,
 
-      numero:
-        numeros.promocion,
+      expediente: numeros.promocion,
 
-      expediente:
-        numeros.promocion,
+      origen: "demanda",
 
-      origen:
-        "demanda",
+      actor: "CARLOS RAMÍREZ GÓMEZ",
 
-      actor:
-        "CARLOS RAMÍREZ GÓMEZ",
+      demandado: "SECRETARÍA DE EDUCACIÓN",
 
-      demandado:
-        "SECRETARÍA DE EDUCACIÓN",
+      terceros: "Sin terceros registrados",
 
-      terceros:
-        "Sin terceros registrados",
-
-      actoDemandado:
-        "Reclamación laboral",
+      actoDemandado: "Reclamación laboral",
 
       fecha,
 
-      fechaRecepcion:
-        fecha,
+      fechaRecepcion: fecha,
 
-      hora:
-        "09:15",
+      hora: "09:15",
 
-      creadoEn:
-        ahora.toISOString(),
+      creadoEn: ahora.toISOString(),
 
-      recibidoMesa:
-        true,
+      recibidoMesa: true,
 
-      recibidoMesaEn:
-        ahora.toISOString(),
+      recibidoMesaEn: ahora.toISOString(),
 
-      recibidoMesaPor:
-        "Datos demo",
+      recibidoMesaPor: "Datos demo",
 
-      ubicacion:
-        `Mesa ${mesa}`,
+      ubicacion: `Mesa ${mesa}`,
 
-      demoRecepcionUnificada:
-        "expediente-promocion"
-
+      demoRecepcionUnificada: "expediente-promocion",
     };
 
-
-    expedientes.push(
-      expedientePromocion
-    );
-
+    expedientes.push(expedientePromocion);
   }
-
 
   // ==========================================================
   // SEGUIMIENTO DEL EXPEDIENTE EXISTENTE
   // ==========================================================
 
-  if (
-    !seguimiento[
-      numeros.promocion
-    ]
-  ) {
+  if (!seguimiento[numeros.promocion]) {
+    seguimiento[numeros.promocion] = {
+      estado: "en-proceso",
 
-    seguimiento[
-      numeros.promocion
-    ] = {
+      recibidoEn: ahora.toISOString(),
 
-      estado:
-        "en-proceso",
+      recibidoPor: "Datos demo",
 
-      recibidoEn:
-        ahora.toISOString(),
+      ubicacion: `Mesa ${mesa}`,
 
-      recibidoPor:
-        "Datos demo",
-
-      ubicacion:
-        `Mesa ${mesa}`,
-
-      ultimoMovimiento:
-        "Expediente disponible en Mesa",
+      ultimoMovimiento: "Expediente disponible en Mesa",
 
       historial: [
-
         {
+          fecha: ahora.toISOString(),
 
-          fecha:
-            ahora.toISOString(),
+          movimiento: "Expediente disponible en Mesa",
 
-          movimiento:
-            "Expediente disponible en Mesa",
-
-          usuario:
-            "Datos demo"
-
-        }
-
-      ]
-
+          usuario: "Datos demo",
+        },
+      ],
     };
-
   }
-
 
   // ==========================================================
   // PROMOCIÓN PENDIENTE
   // ==========================================================
 
-  if (
-    !promociones.some(
-      item =>
-        item.demoRecepcionUnificada ===
-        true
-    )
-  ) {
-
+  if (!promociones.some((item) => item.demoRecepcionUnificada === true)) {
     promociones.push({
+      id: createId(),
 
-      id:
-        createId(),
+      numeroPromocion: "PROM-DEMO-001",
 
-      numeroPromocion:
-        "PROM-DEMO-001",
+      numero: numeros.promocion,
 
-      numero:
-        numeros.promocion,
-
-      expediente:
-        numeros.promocion,
+      expediente: numeros.promocion,
 
       fecha,
 
-      hora:
-        "10:40",
+      hora: "10:40",
 
-      creadoEn:
-        ahora.toISOString(),
+      creadoEn: ahora.toISOString(),
 
-      tipo:
-        "Promoción de trámite",
+      tipo: "Promoción de trámite",
 
       descripcion:
         "Se solicita agregar documentación y acordar la promoción presentada.",
 
-      observacion:
-        "Promoción relacionada con expediente ya existente.",
+      observacion: "Promoción relacionada con expediente ya existente.",
 
       archivoAdjunto: {
-        nombre:
-          "promocion_demo.pdf"
+        nombre: "promocion_demo.pdf",
       },
 
-      recibidaMesa:
-        false,
+      recibidaMesa: false,
 
-      recibidaMesaEn:
-        null,
+      recibidaMesaEn: null,
 
-      recibidaMesaPor:
-        null,
+      recibidaMesaPor: null,
 
-      demoRecepcionUnificada:
-        true
-
+      demoRecepcionUnificada: true,
     });
-
   }
-
 
   // ==========================================================
   // GUARDAR
   // ==========================================================
 
-  saveData(
-    KEY_EXPEDIENTES,
-    expedientes
-  );
+  saveData(KEY_EXPEDIENTES, expedientes);
 
+  saveData(KEY_PROMOCIONES, promociones);
 
-  saveData(
-    KEY_PROMOCIONES,
-    promociones
-  );
+  saveData(KEY_SEGUIMIENTO, seguimiento);
 
-
-  saveData(
-    KEY_SEGUIMIENTO,
-    seguimiento
-  );
-
-
-  if (
-    typeof window.renderMesas ===
-    "function"
-  ) {
-
+  if (typeof window.renderMesas === "function") {
     window.renderMesas();
-
-  }
-  else {
-
+  } else {
     renderRecepcionPromociones();
-
   }
-
 }
-
 
 // ============================================================
 // NÚMEROS DEMO POR MESA
 // ============================================================
 
-function getNumerosDemo(
-  mesa
-) {
-
-  if (
-    mesa === 2
-  ) {
-
+function getNumerosDemo(mesa) {
+  if (mesa === 2) {
     return {
+      demanda: "201/2026",
 
-      demanda:
-        "201/2026",
-
-      promocion:
-        "203/2026"
-
+      promocion: "203/2026",
     };
-
   }
 
-
-  if (
-    mesa === 3
-  ) {
-
+  if (mesa === 3) {
     return {
+      demanda: "OJC-200/2026",
 
-      demanda:
-        "OJC-200/2026",
-
-      promocion:
-        "OJC-202/2026"
-
+      promocion: "OJC-202/2026",
     };
-
   }
-
 
   return {
+    demanda: "200/2026",
 
-    demanda:
-      "200/2026",
-
-    promocion:
-      "202/2026"
-
+    promocion: "202/2026",
   };
-
 }
-
 
 // ============================================================
 // ARCHIVO
 // ============================================================
 
-function obtenerNombreArchivo(
-  registro
-) {
-
+function obtenerNombreArchivo(registro) {
   if (!registro) {
     return "";
   }
-
 
   return (
     registro.archivoAdjunto?.nombre ||
@@ -1904,176 +1166,77 @@ function obtenerNombreArchivo(
     registro.documento?.nombreArchivo ||
     ""
   );
-
 }
-
 
 // ============================================================
 // HORA
 // ============================================================
 
-function obtenerHora(
-  registro
-) {
-
+function obtenerHora(registro) {
   if (!registro) {
     return "—";
   }
 
-
-  if (
-    registro.hora
-  ) {
-
-    return String(
-      registro.hora
-    ).slice(
-      0,
-      5
-    );
-
+  if (registro.hora) {
+    return String(registro.hora).slice(0, 5);
   }
 
+  const fecha = registro.creadoEn || registro.fechaRecepcion;
 
-  const fecha =
-    registro.creadoEn ||
-    registro.fechaRecepcion;
+  if (fecha && String(fecha).includes("T")) {
+    const date = new Date(fecha);
 
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("es-MX", {
+        hour: "2-digit",
 
-  if (
-    fecha &&
-    String(
-      fecha
-    ).includes("T")
-  ) {
-
-    const date =
-      new Date(
-        fecha
-      );
-
-
-    if (
-      !Number.isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return date
-        .toLocaleTimeString(
-          "es-MX",
-          {
-            hour:
-              "2-digit",
-
-            minute:
-              "2-digit"
-          }
-        );
-
+        minute: "2-digit",
+      });
     }
-
   }
-
 
   return "—";
-
 }
-
 
 // ============================================================
 // ORDEN
 // ============================================================
 
-function obtenerFechaOrden(
-  item
-) {
+function obtenerFechaOrden(item) {
+  const value = item.fecha || "";
 
-  const value =
-    item.fecha ||
-    "";
+  const hora = item.hora || "00:00";
 
+  const fecha = new Date(`${String(value).slice(0, 10)}T${hora}`);
 
-  const hora =
-    item.hora ||
-    "00:00";
-
-
-  const fecha =
-    new Date(
-      `${String(
-        value
-      ).slice(
-        0,
-        10
-      )}T${hora}`
-    );
-
-
-  if (
-    Number.isNaN(
-      fecha.getTime()
-    )
-  ) {
-
+  if (Number.isNaN(fecha.getTime())) {
     return 0;
-
   }
 
-
   return fecha.getTime();
-
 }
-
 
 // ============================================================
 // FORMATO FECHA
 // ============================================================
 
-function formatFecha(
-  value
-) {
-
+function formatFecha(value) {
   if (!value) {
     return "—";
   }
 
+  const texto = String(value);
 
-  const texto =
-    String(
-      value
-    );
+  const fecha = texto.slice(0, 10);
 
+  const partes = fecha.split("-");
 
-  const fecha =
-    texto.slice(
-      0,
-      10
-    );
-
-
-  const partes =
-    fecha.split("-");
-
-
-  if (
-    partes.length ===
-    3
-  ) {
-
-    return (
-      `${partes[2]}/` +
-      `${partes[1]}/` +
-      `${partes[0]}`
-    );
-
+  if (partes.length === 3) {
+    return `${partes[2]}/` + `${partes[1]}/` + `${partes[0]}`;
   }
 
-
   return texto;
-
 }
-
 
 // ============================================================
 // COMPATIBILIDAD
@@ -2082,19 +1245,9 @@ function formatFecha(
 // ============================================================
 
 export function getPromocionesPendientesMesa() {
-
-  return getPendientesRecepcion()
-    .filter(
-      item =>
-        item.tipo ===
-        "promocion"
-    );
-
+  return getPendientesRecepcion().filter((item) => item.tipo === "promocion");
 }
 
-
 export function openPromocionesPendientesModal() {
-
   openRecepcionTodoModal();
-
 }
